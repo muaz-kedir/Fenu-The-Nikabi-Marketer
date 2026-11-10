@@ -1,14 +1,22 @@
 import { BriefcaseBusiness, Camera, MessageCircleMore, Music2 } from 'lucide-react';
-import { portfolio, socialLinks } from '../data/portfolio';
+import type { SiteSettings } from '../types/database';
 
 const socialDisplay = [
-  { label: 'Instagram', Icon: Camera },
-  { label: 'TikTok', Icon: Music2 },
-  { label: 'LinkedIn', Icon: BriefcaseBusiness },
-  { label: 'WhatsApp', Icon: MessageCircleMore },
+  { label: 'Instagram', key: 'instagram_url', Icon: Camera },
+  { label: 'TikTok', key: 'tiktok_url', Icon: Music2 },
+  { label: 'LinkedIn', key: 'linkedin_url', Icon: BriefcaseBusiness },
+  { label: 'WhatsApp', key: 'whatsapp_url', Icon: MessageCircleMore },
 ];
 
-export function Footer() {
+type FooterProps = {
+  site?: Partial<SiteSettings>;
+};
+
+export function Footer({ site }: FooterProps) {
+  const name = site?.owner_name ?? 'Azmina Zahra';
+  const email = site?.email ?? 'hello@azminazahra.com';
+  const brandInitials = (name || 'AZ').split(' ').map((part) => part[0]).slice(0, 2).join('').toUpperCase();
+
   return (
     <footer className="border-t border-white/10 bg-[#0a0a0a]">
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
@@ -16,17 +24,17 @@ export function Footer() {
           <div>
             <div className="flex items-center gap-3">
               <span className="flex h-10 w-10 items-center justify-center rounded-full border border-[#f04796]/60 bg-[#f04796]/10 text-sm font-semibold text-[#f6b7d2]">
-                {portfolio.brandInitials}
+                {brandInitials}
               </span>
-              <span className="text-lg font-semibold text-white">{portfolio.name}</span>
+              <span className="text-lg font-semibold text-white">{name}</span>
             </div>
           </div>
 
           <div className="flex items-center gap-3">
-            {socialDisplay.map(({ label, Icon }) => (
+            {socialDisplay.map(({ label, key, Icon }) => (
               <a
                 key={label}
-                href={socialLinks.find((link) => link.label === label)?.href ?? '#'}
+                href={site?.[key as keyof SiteSettings] as string | undefined ?? '#'}
                 target="_blank"
                 rel="noreferrer"
                 aria-label={label}
@@ -39,8 +47,8 @@ export function Footer() {
         </div>
 
         <div className="mt-8 flex flex-col items-center justify-between gap-4 text-sm text-white/60 md:flex-row">
-          <span>{portfolio.email}</span>
-          <span>© 2025 {portfolio.name}. All rights reserved.</span>
+          <span>{email}</span>
+          <span>© 2025 {name}. All rights reserved.</span>
         </div>
       </div>
     </footer>

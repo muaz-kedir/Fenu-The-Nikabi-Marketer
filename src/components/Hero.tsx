@@ -1,8 +1,18 @@
 import { motion } from 'framer-motion';
 import { ArrowRight, Sparkles, Star } from 'lucide-react';
-import { portfolio } from '../data/portfolio';
+import type { HeroContent, SiteSettings } from '../types/database';
 
-export function Hero() {
+type HeroProps = {
+  hero?: Partial<HeroContent>;
+  site?: Partial<SiteSettings>;
+};
+
+export function Hero({ hero, site }: HeroProps) {
+  const greeting = hero?.greeting ?? "Hello, I'm";
+  const name = hero?.full_name ?? site?.owner_name ?? 'Azmina Zahra';
+  const title = hero?.professional_title ?? site?.professional_title ?? 'Social Media Marketing Specialist';
+  const description = hero?.description ?? 'I help brands turn attention into action with strategic content, story-led campaigns, and performance-driven growth systems.';
+  const image = hero?.profile_image_url ?? site?.profile_image_url ?? 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=900&q=80';
   const heroStats = [
     { value: '12K+', label: 'Impressions' },
     { value: '3x', label: 'ROAS' },
@@ -23,34 +33,34 @@ export function Hero() {
         >
           <div className="mb-5 inline-flex w-fit items-center gap-2 rounded-full border border-[#f04796]/40 bg-[#f04796]/10 px-3 py-1.5 text-xs font-medium uppercase tracking-[0.2em] text-[#f6b7d2]">
             <Sparkles size={14} />
-            Hello, I&apos;m
+            {greeting}
           </div>
 
           <h1 className="font-display text-5xl leading-none text-white sm:text-6xl lg:text-[5rem]">
-            {portfolio.name}
+            {name}
           </h1>
 
           <p className="mt-4 max-w-xl text-lg font-medium text-[#f6b7d2] sm:text-xl">
-            {portfolio.title}
+            {title}
           </p>
 
           <p className="mt-5 max-w-xl text-base leading-7 text-white/70 sm:text-lg">
-            {portfolio.intro}
+            {description}
           </p>
 
           <div className="mt-8 flex flex-col gap-4 sm:flex-row">
             <a
-              href="#work"
+              href={hero?.primary_button_url ?? '#work'}
               className="inline-flex items-center justify-center gap-2 rounded-full border border-[#f04796] bg-[#f04796] px-6 py-3.5 text-sm font-semibold text-[#0d0d0f] shadow-[0_0_30px_rgba(240,71,150,0.45)] transition hover:-translate-y-0.5 hover:bg-[#ff6ab3]"
             >
-              View My Work
+              {hero?.primary_button_text ?? 'View My Work'}
               <ArrowRight size={18} />
             </a>
             <a
-              href="#contact"
+              href={hero?.secondary_button_url ?? '#contact'}
               className="inline-flex items-center justify-center rounded-full border border-white/15 bg-white/5 px-6 py-3.5 text-sm font-semibold text-white transition hover:border-[#f6b7d2] hover:text-[#f6b7d2]"
             >
-              Let&apos;s Work Together
+              {hero?.secondary_button_text ?? "Let's Work Together"}
             </a>
           </div>
 
@@ -83,11 +93,7 @@ export function Hero() {
 
           <div className="relative flex h-[430px] w-[430px] items-center justify-center rounded-full border border-[#f04796]/60 bg-[linear-gradient(135deg,rgba(240,71,150,0.15),rgba(255,255,255,0.02),rgba(240,71,150,0.05))] p-6 shadow-[0_0_60px_rgba(240,71,150,0.15)]">
             <div className="absolute inset-3 rounded-full border border-[#f6b7d2]/35" />
-            <img
-              src={portfolio.heroImage}
-              alt={portfolio.name}
-              className="h-full w-full rounded-full object-cover object-center"
-            />
+            <img src={image} alt={name} className="h-full w-full rounded-full object-cover object-center" />
           </div>
         </motion.div>
       </div>

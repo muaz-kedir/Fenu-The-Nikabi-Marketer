@@ -1,7 +1,18 @@
 import { ArrowRight } from 'lucide-react';
-import { processSteps } from '../data/portfolio';
+import type { ProcessStep } from '../types/database';
 
-export function Process() {
+type ProcessProps = {
+  process?: ProcessStep[];
+};
+
+export function Process({ process }: ProcessProps) {
+  const steps = process ?? [
+    { id: '1', step_number: '01', title: 'Understand', description: 'I learn your goals, audience, and brand positioning.', display_order: 1, is_visible: true },
+    { id: '2', step_number: '02', title: 'Plan', description: 'We map a content strategy aligned with your growth objectives.', display_order: 2, is_visible: true },
+    { id: '3', step_number: '03', title: 'Create', description: 'I develop content systems, campaigns, and creative direction.', display_order: 3, is_visible: true },
+    { id: '4', step_number: '04', title: 'Improve', description: 'We refine performance with insights and optimisation loops.', display_order: 4, is_visible: true },
+  ];
+
   return (
     <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
       <div className="mb-10 text-center">
@@ -16,10 +27,10 @@ export function Process() {
       <div className="relative">
         <div className="absolute left-0 right-0 top-1/2 hidden h-px -translate-y-1/2 bg-gradient-to-r from-transparent via-[#f04796]/70 to-transparent lg:block" />
         <div className="grid gap-6 lg:grid-cols-4">
-          {processSteps.map(({ number, title, description }) => (
-            <div key={number} className="relative rounded-[30px] border border-white/10 bg-[#141414] p-6">
+          {steps.map(({ step_number, title, description, id }) => (
+            <div key={id} className="relative rounded-[30px] border border-white/10 bg-[#141414] p-6">
               <div className="mb-6 flex items-center justify-between">
-                <span className="text-3xl font-semibold text-[#f6b7d2]">{number}</span>
+                <span className="text-3xl font-semibold text-[#f6b7d2]">{step_number}</span>
                 <span className="flex h-10 w-10 items-center justify-center rounded-full border border-[#f04796]/50 bg-[#f04796]/10 text-[#f6b7d2]">
                   <ArrowRight size={16} />
                 </span>
