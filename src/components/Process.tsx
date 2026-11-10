@@ -1,0 +1,35 @@
+import { ArrowRight } from 'lucide-react';
+import { processSteps } from '../data/portfolio';
+
+export function Process() {
+  return (
+    <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
+      <div className="mb-10 text-center">
+        <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.25em] text-[#f6b7d2]">
+          <span className="h-px w-10 bg-[#f04796]" />
+          Work Process
+          <span className="h-px w-10 bg-[#f04796]" />
+        </div>
+        <h2 className="mt-5 font-display text-5xl text-white sm:text-6xl">The 4-step strategic engine</h2>
+      </div>
+
+      <div className="relative">
+        <div className="absolute left-0 right-0 top-1/2 hidden h-px -translate-y-1/2 bg-gradient-to-r from-transparent via-[#f04796]/70 to-transparent lg:block" />
+        <div className="grid gap-6 lg:grid-cols-4">
+          {processSteps.map(({ number, title, description }) => (
+            <div key={number} className="relative rounded-[30px] border border-white/10 bg-[#141414] p-6">
+              <div className="mb-6 flex items-center justify-between">
+                <span className="text-3xl font-semibold text-[#f6b7d2]">{number}</span>
+                <span className="flex h-10 w-10 items-center justify-center rounded-full border border-[#f04796]/50 bg-[#f04796]/10 text-[#f6b7d2]">
+                  <ArrowRight size={16} />
+                </span>
+              </div>
+              <h3 className="text-2xl font-semibold text-white">{title}</h3>
+              <p className="mt-4 text-sm leading-7 text-white/65">{description}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}

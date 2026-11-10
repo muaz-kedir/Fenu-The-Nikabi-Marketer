@@ -1,0 +1,31 @@
+import { BarChart3, Heart, MessageSquare, TrendingUp, Users } from 'lucide-react';
+import { stats } from '../data/portfolio';
+
+const iconMap = {
+  TrendingUp,
+  Heart,
+  MessageSquare,
+  Users,
+};
+
+export function Stats() {
+  return (
+    <section className="mx-auto max-w-7xl px-4 pb-10 sm:px-6 lg:px-8 lg:pb-20">
+      <div className="grid gap-4 rounded-[28px] border border-white/10 bg-[#141414] p-4 sm:grid-cols-2 lg:grid-cols-4 lg:p-6">
+        {stats.map(({ value, label, icon }) => {
+          const Icon = iconMap[icon as keyof typeof iconMap];
+
+          return (
+            <div key={label} className="group rounded-3xl border border-white/10 bg-[#0f0f10] p-6 transition hover:-translate-y-1 hover:border-[#f04796]/40 hover:shadow-[0_0_25px_rgba(240,71,150,0.12)]">
+              <div className="mb-3 inline-flex h-12 w-12 items-center justify-center rounded-full bg-[#f04796]/10 text-[#f6b7d2]">
+                <Icon size={20} />
+              </div>
+              <div className="text-3xl font-bold text-[#f6b7d2] lg:text-4xl">{value}</div>
+              <div className="mt-2 text-sm uppercase tracking-[0.18em] text-white/60">{label}</div>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
