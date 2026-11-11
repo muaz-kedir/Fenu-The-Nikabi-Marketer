@@ -6,20 +6,104 @@ import crypto from 'node:crypto';
 import path from 'node:path';
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import dotenv from 'dotenv';
+
+// Ensure .env is read from project root
+dotenv.config({ path: path.resolve(process.cwd(), '.env') });
 
 const { Pool } = pg;
 const app = express();
 const port = Number(process.env.PORT || 3001);
-const databaseUrl = process.env.DATABASE_URL || '';
 const uploadsDir = path.join(process.cwd(), 'uploads');
 const localContactMessagesPath = path.join(process.cwd(), '.local-data', 'contact-messages.json');
 const localTestimonialsPath = path.join(process.cwd(), '.local-data', 'testimonials.json');
 
-const pool = databaseUrl ? new Pool({ connectionString: databaseUrl }) : null;
+const JWT_SECRET = process.env.ADMIN_JWT_SECRET || 'fenu-portfolio-secure-admin-token-secret-2026';
 const adminTokens = new Map();
 
 const localAdminEmail = process.env.LOCAL_ADMIN_EMAIL || 'admin@example.com';
 const localAdminPassword = process.env.LOCAL_ADMIN_PASSWORD || 'admin123';
+
+let pool = null;
+
+function getDatabaseUrl() {
+  if (process.env.DATABASE_URL) return process.env.DATABASE_URL;
+  try {
+    const envPath = path.resolve(process.cwd(), '.env');
+    if (fs.existsSync(envPath)) {
+      const parsed = dotenv.parse(fs.readFileSync(envPath, 'utf8'));
+      if (parsed.DATABASE_URL) {
+        process.env.DATABASE_URL = parsed.DATABASE_URL;
+        return parsed.DATABASE_URL;
+      }
+    }
+  } catch (err) {
+    console.error('Error reading .env for DATABASE_URL:', err);
+  }
+  return '';
+}
+
+function getPool() {
+  const dbUrl = getDatabaseUrl();
+  if (!dbUrl) return null;
+  if (!pool) {
+    try {
+      pool = new Pool({
+        connectionString: dbUrl,
+        connectionTimeoutMillis: 5000,
+        idleTimeoutMillis: 30000,
+        max: 10,
+      });
+      pool.on('error', (err) => {
+        console.error('Unexpected error on idle pg client:', err);
+      });
+    } catch (err) {
+      console.error('Failed to initialize pg pool:', err);
+      pool = null;
+    }
+  }
+  return pool;
+}
+
+function signToken(user, expiresInMs = 7 * 24 * 60 * 60 * 1000) {
+  const payload = {
+    user,
+    exp: Date.now() + expiresInMs,
+  };
+  const payloadB64 = Buffer.from(JSON.stringify(payload)).toString('base64url');
+  const signature = crypto.createHmac('sha256', JWT_SECRET).update(payloadB64).digest('base64url');
+  return `${payloadB64}.${signature}`;
+}
+
+function verifyToken(token) {
+  if (!token) return null;
+  
+  // 1. Verify HMAC signed token
+  const dotIndex = token.indexOf('.');
+  if (dotIndex > 0) {
+    const payloadB64 = token.slice(0, dotIndex);
+    const signature = token.slice(dotIndex + 1);
+    try {
+      const expectedSig = crypto.createHmac('sha256', JWT_SECRET).update(payloadB64).digest('base64url');
+      if (crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expectedSig))) {
+        const payload = JSON.parse(Buffer.from(payloadB64, 'base64url').toString('utf8'));
+        if (payload.exp && payload.exp > Date.now()) {
+          return payload.user;
+        }
+      }
+    } catch {
+      // Signature or JSON parsing failed
+    }
+  }
+
+  // 2. In-memory session fallback
+  const session = adminTokens.get(token);
+  if (session && session.expiresAt > Date.now()) {
+    return session.user;
+  }
+
+  return null;
+}
 
 app.use(cors());
 app.use(express.json({ limit: '25mb' }));
@@ -62,19 +146,20 @@ function writeLocalTestimonials(testimonials) {
 }
 
 async function query(text, params = []) {
-  if (!pool) throw new Error('Database is not configured.');
-  return pool.query(text, params);
+  const activePool = getPool();
+  if (!activePool) throw new Error('Database is not configured. Please ensure DATABASE_URL is set in .env');
+  return activePool.query(text, params);
 }
 
 function requireAdmin(req, res, next) {
   const header = req.headers.authorization || '';
   const token = header.startsWith('Bearer ') ? header.slice(7) : '';
-  const session = adminTokens.get(token);
-  if (!token || !session || session.expiresAt < Date.now()) {
-    fail(res, 401, 'Authentication required.');
+  const user = verifyToken(token);
+  if (!token || !user) {
+    fail(res, 401, 'Authentication required. Your session may have expired.');
     return;
   }
-  req.admin = session.user;
+  req.admin = user;
   next();
 }
 
@@ -177,7 +262,7 @@ const seedPortfolio = {
 };
 
 async function buildPortfolio() {
-  if (!pool) {
+  if (!getPool()) {
     return {
       ...seedPortfolio,
       testimonials: readLocalTestimonials()
@@ -223,7 +308,7 @@ async function buildPortfolio() {
 }
 
 app.get('/api/health', (_req, res) => {
-  res.json({ ok: true, database: pool ? 'configured' : 'fallback' });
+  res.json({ ok: true, database: getPool() ? 'configured' : 'fallback' });
 });
 
 app.get('/api/portfolio', async (_req, res) => {
@@ -243,7 +328,7 @@ app.get('/api/dashboard', async (_req, res) => {
     totalProcessSteps: 0,
     totalMedia: 0,
   };
-  if (!pool) {
+  if (!getPool()) {
     try {
       const messages = readLocalContactMessages();
       res.json({
@@ -302,12 +387,12 @@ app.post('/api/admin/login', async (req, res) => {
     fail(res, 401, 'Invalid email or password.');
     return;
   }
-  const token = crypto.randomUUID();
   const user = { id: 'local-admin', email, role: 'admin' };
-  adminTokens.set(token, { user, expiresAt: Date.now() + 24 * 60 * 60 * 1000 });
+  const token = signToken(user, 7 * 24 * 60 * 60 * 1000);
+  adminTokens.set(token, { user, expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000 });
   ok(res, {
     user,
-    session: { user, expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() },
+    session: { user, expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() },
     token,
   });
 });
@@ -323,6 +408,27 @@ app.get('/api/admin/me', requireAdmin, (req, res) => {
   ok(res, { user: req.admin });
 });
 
+function sanitizeSingletonPayload(table, payload) {
+  const data = { ...payload };
+  if (table === 'hero_content') {
+    if (!data.greeting) data.greeting = "Hello, I'm";
+    if (!data.full_name) data.full_name = 'Azmina Zahra';
+    if (!data.professional_title) data.professional_title = 'Social Media Marketing Specialist';
+    if (!data.description) data.description = '';
+    if (!data.primary_button_text) data.primary_button_text = 'View My Work';
+    if (!data.primary_button_url) data.primary_button_url = '#work';
+  } else if (table === 'about_content') {
+    if (!data.title) data.title = 'About Me';
+    if (!data.description) data.description = '';
+  } else if (table === 'site_settings') {
+    if (!data.site_name) data.site_name = 'Azmina Zahra';
+    if (!data.owner_name) data.owner_name = 'Azmina Zahra';
+    if (!data.professional_title) data.professional_title = 'Social Media Marketing Specialist';
+    if (!data.email) data.email = 'hello@azminazahra.com';
+  }
+  return data;
+}
+
 // Generic helpers for singleton tables (draft/publish system)
 function singletonRoutes(table, columns) {
   app.get(`/api/admin/${table}`, requireAdmin, async (_req, res) => {
@@ -332,8 +438,8 @@ function singletonRoutes(table, columns) {
       const draft = result.rows.find((row) => !row.is_published) || null;
       ok(res, { published, draft, items: result.rows });
     } catch (error) {
-      console.error(error);
-      fail(res, 500, 'Failed to load content.');
+      console.error(`Error fetching admin ${table}:`, error);
+      fail(res, 500, error.message || 'Failed to load content.');
     }
   });
 
@@ -341,10 +447,11 @@ function singletonRoutes(table, columns) {
     try {
       const isPublished = req.body.is_published === true;
       const fields = columns;
+      const sanitized = sanitizeSingletonPayload(table, req.body || {});
       const existing = await query(`SELECT id FROM ${table} WHERE is_published = $1 ORDER BY updated_at DESC LIMIT 1`, [
         isPublished,
       ]);
-      const values = fields.map((field) => req.body[field] ?? null);
+      const values = fields.map((field) => sanitized[field] ?? null);
       if (existing.rows[0]) {
         const setClause = fields.map((field, index) => `${field} = $${index + 2}`).join(', ');
         await query(`UPDATE ${table} SET ${setClause}, updated_at = NOW() WHERE id = $1`, [
@@ -361,8 +468,8 @@ function singletonRoutes(table, columns) {
         ok(res, { id: result.rows[0].id, created: true, is_published: isPublished });
       }
     } catch (error) {
-      console.error(error);
-      fail(res, 500, 'Failed to save content.');
+      console.error(`Error saving admin ${table}:`, error);
+      fail(res, 500, error.message || 'Failed to save content.');
     }
   });
 
@@ -373,14 +480,15 @@ function singletonRoutes(table, columns) {
       const hasPayload = fields.some((f) => req.body && req.body[f] !== undefined);
 
       if (hasPayload) {
-        const values = fields.map((field) => req.body[field] ?? null);
+        const sanitized = sanitizeSingletonPayload(table, req.body || {});
+        const values = fields.map((field) => sanitized[field] ?? null);
         const published = await query(`SELECT id FROM ${table} WHERE is_published = TRUE ORDER BY updated_at DESC LIMIT 1`);
         if (published.rows[0]) {
           const setClause = fields.map((field, index) => `${field} = $${index + 2}`).join(', ');
           await query(`UPDATE ${table} SET ${setClause}, updated_at = NOW() WHERE id = $1`, [published.rows[0].id, ...values]);
         } else {
           const placeholders = fields.map((_, index) => `$${index + 2}`).join(', ');
-          await query(`INSERT INTO ${table} (is_published, ${fields.join(', ')}) VALUES (TRUE, ${placeholders})`, [true, ...values]);
+          await query(`INSERT INTO ${table} (is_published, ${fields.join(', ')}) VALUES ($1, ${placeholders})`, [true, ...values]);
         }
         // Also update draft if exists to match
         const draft = await query(`SELECT id FROM ${table} WHERE is_published = FALSE ORDER BY updated_at DESC LIMIT 1`);
@@ -404,7 +512,7 @@ function singletonRoutes(table, columns) {
         ok(res, { published: true, message: 'Already published.' });
         return;
       }
-      const row = draft.rows[0];
+      const row = sanitizeSingletonPayload(table, draft.rows[0]);
       const published = await query(`SELECT id FROM ${table} WHERE is_published = TRUE ORDER BY updated_at DESC LIMIT 1`);
       const values = fields.map((field) => row[field] ?? null);
       if (published.rows[0]) {
@@ -415,15 +523,15 @@ function singletonRoutes(table, columns) {
         ]);
       } else {
         const placeholders = fields.map((_, index) => `$${index + 2}`).join(', ');
-        await query(`INSERT INTO ${table} (is_published, ${fields.join(', ')}) VALUES (TRUE, ${placeholders})`, [
+        await query(`INSERT INTO ${table} (is_published, ${fields.join(', ')}) VALUES ($1, ${placeholders})`, [
           true,
           ...values,
         ]);
       }
       ok(res, { published: true });
     } catch (error) {
-      console.error(error);
-      fail(res, 500, 'Failed to publish content.');
+      console.error(`Error publishing admin ${table}:`, error);
+      fail(res, 500, error.message || 'Failed to publish content.');
     }
   });
 }
@@ -496,22 +604,22 @@ singletonRoutes('footer_content', [
 function collectionRoutes(resource, table, columns) {
   app.get(`/api/admin/${resource}`, requireAdmin, async (_req, res) => {
     try {
-      if (!pool && resource === 'testimonials') {
+      if (!getPool() && resource === 'testimonials') {
         ok(res, readLocalTestimonials().sort((a, b) => a.display_order - b.display_order));
         return;
       }
       const result = await query(`SELECT * FROM ${table} ORDER BY display_order, id`);
       ok(res, result.rows);
     } catch (error) {
-      console.error(error);
-      fail(res, 500, 'Failed to load records.');
+      console.error(`Error loading admin ${resource}:`, error);
+      fail(res, 500, error.message || 'Failed to load records.');
     }
   });
 
   app.post(`/api/admin/${resource}`, requireAdmin, async (req, res) => {
     try {
       const fields = columns;
-      if (!pool && resource === 'testimonials') {
+      if (!getPool() && resource === 'testimonials') {
         const testimonial = {
           id: crypto.randomUUID(),
           created_at: new Date().toISOString(),
@@ -547,8 +655,8 @@ function collectionRoutes(resource, table, columns) {
       );
       ok(res, result.rows[0]);
     } catch (error) {
-      console.error(error);
-      fail(res, 500, 'Failed to create record.');
+      console.error(`Error creating in ${resource}:`, error);
+      fail(res, 500, error.message || 'Failed to create record.');
     }
   });
 
@@ -557,15 +665,15 @@ function collectionRoutes(resource, table, columns) {
       await query(`UPDATE ${table} SET is_published = TRUE, updated_at = NOW()`);
       ok(res, { published: true });
     } catch (error) {
-      console.error(error);
-      fail(res, 500, 'Failed to publish records.');
+      console.error(`Error publishing all in ${resource}:`, error);
+      fail(res, 500, error.message || 'Failed to publish records.');
     }
   });
 
   app.put(`/api/admin/${resource}/reorder`, requireAdmin, async (req, res) => {
     try {
       const ids = Array.isArray(req.body.ids) ? req.body.ids : [];
-      if (!pool && resource === 'testimonials') {
+      if (!getPool() && resource === 'testimonials') {
         const orderById = new Map(ids.map((id, index) => [id, index + 1]));
         writeLocalTestimonials(
           readLocalTestimonials().map((t) =>
@@ -583,15 +691,15 @@ function collectionRoutes(resource, table, columns) {
       }
       ok(res, { reordered: true });
     } catch (error) {
-      console.error(error);
-      fail(res, 500, 'Failed to reorder records.');
+      console.error(`Error reordering in ${resource}:`, error);
+      fail(res, 500, error.message || 'Failed to reorder records.');
     }
   });
 
   app.put(`/api/admin/${resource}/:id`, requireAdmin, async (req, res) => {
     try {
       const fields = columns;
-      if (!pool && resource === 'testimonials') {
+      if (!getPool() && resource === 'testimonials') {
         const testimonials = readLocalTestimonials();
         const existing = testimonials.find((testimonial) => testimonial.id === req.params.id);
         if (!existing) {
@@ -631,14 +739,14 @@ function collectionRoutes(resource, table, columns) {
       );
       ok(res, result.rows[0] || { id: req.params.id, updated: true });
     } catch (error) {
-      console.error(error);
-      fail(res, 500, 'Failed to update record.');
+      console.error(`Error updating in ${resource}:`, error);
+      fail(res, 500, error.message || 'Failed to update record.');
     }
   });
 
   app.delete(`/api/admin/${resource}/:id`, requireAdmin, async (req, res) => {
     try {
-      if (!pool && resource === 'testimonials') {
+      if (!getPool() && resource === 'testimonials') {
         writeLocalTestimonials(readLocalTestimonials().filter((t) => t.id !== req.params.id));
         ok(res, { deleted: true });
         return;
@@ -646,8 +754,8 @@ function collectionRoutes(resource, table, columns) {
       await query(`DELETE FROM ${table} WHERE id = $1`, [req.params.id]);
       ok(res, { deleted: true });
     } catch (error) {
-      console.error(error);
-      fail(res, 500, 'Failed to delete record.');
+      console.error(`Error deleting in ${resource}:`, error);
+      fail(res, 500, error.message || 'Failed to delete record.');
     }
   });
 
@@ -656,8 +764,8 @@ function collectionRoutes(resource, table, columns) {
       await query(`UPDATE ${table} SET is_published = TRUE, updated_at = NOW() WHERE id = $1`, [req.params.id]);
       ok(res, { published: true });
     } catch (error) {
-      console.error(error);
-      fail(res, 500, 'Failed to publish record.');
+      console.error(`Error publishing in ${resource}:`, error);
+      fail(res, 500, error.message || 'Failed to publish record.');
     }
   });
 
@@ -666,8 +774,8 @@ function collectionRoutes(resource, table, columns) {
       await query(`UPDATE ${table} SET is_published = FALSE, updated_at = NOW() WHERE id = $1`, [req.params.id]);
       ok(res, { published: false });
     } catch (error) {
-      console.error(error);
-      fail(res, 500, 'Failed to unpublish record.');
+      console.error(`Error unpublishing in ${resource}:`, error);
+      fail(res, 500, error.message || 'Failed to unpublish record.');
     }
   });
 }
@@ -751,8 +859,8 @@ app.get('/api/media', requireAdmin, async (_req, res) => {
     const result = await query('SELECT * FROM media_items ORDER BY uploaded_at DESC');
     ok(res, result.rows);
   } catch (error) {
-    console.error(error);
-    fail(res, 500, 'Failed to load media.');
+    console.error('Error fetching media:', error);
+    fail(res, 500, error.message || 'Failed to load media.');
   }
 });
 
@@ -792,8 +900,8 @@ app.post('/api/media/upload', requireAdmin, async (req, res) => {
     );
     ok(res, result.rows[0]);
   } catch (error) {
-    console.error(error);
-    fail(res, 500, 'Failed to upload media.');
+    console.error('Error uploading media:', error);
+    fail(res, 500, error.message || 'Failed to upload media.');
   }
 });
 
@@ -802,8 +910,8 @@ app.patch('/api/media/:id', requireAdmin, async (req, res) => {
     await query('UPDATE media_items SET alt_text = $1 WHERE id = $2', [req.body.alt_text ?? null, req.params.id]);
     ok(res, { updated: true });
   } catch (error) {
-    console.error(error);
-    fail(res, 500, 'Failed to update media.');
+    console.error('Error updating media alt:', error);
+    fail(res, 500, error.message || 'Failed to update media.');
   }
 });
 
@@ -842,8 +950,8 @@ app.get('/api/media/:id/references', requireAdmin, async (req, res) => {
 
     ok(res, { inUse: references.length > 0, references });
   } catch (error) {
-    console.error(error);
-    fail(res, 500, 'Failed to check media references.');
+    console.error('Error checking media references:', error);
+    fail(res, 500, error.message || 'Failed to check media references.');
   }
 });
 
@@ -857,8 +965,8 @@ app.delete('/api/media/:id', requireAdmin, async (req, res) => {
     await query('DELETE FROM media_items WHERE id = $1', [req.params.id]);
     ok(res, { deleted: true });
   } catch (error) {
-    console.error(error);
-    fail(res, 500, 'Failed to delete media.');
+    console.error('Error deleting media:', error);
+    fail(res, 500, error.message || 'Failed to delete media.');
   }
 });
 
@@ -874,7 +982,7 @@ app.post('/api/contact-messages', async (req, res) => {
       fail(res, 400, 'A valid email address is required.');
       return;
     }
-    if (pool) {
+    if (getPool()) {
       const result = await query(
         'INSERT INTO contact_messages (sender_name, sender_email, subject, message) VALUES ($1, $2, $3, $4) RETURNING *',
         [sender_name, sender_email, subject || null, message],
@@ -894,22 +1002,22 @@ app.post('/api/contact-messages', async (req, res) => {
       ok(res, contactMessage);
     }
   } catch (error) {
-    console.error(error);
-    fail(res, 500, 'Failed to submit message.');
+    console.error('Error submitting contact message:', error);
+    fail(res, 500, error.message || 'Failed to submit message.');
   }
 });
 
 app.get('/api/contact-messages', requireAdmin, async (_req, res) => {
   try {
-    if (pool) {
+    if (getPool()) {
       const result = await query('SELECT * FROM contact_messages ORDER BY created_at DESC');
       ok(res, result.rows);
     } else {
-      ok(res, readLocalContactMessages());
+      ok(readLocalContactMessages());
     }
   } catch (error) {
-    console.error(error);
-    fail(res, 500, 'Failed to load messages.');
+    console.error('Error fetching contact messages:', error);
+    fail(res, 500, error.message || 'Failed to load messages.');
   }
 });
 
@@ -920,7 +1028,7 @@ app.patch('/api/contact-messages/:id', requireAdmin, async (req, res) => {
       fail(res, 400, 'Invalid status.');
       return;
     }
-    if (pool) {
+    if (getPool()) {
       await query('UPDATE contact_messages SET status = $1 WHERE id = $2', [status, req.params.id]);
     } else {
       const messages = readLocalContactMessages();
@@ -930,14 +1038,14 @@ app.patch('/api/contact-messages/:id', requireAdmin, async (req, res) => {
     }
     ok(res, { updated: true });
   } catch (error) {
-    console.error(error);
-    fail(res, 500, 'Failed to update message.');
+    console.error('Error updating contact message:', error);
+    fail(res, 500, error.message || 'Failed to update message.');
   }
 });
 
 app.delete('/api/contact-messages/:id', requireAdmin, async (req, res) => {
   try {
-    if (pool) {
+    if (getPool()) {
       await query('DELETE FROM contact_messages WHERE id = $1', [req.params.id]);
     } else {
       const messages = readLocalContactMessages();
@@ -945,8 +1053,8 @@ app.delete('/api/contact-messages/:id', requireAdmin, async (req, res) => {
     }
     ok(res, { deleted: true });
   } catch (error) {
-    console.error(error);
-    fail(res, 500, 'Failed to delete message.');
+    console.error('Error deleting contact message:', error);
+    fail(res, 500, error.message || 'Failed to delete message.');
   }
 });
 

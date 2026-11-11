@@ -14,8 +14,12 @@ export async function localApiRequest<T>(path: string, options: RequestInit = {}
 
   const payload = await response.json().catch(() => ({}));
 
+  if (response.status === 401 && !path.includes('/login')) {
+    window.dispatchEvent(new CustomEvent('admin:unauthorized', { detail: { path } }));
+  }
+
   if (!response.ok) {
-    throw new Error(payload?.message || 'Local API request failed.');
+    throw new Error(payload?.message || `Request failed with status ${response.status}`);
   }
 
   return payload as T;
