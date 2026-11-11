@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f04796"/>
+      <stop offset="100%" stop-color="#be185d"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="16" fill="#0d0d0f"/>
+  <rect x="2" y="2" width="60" height="60" rx="14" fill="none" stroke="url(#grad)" stroke-width="2"/>
+  <text x="32" y="41" font-family="system-ui, -apple-system, sans-serif" font-size="26" font-weight="800" fill="#ffffff" text-anchor="middle" letter-spacing="-1">AZ</text>
+</svg>
