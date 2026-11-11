@@ -11,9 +11,9 @@ const { Pool } = pg;
 const app = express();
 const port = Number(process.env.PORT || 3001);
 const databaseUrl = process.env.DATABASE_URL || '';
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const uploadsDir = path.join(process.cwd(), 'uploads');
 const localContactMessagesPath = path.join(process.cwd(), '.local-data', 'contact-messages.json');
+const localTestimonialsPath = path.join(process.cwd(), '.local-data', 'testimonials.json');
 
 const pool = databaseUrl ? new Pool({ connectionString: databaseUrl }) : null;
 const adminTokens = new Map();
@@ -35,11 +35,8 @@ function fail(res, status, message) {
 
 function readLocalContactMessages() {
   if (!fs.existsSync(localContactMessagesPath)) return [];
-
   const messages = JSON.parse(fs.readFileSync(localContactMessagesPath, 'utf8'));
-  if (!Array.isArray(messages)) {
-    throw new Error('Local contact messages file must contain an array.');
-  }
+  if (!Array.isArray(messages)) return [];
   return messages;
 }
 
@@ -48,6 +45,20 @@ function writeLocalContactMessages(messages) {
   const temporaryPath = `${localContactMessagesPath}.${process.pid}.tmp`;
   fs.writeFileSync(temporaryPath, JSON.stringify(messages, null, 2));
   fs.renameSync(temporaryPath, localContactMessagesPath);
+}
+
+function readLocalTestimonials() {
+  if (!fs.existsSync(localTestimonialsPath)) return [];
+  const testimonials = JSON.parse(fs.readFileSync(localTestimonialsPath, 'utf8'));
+  if (!Array.isArray(testimonials)) return [];
+  return testimonials;
+}
+
+function writeLocalTestimonials(testimonials) {
+  fs.mkdirSync(path.dirname(localTestimonialsPath), { recursive: true });
+  const temporaryPath = `${localTestimonialsPath}.${process.pid}.tmp`;
+  fs.writeFileSync(temporaryPath, JSON.stringify(testimonials, null, 2));
+  fs.renameSync(temporaryPath, localTestimonialsPath);
 }
 
 async function query(text, params = []) {
@@ -68,16 +79,19 @@ function requireAdmin(req, res, next) {
 }
 
 function slugify(value) {
-  return String(value || '')
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '') || `item-${Date.now()}`;
+  return (
+    String(value || '')
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '') || `item-${Date.now()}`
+  );
 }
 
 const seedPortfolio = {
   siteSettings: {
     id: 'seed-site',
+    is_published: true,
     site_name: 'Azmina Zahra',
     owner_name: 'Azmina Zahra',
     professional_title: 'Social Media Marketing Specialist',
@@ -87,6 +101,7 @@ const seedPortfolio = {
     logo_url: null,
     favicon_url: null,
     profile_image_url: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=900&q=80',
+    profile_image_alt: 'Azmina Zahra portrait',
     resume_url: null,
     instagram_url: 'https://instagram.com',
     tiktok_url: 'https://tiktok.com',
@@ -99,11 +114,14 @@ const seedPortfolio = {
   },
   hero: {
     id: 'seed-hero',
+    is_published: true,
     greeting: "Hello, I'm",
     full_name: 'Azmina Zahra',
     professional_title: 'Social Media Marketing Specialist',
-    description: 'I help brands turn attention into action with strategic content, story-led campaigns, and performance-driven growth systems.',
+    description:
+      'I help brands turn attention into action with strategic content, story-led campaigns, and performance-driven growth systems.',
     profile_image_url: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=900&q=80',
+    profile_image_alt: 'Azmina Zahra',
     background_image_url: null,
     primary_button_text: 'View My Work',
     primary_button_url: '#work',
@@ -113,11 +131,40 @@ const seedPortfolio = {
   },
   about: {
     id: 'seed-about',
+    is_published: true,
     title: 'A brand storyteller with strategy in her DNA.',
     subtitle: 'About Me',
-    description: 'I design thoughtful marketing experiences that connect with people, elevate brands, and turn engagement into measurable results.',
+    description:
+      'I design thoughtful marketing experiences that connect with people, elevate brands, and turn engagement into measurable results.',
     profile_image_url: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=1000&q=80',
-    additional_description: 'I partner with founders and growing brands to build modern, people-first digital marketing systems that feel premium and perform in real life.',
+    profile_image_alt: 'About Azmina Zahra',
+    additional_description:
+      'I partner with founders and growing brands to build modern, people-first digital marketing systems that feel premium and perform in real life.',
+    updated_at: new Date().toISOString(),
+  },
+  cta: {
+    id: 'seed-cta',
+    is_published: true,
+    script_greeting: 'Thank you for your support!',
+    main_heading: 'Ready to grow your brand?',
+    supporting_description:
+      "Let's focus on building and growing your presence with strategy, creativity, and performance that feels premium from day one.",
+    highlighted_words: 'building,growing',
+    button_text: 'Contact Me',
+    button_url: 'https://wa.me/971521234567',
+    updated_at: new Date().toISOString(),
+  },
+  footer: {
+    id: 'seed-footer',
+    is_published: true,
+    copyright_text: '© 2025 Azmina Zahra. All rights reserved.',
+    email: 'hello@azminazahra.com',
+    phone: '+971 52 123 4567',
+    instagram_url: 'https://instagram.com',
+    tiktok_url: 'https://tiktok.com',
+    linkedin_url: 'https://linkedin.com',
+    whatsapp_url: 'https://wa.me/971521234567',
+    footer_description: 'Premium social media marketing strategy and creative services.',
     updated_at: new Date().toISOString(),
   },
   stats: [],
@@ -130,25 +177,37 @@ const seedPortfolio = {
 };
 
 async function buildPortfolio() {
-  if (!pool) return seedPortfolio;
+  if (!pool) {
+    return {
+      ...seedPortfolio,
+      testimonials: readLocalTestimonials()
+        .filter((testimonial) => testimonial.is_published)
+        .sort((a, b) => a.display_order - b.display_order),
+    };
+  }
   try {
-    const [site, hero, about, stats, services, projects, skills, process, testimonials, sections] = await Promise.all([
-      query('SELECT * FROM site_settings WHERE is_published = TRUE ORDER BY updated_at DESC LIMIT 1'),
-      query('SELECT * FROM hero_content WHERE is_published = TRUE ORDER BY updated_at DESC LIMIT 1'),
-      query('SELECT * FROM about_content WHERE is_published = TRUE ORDER BY updated_at DESC LIMIT 1'),
-      query('SELECT * FROM statistics WHERE is_published = TRUE AND is_visible = TRUE ORDER BY display_order, id'),
-      query('SELECT * FROM services WHERE is_published = TRUE AND is_visible = TRUE ORDER BY display_order, id'),
-      query('SELECT * FROM projects WHERE is_published = TRUE ORDER BY display_order, id'),
-      query('SELECT * FROM skills WHERE is_published = TRUE AND is_visible = TRUE ORDER BY display_order, id'),
-      query('SELECT * FROM process_steps WHERE is_published = TRUE AND is_visible = TRUE ORDER BY display_order, id'),
-      query('SELECT * FROM testimonials WHERE is_published = TRUE ORDER BY display_order, id'),
-      query('SELECT * FROM page_sections WHERE is_published = TRUE AND is_visible = TRUE ORDER BY display_order, id'),
-    ]);
+    const [site, hero, about, cta, footer, stats, services, projects, skills, process, testimonials, sections] =
+      await Promise.all([
+        query('SELECT * FROM site_settings WHERE is_published = TRUE ORDER BY updated_at DESC LIMIT 1'),
+        query('SELECT * FROM hero_content WHERE is_published = TRUE ORDER BY updated_at DESC LIMIT 1'),
+        query('SELECT * FROM about_content WHERE is_published = TRUE ORDER BY updated_at DESC LIMIT 1'),
+        query('SELECT * FROM cta_content WHERE is_published = TRUE ORDER BY updated_at DESC LIMIT 1'),
+        query('SELECT * FROM footer_content WHERE is_published = TRUE ORDER BY updated_at DESC LIMIT 1'),
+        query('SELECT * FROM statistics WHERE is_published = TRUE AND is_visible = TRUE ORDER BY display_order, id'),
+        query('SELECT * FROM services WHERE is_published = TRUE AND is_visible = TRUE ORDER BY display_order, id'),
+        query('SELECT * FROM projects WHERE is_published = TRUE AND is_visible = TRUE ORDER BY display_order, id'),
+        query('SELECT * FROM skills WHERE is_published = TRUE AND is_visible = TRUE ORDER BY display_order, id'),
+        query('SELECT * FROM process_steps WHERE is_published = TRUE AND is_visible = TRUE ORDER BY display_order, id'),
+        query('SELECT * FROM testimonials WHERE is_published = TRUE AND is_visible = TRUE ORDER BY display_order, id'),
+        query('SELECT * FROM page_sections WHERE is_published = TRUE ORDER BY display_order, id'),
+      ]);
 
     return {
       siteSettings: site.rows[0] || seedPortfolio.siteSettings,
       hero: hero.rows[0] || seedPortfolio.hero,
       about: about.rows[0] || seedPortfolio.about,
+      cta: cta.rows[0] || seedPortfolio.cta,
+      footer: footer.rows[0] || seedPortfolio.footer,
       stats: stats.rows,
       services: services.rows,
       projects: projects.rows,
@@ -180,6 +239,9 @@ app.get('/api/dashboard', async (_req, res) => {
     unreadMessages: 0,
     publishedProjects: 0,
     hiddenSections: 0,
+    totalSkills: 0,
+    totalProcessSteps: 0,
+    totalMedia: 0,
   };
   if (!pool) {
     try {
@@ -188,6 +250,7 @@ app.get('/api/dashboard', async (_req, res) => {
         ...fallback,
         totalMessages: messages.length,
         unreadMessages: messages.filter((message) => message.status !== 'read').length,
+        totalTestimonials: readLocalTestimonials().length,
       });
     } catch (error) {
       console.error('local contact messages read failed:', error);
@@ -203,8 +266,11 @@ app.get('/api/dashboard', async (_req, res) => {
         (SELECT COUNT(*) FROM testimonials) AS total_testimonials,
         (SELECT COUNT(*) FROM contact_messages) AS total_messages,
         (SELECT COUNT(*) FROM contact_messages WHERE status <> 'read') AS unread_messages,
-        (SELECT COUNT(*) FROM projects WHERE is_published = TRUE) AS published_projects,
-        (SELECT COUNT(*) FROM page_sections WHERE is_visible = FALSE) AS hidden_sections
+        (SELECT COUNT(*) FROM projects WHERE is_published = TRUE AND is_visible = TRUE) AS published_projects,
+        (SELECT COUNT(*) FROM page_sections WHERE is_visible = FALSE) AS hidden_sections,
+        (SELECT COUNT(*) FROM skills) AS total_skills,
+        (SELECT COUNT(*) FROM process_steps) AS total_process_steps,
+        (SELECT COUNT(*) FROM media_items) AS total_media
     `);
     const row = result.rows[0] || {};
     res.json({
@@ -215,6 +281,9 @@ app.get('/api/dashboard', async (_req, res) => {
       unreadMessages: Number(row.unread_messages || 0),
       publishedProjects: Number(row.published_projects || 0),
       hiddenSections: Number(row.hidden_sections || 0),
+      totalSkills: Number(row.total_skills || 0),
+      totalProcessSteps: Number(row.total_process_steps || 0),
+      totalMedia: Number(row.total_media || 0),
     });
   } catch (error) {
     console.error('dashboard query failed:', error);
@@ -254,9 +323,9 @@ app.get('/api/admin/me', requireAdmin, (req, res) => {
   ok(res, { user: req.admin });
 });
 
-// Generic helpers for singleton tables
+// Generic helpers for singleton tables (draft/publish system)
 function singletonRoutes(table, columns) {
-  app.get(`/api/admin/${table}`, requireAdmin, async (req, res) => {
+  app.get(`/api/admin/${table}`, requireAdmin, async (_req, res) => {
     try {
       const result = await query(`SELECT * FROM ${table} ORDER BY is_published DESC, updated_at DESC`);
       const published = result.rows.find((row) => row.is_published) || null;
@@ -272,16 +341,24 @@ function singletonRoutes(table, columns) {
     try {
       const isPublished = req.body.is_published === true;
       const fields = columns;
-      const existing = await query(`SELECT id FROM ${table} WHERE is_published = $1 ORDER BY updated_at DESC LIMIT 1`, [isPublished]);
+      const existing = await query(`SELECT id FROM ${table} WHERE is_published = $1 ORDER BY updated_at DESC LIMIT 1`, [
+        isPublished,
+      ]);
       const values = fields.map((field) => req.body[field] ?? null);
       if (existing.rows[0]) {
         const setClause = fields.map((field, index) => `${field} = $${index + 2}`).join(', ');
-        await query(`UPDATE ${table} SET ${setClause}, updated_at = NOW() WHERE id = $1`, [existing.rows[0].id, ...values]);
-        ok(res, { id: existing.rows[0].id, updated: true });
+        await query(`UPDATE ${table} SET ${setClause}, updated_at = NOW() WHERE id = $1`, [
+          existing.rows[0].id,
+          ...values,
+        ]);
+        ok(res, { id: existing.rows[0].id, updated: true, is_published: isPublished });
       } else {
         const placeholders = fields.map((_, index) => `$${index + 2}`).join(', ');
-        const result = await query(`INSERT INTO ${table} (is_published, ${fields.join(', ')}) VALUES ($1, ${placeholders}) RETURNING id`, [isPublished, ...values]);
-        ok(res, { id: result.rows[0].id, created: true });
+        const result = await query(
+          `INSERT INTO ${table} (is_published, ${fields.join(', ')}) VALUES ($1, ${placeholders}) RETURNING id`,
+          [isPublished, ...values],
+        );
+        ok(res, { id: result.rows[0].id, created: true, is_published: isPublished });
       }
     } catch (error) {
       console.error(error);
@@ -291,21 +368,57 @@ function singletonRoutes(table, columns) {
 
   app.post(`/api/admin/${table}/publish`, requireAdmin, async (req, res) => {
     try {
+      // If client sent updated fields directly in publish body, save as published
+      const fields = columns;
+      const hasPayload = fields.some((f) => req.body && req.body[f] !== undefined);
+
+      if (hasPayload) {
+        const values = fields.map((field) => req.body[field] ?? null);
+        const published = await query(`SELECT id FROM ${table} WHERE is_published = TRUE ORDER BY updated_at DESC LIMIT 1`);
+        if (published.rows[0]) {
+          const setClause = fields.map((field, index) => `${field} = $${index + 2}`).join(', ');
+          await query(`UPDATE ${table} SET ${setClause}, updated_at = NOW() WHERE id = $1`, [published.rows[0].id, ...values]);
+        } else {
+          const placeholders = fields.map((_, index) => `$${index + 2}`).join(', ');
+          await query(`INSERT INTO ${table} (is_published, ${fields.join(', ')}) VALUES (TRUE, ${placeholders})`, [true, ...values]);
+        }
+        // Also update draft if exists to match
+        const draft = await query(`SELECT id FROM ${table} WHERE is_published = FALSE ORDER BY updated_at DESC LIMIT 1`);
+        if (draft.rows[0]) {
+          const setClause = fields.map((field, index) => `${field} = $${index + 2}`).join(', ');
+          await query(`UPDATE ${table} SET ${setClause}, updated_at = NOW() WHERE id = $1`, [draft.rows[0].id, ...values]);
+        }
+        ok(res, { published: true });
+        return;
+      }
+
+      // Otherwise copy existing draft to published
       const draft = await query(`SELECT * FROM ${table} WHERE is_published = FALSE ORDER BY updated_at DESC LIMIT 1`);
       if (!draft.rows[0]) {
-        fail(res, 404, 'No draft to publish.');
+        // If no draft exists, check if published already exists
+        const published = await query(`SELECT * FROM ${table} WHERE is_published = TRUE ORDER BY updated_at DESC LIMIT 1`);
+        if (!published.rows[0]) {
+          fail(res, 404, 'No content to publish.');
+          return;
+        }
+        ok(res, { published: true, message: 'Already published.' });
         return;
       }
       const row = draft.rows[0];
       const published = await query(`SELECT id FROM ${table} WHERE is_published = TRUE ORDER BY updated_at DESC LIMIT 1`);
-      const fields = columns;
       const values = fields.map((field) => row[field] ?? null);
       if (published.rows[0]) {
         const setClause = fields.map((field, index) => `${field} = $${index + 2}`).join(', ');
-        await query(`UPDATE ${table} SET ${setClause}, updated_at = NOW() WHERE id = $1`, [published.rows[0].id, ...values]);
+        await query(`UPDATE ${table} SET ${setClause}, updated_at = NOW() WHERE id = $1`, [
+          published.rows[0].id,
+          ...values,
+        ]);
       } else {
         const placeholders = fields.map((_, index) => `$${index + 2}`).join(', ');
-        await query(`INSERT INTO ${table} (is_published, ${fields.join(', ')}) VALUES (TRUE, ${placeholders})`, [true, ...values]);
+        await query(`INSERT INTO ${table} (is_published, ${fields.join(', ')}) VALUES (TRUE, ${placeholders})`, [
+          true,
+          ...values,
+        ]);
       }
       ok(res, { published: true });
     } catch (error) {
@@ -315,17 +428,78 @@ function singletonRoutes(table, columns) {
   });
 }
 
-singletonRoutes('site_settings', ['site_name', 'owner_name', 'professional_title', 'email', 'phone', 'location', 'logo_url', 'favicon_url', 'profile_image_url', 'resume_url', 'instagram_url', 'tiktok_url', 'linkedin_url', 'whatsapp_url', 'seo_title', 'seo_description', 'copyright_text']);
-singletonRoutes('hero_content', ['greeting', 'full_name', 'professional_title', 'description', 'profile_image_url', 'background_image_url', 'primary_button_text', 'primary_button_url', 'secondary_button_text', 'secondary_button_url']);
-singletonRoutes('about_content', ['title', 'subtitle', 'description', 'profile_image_url', 'additional_description']);
-singletonRoutes('cta_content', ['script_greeting', 'main_heading', 'supporting_description', 'highlighted_words', 'button_text', 'button_url']);
-singletonRoutes('footer_content', ['copyright_text', 'email', 'phone', 'instagram_url', 'tiktok_url', 'linkedin_url', 'whatsapp_url', 'footer_description']);
+singletonRoutes('site_settings', [
+  'site_name',
+  'owner_name',
+  'professional_title',
+  'email',
+  'phone',
+  'location',
+  'logo_url',
+  'favicon_url',
+  'profile_image_url',
+  'profile_image_alt',
+  'resume_url',
+  'instagram_url',
+  'tiktok_url',
+  'linkedin_url',
+  'whatsapp_url',
+  'seo_title',
+  'seo_description',
+  'copyright_text',
+]);
+
+singletonRoutes('hero_content', [
+  'greeting',
+  'full_name',
+  'professional_title',
+  'description',
+  'profile_image_url',
+  'profile_image_alt',
+  'background_image_url',
+  'primary_button_text',
+  'primary_button_url',
+  'secondary_button_text',
+  'secondary_button_url',
+]);
+
+singletonRoutes('about_content', [
+  'title',
+  'subtitle',
+  'description',
+  'profile_image_url',
+  'profile_image_alt',
+  'additional_description',
+]);
+
+singletonRoutes('cta_content', [
+  'script_greeting',
+  'main_heading',
+  'supporting_description',
+  'highlighted_words',
+  'button_text',
+  'button_url',
+]);
+
+singletonRoutes('footer_content', [
+  'copyright_text',
+  'email',
+  'phone',
+  'instagram_url',
+  'tiktok_url',
+  'linkedin_url',
+  'whatsapp_url',
+  'footer_description',
+]);
 
 // Collection routes factory
-function collectionRoutes(resource, table, columns, options = {}) {
-  const slugField = options.slugField || null;
-  app.get(`/api/admin/${resource}`, requireAdmin, async (req, res) => {
+function collectionRoutes(resource, table, columns) {
+  app.get(`/api/admin/${resource}`, requireAdmin, async (_req, res) => {
     try {
+      if (!pool && resource === 'testimonials') {
+        ok(res, readLocalTestimonials().sort((a, b) => a.display_order - b.display_order));
+        return;
+      }
       const result = await query(`SELECT * FROM ${table} ORDER BY display_order, id`);
       ok(res, result.rows);
     } catch (error) {
@@ -337,6 +511,27 @@ function collectionRoutes(resource, table, columns, options = {}) {
   app.post(`/api/admin/${resource}`, requireAdmin, async (req, res) => {
     try {
       const fields = columns;
+      if (!pool && resource === 'testimonials') {
+        const testimonial = {
+          id: crypto.randomUUID(),
+          created_at: new Date().toISOString(),
+          ...Object.fromEntries(
+            fields.map((field) => [
+              field,
+              req.body[field] !== undefined
+                ? req.body[field]
+                : field === 'is_published' || field.startsWith('is_')
+                  ? true
+                  : field === 'display_order'
+                    ? 0
+                    : null,
+            ]),
+          ),
+        };
+        writeLocalTestimonials([testimonial, ...readLocalTestimonials()]);
+        ok(res, { id: testimonial.id, created: true });
+        return;
+      }
       const values = fields.map((field) => {
         if (field === 'slug' && !req.body.slug) return slugify(req.body.title || req.body.name);
         if (req.body[field] !== undefined) return req.body[field];
@@ -346,17 +541,82 @@ function collectionRoutes(resource, table, columns, options = {}) {
         return null;
       });
       const placeholders = fields.map((_, index) => `$${index + 1}`).join(', ');
-      const result = await query(`INSERT INTO ${table} (${fields.join(', ')}) VALUES (${placeholders}) RETURNING id`, values);
-      ok(res, { id: result.rows[0].id, created: true });
+      const result = await query(
+        `INSERT INTO ${table} (${fields.join(', ')}) VALUES (${placeholders}) RETURNING *`,
+        values,
+      );
+      ok(res, result.rows[0]);
     } catch (error) {
       console.error(error);
       fail(res, 500, 'Failed to create record.');
     }
   });
 
+  app.post(`/api/admin/${resource}/publish-all`, requireAdmin, async (_req, res) => {
+    try {
+      await query(`UPDATE ${table} SET is_published = TRUE, updated_at = NOW()`);
+      ok(res, { published: true });
+    } catch (error) {
+      console.error(error);
+      fail(res, 500, 'Failed to publish records.');
+    }
+  });
+
+  app.put(`/api/admin/${resource}/reorder`, requireAdmin, async (req, res) => {
+    try {
+      const ids = Array.isArray(req.body.ids) ? req.body.ids : [];
+      if (!pool && resource === 'testimonials') {
+        const orderById = new Map(ids.map((id, index) => [id, index + 1]));
+        writeLocalTestimonials(
+          readLocalTestimonials().map((t) =>
+            orderById.has(t.id) ? { ...t, display_order: orderById.get(t.id) } : t,
+          ),
+        );
+        ok(res, { reordered: true });
+        return;
+      }
+      for (let index = 0; index < ids.length; index += 1) {
+        await query(`UPDATE ${table} SET display_order = $1, updated_at = NOW() WHERE id = $2`, [
+          index + 1,
+          ids[index],
+        ]);
+      }
+      ok(res, { reordered: true });
+    } catch (error) {
+      console.error(error);
+      fail(res, 500, 'Failed to reorder records.');
+    }
+  });
+
   app.put(`/api/admin/${resource}/:id`, requireAdmin, async (req, res) => {
     try {
       const fields = columns;
+      if (!pool && resource === 'testimonials') {
+        const testimonials = readLocalTestimonials();
+        const existing = testimonials.find((testimonial) => testimonial.id === req.params.id);
+        if (!existing) {
+          fail(res, 404, 'Testimonial not found.');
+          return;
+        }
+        const updated = {
+          ...existing,
+          ...Object.fromEntries(
+            fields.map((field) => [
+              field,
+              req.body[field] !== undefined
+                ? req.body[field]
+                : field === 'is_published' || field.startsWith('is_')
+                  ? true
+                  : field === 'display_order'
+                    ? 0
+                    : null,
+            ]),
+          ),
+        };
+        writeLocalTestimonials(testimonials.map((t) => (t.id === req.params.id ? updated : t)));
+        ok(res, { id: req.params.id, updated: true });
+        return;
+      }
       const values = fields.map((field) => {
         if (req.body[field] !== undefined) return req.body[field];
         if (field === 'is_featured') return false;
@@ -365,8 +625,11 @@ function collectionRoutes(resource, table, columns, options = {}) {
         return null;
       });
       const setClause = fields.map((field, index) => `${field} = $${index + 2}`).join(', ');
-      await query(`UPDATE ${table} SET ${setClause}, updated_at = NOW() WHERE id = $1`, [req.params.id, ...values]);
-      ok(res, { id: req.params.id, updated: true });
+      const result = await query(
+        `UPDATE ${table} SET ${setClause}, updated_at = NOW() WHERE id = $1 RETURNING *`,
+        [req.params.id, ...values],
+      );
+      ok(res, result.rows[0] || { id: req.params.id, updated: true });
     } catch (error) {
       console.error(error);
       fail(res, 500, 'Failed to update record.');
@@ -375,6 +638,11 @@ function collectionRoutes(resource, table, columns, options = {}) {
 
   app.delete(`/api/admin/${resource}/:id`, requireAdmin, async (req, res) => {
     try {
+      if (!pool && resource === 'testimonials') {
+        writeLocalTestimonials(readLocalTestimonials().filter((t) => t.id !== req.params.id));
+        ok(res, { deleted: true });
+        return;
+      }
       await query(`DELETE FROM ${table} WHERE id = $1`, [req.params.id]);
       ok(res, { deleted: true });
     } catch (error) {
@@ -402,43 +670,83 @@ function collectionRoutes(resource, table, columns, options = {}) {
       fail(res, 500, 'Failed to unpublish record.');
     }
   });
-
-  app.post(`/api/admin/${resource}/publish-all`, requireAdmin, async (req, res) => {
-    try {
-      await query(`UPDATE ${table} SET is_published = TRUE, updated_at = NOW()`);
-      ok(res, { published: true });
-    } catch (error) {
-      console.error(error);
-      fail(res, 500, 'Failed to publish records.');
-    }
-  });
-
-  app.put(`/api/admin/${resource}/reorder`, requireAdmin, async (req, res) => {
-    try {
-      const ids = Array.isArray(req.body.ids) ? req.body.ids : [];
-      for (let index = 0; index < ids.length; index += 1) {
-        await query(`UPDATE ${table} SET display_order = $1, updated_at = NOW() WHERE id = $2`, [index + 1, ids[index]]);
-      }
-      ok(res, { reordered: true });
-    } catch (error) {
-      console.error(error);
-      fail(res, 500, 'Failed to reorder records.');
-    }
-  });
 }
 
-collectionRoutes('statistics', 'statistics', ['is_published', 'is_visible', 'label', 'value', 'suffix', 'icon', 'display_order']);
-collectionRoutes('services', 'services', ['is_published', 'is_visible', 'title', 'description', 'icon', 'image_url', 'display_order']);
-collectionRoutes('projects', 'projects', ['is_published', 'is_featured', 'title', 'slug', 'description', 'category', 'cover_image_url', 'result_metric', 'result_description', 'case_study_url', 'display_order']);
-collectionRoutes('skills', 'skills', ['is_published', 'is_visible', 'name', 'icon', 'display_order']);
-collectionRoutes('process', 'process_steps', ['is_published', 'is_visible', 'step_number', 'title', 'description', 'display_order']);
-collectionRoutes('testimonials', 'testimonials', ['is_published', 'client_name', 'client_designation', 'client_image_url', 'testimonial', 'display_order']);
+collectionRoutes('statistics', 'statistics', [
+  'is_published',
+  'is_visible',
+  'label',
+  'value',
+  'suffix',
+  'icon',
+  'display_order',
+]);
 
-// Page sections
-collectionRoutes('sections', 'page_sections', ['is_published', 'section_key', 'title', 'subtitle', 'description', 'is_visible', 'display_order']);
+collectionRoutes('services', 'services', [
+  'is_published',
+  'is_visible',
+  'title',
+  'description',
+  'icon',
+  'image_url',
+  'image_alt',
+  'display_order',
+]);
+
+collectionRoutes('projects', 'projects', [
+  'is_published',
+  'is_visible',
+  'is_featured',
+  'title',
+  'slug',
+  'description',
+  'category',
+  'cover_image_url',
+  'result_metric',
+  'result_description',
+  'case_study_url',
+  'display_order',
+]);
+
+collectionRoutes('skills', 'skills', [
+  'is_published',
+  'is_visible',
+  'name',
+  'icon',
+  'display_order',
+]);
+
+collectionRoutes('process', 'process_steps', [
+  'is_published',
+  'is_visible',
+  'step_number',
+  'title',
+  'description',
+  'display_order',
+]);
+
+collectionRoutes('testimonials', 'testimonials', [
+  'is_published',
+  'is_visible',
+  'client_name',
+  'client_designation',
+  'client_image_url',
+  'testimonial',
+  'display_order',
+]);
+
+collectionRoutes('sections', 'page_sections', [
+  'is_published',
+  'section_key',
+  'title',
+  'subtitle',
+  'description',
+  'is_visible',
+  'display_order',
+]);
 
 // Media
-app.get('/api/media', requireAdmin, async (req, res) => {
+app.get('/api/media', requireAdmin, async (_req, res) => {
   try {
     const result = await query('SELECT * FROM media_items ORDER BY uploaded_at DESC');
     ok(res, result.rows);
@@ -499,6 +807,46 @@ app.patch('/api/media/:id', requireAdmin, async (req, res) => {
   }
 });
 
+// Check if an image is referenced in any content before deleting
+app.get('/api/media/:id/references', requireAdmin, async (req, res) => {
+  try {
+    const item = await query('SELECT file_url FROM media_items WHERE id = $1', [req.params.id]);
+    if (!item.rows[0]) {
+      fail(res, 404, 'Media item not found.');
+      return;
+    }
+    const url = item.rows[0].file_url;
+    const references = [];
+
+    const [hero, about, site, services, projects, testimonials] = await Promise.all([
+      query(
+        'SELECT full_name FROM hero_content WHERE profile_image_url = $1 OR background_image_url = $1',
+        [url],
+      ),
+      query('SELECT title FROM about_content WHERE profile_image_url = $1', [url]),
+      query(
+        'SELECT site_name FROM site_settings WHERE logo_url = $1 OR profile_image_url = $1 OR favicon_url = $1',
+        [url],
+      ),
+      query('SELECT title FROM services WHERE image_url = $1', [url]),
+      query('SELECT title FROM projects WHERE cover_image_url = $1', [url]),
+      query('SELECT client_name FROM testimonials WHERE client_image_url = $1', [url]),
+    ]);
+
+    if (hero.rows.length) references.push(...hero.rows.map((r) => `Hero Section (${r.full_name})`));
+    if (about.rows.length) references.push(...about.rows.map((r) => `About Section (${r.title})`));
+    if (site.rows.length) references.push(...site.rows.map((r) => `Site Settings (${r.site_name})`));
+    if (services.rows.length) references.push(...services.rows.map((r) => `Service: ${r.title}`));
+    if (projects.rows.length) references.push(...projects.rows.map((r) => `Project: ${r.title}`));
+    if (testimonials.rows.length) references.push(...testimonials.rows.map((r) => `Testimonial: ${r.client_name}`));
+
+    ok(res, { inUse: references.length > 0, references });
+  } catch (error) {
+    console.error(error);
+    fail(res, 500, 'Failed to check media references.');
+  }
+});
+
 app.delete('/api/media/:id', requireAdmin, async (req, res) => {
   try {
     const item = await query('SELECT storage_path FROM media_items WHERE id = $1', [req.params.id]);
@@ -523,7 +871,7 @@ app.post('/api/contact-messages', async (req, res) => {
       return;
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(sender_email)) {
-      fail(res, 400, 'A valid email is required.');
+      fail(res, 400, 'A valid email address is required.');
       return;
     }
     if (pool) {
@@ -551,7 +899,7 @@ app.post('/api/contact-messages', async (req, res) => {
   }
 });
 
-app.get('/api/contact-messages', requireAdmin, async (req, res) => {
+app.get('/api/contact-messages', requireAdmin, async (_req, res) => {
   try {
     if (pool) {
       const result = await query('SELECT * FROM contact_messages ORDER BY created_at DESC');
@@ -576,9 +924,9 @@ app.patch('/api/contact-messages/:id', requireAdmin, async (req, res) => {
       await query('UPDATE contact_messages SET status = $1 WHERE id = $2', [status, req.params.id]);
     } else {
       const messages = readLocalContactMessages();
-      writeLocalContactMessages(messages.map((message) => (
-        message.id === req.params.id ? { ...message, status } : message
-      )));
+      writeLocalContactMessages(
+        messages.map((message) => (message.id === req.params.id ? { ...message, status } : message)),
+      );
     }
     ok(res, { updated: true });
   } catch (error) {

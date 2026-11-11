@@ -173,3 +173,7 @@ export async function updateMediaAlt(id: string, altText: string) {
 export async function deleteMedia(id: string) {
   return localApiRequest(`/api/media/${id}`, { method: 'DELETE' });
 }
+
+export async function checkMediaReferences(id: string): Promise<{ inUse: boolean; references: string[] }> {
+  return localApiRequest<{ inUse: boolean; references: string[] }>(`/api/media/${id}/references`);
+}

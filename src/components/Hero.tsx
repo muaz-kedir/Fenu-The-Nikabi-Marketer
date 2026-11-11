@@ -13,8 +13,17 @@ export function Hero({ hero, site }: HeroProps) {
   const title = hero?.professional_title ?? site?.professional_title ?? 'Social Media Marketing Specialist';
   const description = hero?.description ?? 'I help brands turn attention into action with strategic content, story-led campaigns, and performance-driven growth systems.';
   const image = hero?.profile_image_url ?? site?.profile_image_url ?? 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=900&q=80';
+  const altText = hero?.profile_image_alt || name;
+  const bgImage = hero?.background_image_url;
+
   return (
     <section id="home" className="relative overflow-hidden">
+      {bgImage && (
+        <div
+          className="absolute inset-0 bg-cover bg-center opacity-10 pointer-events-none"
+          style={{ backgroundImage: `url(${bgImage})` }}
+        />
+      )}
       <div className="absolute inset-x-0 top-0 h-[500px] bg-[radial-gradient(circle_at_50%_20%,rgba(240,71,150,0.38),transparent_45%)]" />
       <div className="absolute left-1/2 top-16 h-64 w-64 -translate-x-1/2 rounded-full bg-[#f04796]/10 blur-3xl" />
 
@@ -79,7 +88,7 @@ export function Hero({ hero, site }: HeroProps) {
 
           <div className="relative flex h-[430px] w-[430px] items-center justify-center rounded-full border border-[#f04796]/60 bg-[linear-gradient(135deg,rgba(240,71,150,0.15),rgba(255,255,255,0.02),rgba(240,71,150,0.05))] p-6 shadow-[0_0_60px_rgba(240,71,150,0.15)]">
             <div className="absolute inset-3 rounded-full border border-[#f6b7d2]/35" />
-            <img src={image} alt={name} className="h-full w-full rounded-full object-cover object-center" />
+            <img src={image} alt={altText} className="h-full w-full rounded-full object-cover object-center" />
           </div>
         </motion.div>
       </div>

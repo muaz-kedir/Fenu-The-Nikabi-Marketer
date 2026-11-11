@@ -11,6 +11,7 @@ export function About({ about }: AboutProps) {
   const description = about?.description ?? 'I design thoughtful marketing experiences that connect with people, elevate brands, and turn engagement into measurable results.';
   const additionalDescription = about?.additional_description ?? 'I partner with founders and growing brands to build modern, people-first digital marketing systems that feel premium and perform in real life. From content planning to campaign optimisation, I turn your goals into visible momentum.';
   const image = about?.profile_image_url ?? 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=1000&q=80';
+  const altText = about?.profile_image_alt || subtitle;
 
   return (
     <section id="about" className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
@@ -18,7 +19,7 @@ export function About({ about }: AboutProps) {
         <div className="relative mx-auto w-full max-w-[420px]">
           <div className="absolute inset-6 rounded-[32px] border border-[#f04796]/40 bg-[#f04796]/10 blur-xl" />
           <div className="relative overflow-hidden rounded-[32px] border border-white/10 bg-[#111214] p-4 shadow-[0_0_40px_rgba(240,71,150,0.1)]">
-            <img src={image} alt={subtitle} className="h-[520px] w-full rounded-[24px] object-cover" />
+            <img src={image} alt={altText} className="h-[520px] w-full rounded-[24px] object-cover" />
           </div>
         </div>
 

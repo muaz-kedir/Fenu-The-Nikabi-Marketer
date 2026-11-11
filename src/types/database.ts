@@ -2,6 +2,7 @@ export type UserRole = 'admin' | 'editor' | 'viewer';
 
 export type SiteSettings = {
   id: string;
+  is_published?: boolean;
   site_name: string;
   owner_name: string;
   professional_title: string;
@@ -11,6 +12,7 @@ export type SiteSettings = {
   logo_url: string | null;
   favicon_url: string | null;
   profile_image_url: string | null;
+  profile_image_alt?: string | null;
   resume_url: string | null;
   instagram_url: string;
   tiktok_url: string;
@@ -36,11 +38,13 @@ export type PageSection = {
 
 export type HeroContent = {
   id: string;
+  is_published?: boolean;
   greeting: string;
   full_name: string;
   professional_title: string;
   description: string;
   profile_image_url: string | null;
+  profile_image_alt?: string | null;
   background_image_url: string | null;
   primary_button_text: string;
   primary_button_url: string;
@@ -51,11 +55,39 @@ export type HeroContent = {
 
 export type AboutContent = {
   id: string;
+  is_published?: boolean;
   title: string;
   subtitle: string | null;
   description: string;
   profile_image_url: string | null;
+  profile_image_alt?: string | null;
   additional_description: string | null;
+  updated_at: string;
+};
+
+export type CtaContent = {
+  id: string;
+  is_published?: boolean;
+  script_greeting: string;
+  main_heading: string;
+  supporting_description: string;
+  highlighted_words: string;
+  button_text: string;
+  button_url: string;
+  updated_at: string;
+};
+
+export type FooterContent = {
+  id: string;
+  is_published?: boolean;
+  copyright_text: string;
+  email: string;
+  phone: string;
+  instagram_url: string;
+  tiktok_url: string;
+  linkedin_url: string;
+  whatsapp_url: string;
+  footer_description: string;
   updated_at: string;
 };
 
@@ -77,6 +109,7 @@ export type ServiceItem = {
   description: string;
   icon: string;
   image_url: string | null;
+  image_alt?: string | null;
   display_order: number;
   is_visible: boolean;
   is_published?: boolean;
@@ -96,6 +129,7 @@ export type ProjectItem = {
   case_study_url: string;
   is_featured: boolean;
   is_published: boolean;
+  is_visible: boolean;
   display_order: number;
   created_at: string;
   updated_at: string;
@@ -108,6 +142,7 @@ export type SkillItem = {
   display_order: number;
   is_visible: boolean;
   is_published?: boolean;
+  updated_at?: string;
 };
 
 export type ProcessStep = {
@@ -118,6 +153,7 @@ export type ProcessStep = {
   display_order: number;
   is_visible: boolean;
   is_published?: boolean;
+  updated_at?: string;
 };
 
 export type TestimonialItem = {
@@ -127,8 +163,10 @@ export type TestimonialItem = {
   client_image_url: string | null;
   testimonial: string;
   display_order: number;
+  is_visible: boolean;
   is_published: boolean;
   created_at: string;
+  updated_at?: string;
 };
 
 export type ContactMessage = {
@@ -137,7 +175,7 @@ export type ContactMessage = {
   sender_email: string;
   subject: string;
   message: string;
-  status: string;
+  status: 'new' | 'read' | 'replied';
   created_at: string;
 };
 
@@ -156,6 +194,8 @@ export type PortfolioData = {
   siteSettings: SiteSettings;
   hero: HeroContent;
   about: AboutContent;
+  cta?: CtaContent;
+  footer?: FooterContent;
   stats: Statistic[];
   services: ServiceItem[];
   projects: ProjectItem[];

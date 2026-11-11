@@ -31,6 +31,7 @@ CREATE TABLE IF NOT EXISTS hero_content (
   professional_title TEXT NOT NULL,
   description TEXT NOT NULL,
   profile_image_url TEXT,
+  profile_image_alt TEXT,
   background_image_url TEXT,
   primary_button_text TEXT NOT NULL,
   primary_button_url TEXT NOT NULL,
@@ -46,6 +47,7 @@ CREATE TABLE IF NOT EXISTS about_content (
   subtitle TEXT,
   description TEXT NOT NULL,
   profile_image_url TEXT,
+  profile_image_alt TEXT,
   additional_description TEXT,
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -96,6 +98,7 @@ CREATE TABLE IF NOT EXISTS services (
   description TEXT NOT NULL,
   icon TEXT,
   image_url TEXT,
+  image_alt TEXT,
   display_order INTEGER NOT NULL DEFAULT 0,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
@@ -104,6 +107,7 @@ CREATE TABLE IF NOT EXISTS services (
 CREATE TABLE IF NOT EXISTS projects (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   is_published BOOLEAN NOT NULL DEFAULT TRUE,
+  is_visible BOOLEAN NOT NULL DEFAULT TRUE,
   is_featured BOOLEAN NOT NULL DEFAULT FALSE,
   title TEXT NOT NULL,
   slug TEXT NOT NULL UNIQUE,
@@ -124,7 +128,8 @@ CREATE TABLE IF NOT EXISTS skills (
   is_visible BOOLEAN NOT NULL DEFAULT TRUE,
   name TEXT NOT NULL,
   icon TEXT,
-  display_order INTEGER NOT NULL DEFAULT 0
+  display_order INTEGER NOT NULL DEFAULT 0,
+  updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS process_steps (
@@ -134,18 +139,21 @@ CREATE TABLE IF NOT EXISTS process_steps (
   step_number TEXT NOT NULL,
   title TEXT NOT NULL,
   description TEXT NOT NULL,
-  display_order INTEGER NOT NULL DEFAULT 0
+  display_order INTEGER NOT NULL DEFAULT 0,
+  updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS testimonials (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   is_published BOOLEAN NOT NULL DEFAULT TRUE,
+  is_visible BOOLEAN NOT NULL DEFAULT TRUE,
   client_name TEXT NOT NULL,
   client_designation TEXT NOT NULL,
   client_image_url TEXT,
   testimonial TEXT NOT NULL,
   display_order INTEGER NOT NULL DEFAULT 0,
-  created_at TIMESTAMPTZ DEFAULT NOW()
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS page_sections (

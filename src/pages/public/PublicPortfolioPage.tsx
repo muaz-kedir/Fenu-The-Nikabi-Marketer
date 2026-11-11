@@ -16,7 +16,11 @@ export function PublicPortfolioPage() {
   const { data, loading, error } = usePortfolioContent();
 
   if (loading) {
-    return <div className="flex min-h-screen items-center justify-center bg-[#0a0a0a] text-white">Loading portfolio...</div>;
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#0a0a0a] text-white">
+        <span className="animate-pulse text-[#f6b7d2]">Loading portfolio...</span>
+      </div>
+    );
   }
 
   if (error || !data) {
@@ -27,28 +31,50 @@ export function PublicPortfolioPage() {
     );
   }
 
-  const sections = (data.sections || []).filter((section) => section.is_visible && section.is_published !== false).sort((a, b) => a.display_order - b.display_order);
   const sectionRenderers: Record<string, React.ReactNode> = {
     hero: <Hero hero={data.hero} site={data.siteSettings} />,
-    stats: <Stats stats={data.stats.filter((stat) => stat.is_visible)} />,
+    stats: <Stats stats={(data.stats || []).filter((s) => s.is_visible && s.is_published !== false)} />,
     about: <About about={data.about} />,
-    services: <Services services={data.services.filter((service) => service.is_visible)} />,
-    work: <FeaturedWork projects={data.projects.filter((project) => project.is_published !== false && project.is_featured)} />,
-    skills: <Skills skills={data.skills.filter((skill) => skill.is_visible)} />,
-    process: <Process process={data.process.filter((step) => step.is_visible)} />,
-    testimonials: <Testimonials testimonials={data.testimonials.filter((item) => item.is_published !== false)} />,
-    contact: <Contact site={data.siteSettings} />,
+    services: <Services services={(data.services || []).filter((s) => s.is_visible && s.is_published !== false)} />,
+    work: (
+      <FeaturedWork
+        projects={(data.projects || []).filter(
+          (p) => p.is_published !== false && p.is_visible !== false && p.is_featured,
+        )}
+      />
+    ),
+    skills: <Skills skills={(data.skills || []).filter((s) => s.is_visible && s.is_published !== false)} />,
+    process: <Process process={(data.process || []).filter((s) => s.is_visible && s.is_published !== false)} />,
+    testimonials: (
+      <Testimonials
+        testimonials={(data.testimonials || []).filter(
+          (t) => t.is_published !== false && t.is_visible !== false,
+        )}
+      />
+    ),
+    contact: <Contact site={data.siteSettings} cta={data.cta} />,
   };
 
-  const renderedSections = sections.length
-    ? sections.map((section) => <div key={section.section_key}>{sectionRenderers[section.section_key] ?? null}</div>)
-    : Object.entries(sectionRenderers).map(([key, section]) => <Fragment key={key}>{section}</Fragment>);
+  const hasSectionsConfig = Boolean(data.sections && data.sections.length > 0);
+  const visibleSections = hasSectionsConfig
+    ? data.sections
+        .filter((section) => section.is_visible && section.is_published !== false)
+        .sort((a, b) => a.display_order - b.display_order)
+    : null;
+
+  const renderedSections = visibleSections
+    ? visibleSections.map((section) => (
+        <div key={section.section_key}>{sectionRenderers[section.section_key] ?? null}</div>
+      ))
+    : Object.entries(sectionRenderers).map(([key, section]) => (
+        <Fragment key={key}>{section}</Fragment>
+      ));
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white antialiased">
       <Navbar site={data.siteSettings} />
       <main>{renderedSections}</main>
-      <Footer site={data.siteSettings} />
+      <Footer site={data.siteSettings} footer={data.footer} />
     </div>
   );
 }
