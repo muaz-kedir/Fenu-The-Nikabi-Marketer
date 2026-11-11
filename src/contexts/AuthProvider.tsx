@@ -1,34 +1,12 @@
 import {
-  createContext,
   useCallback,
-  useContext,
   useEffect,
   useMemo,
   useState,
   type ReactNode,
 } from 'react';
 import { localApiRequest } from '../services/localApi';
-
-type AdminUser = {
-  id: string;
-  email: string;
-  role: 'admin';
-};
-
-type AdminSession = {
-  user: AdminUser;
-  expiresAt: string;
-};
-
-type AuthContextValue = {
-  user: AdminUser | null;
-  session: AdminSession | null;
-  isLoading: boolean;
-  signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
-  signOut: () => Promise<void>;
-};
-
-const AuthContext = createContext<AuthContextValue | undefined>(undefined);
+import { AuthContext, type AdminSession, type AdminUser, type AuthContextValue } from './AuthContext';
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AdminUser | null>(null);
@@ -56,12 +34,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = useCallback(async (email: string, password: string) => {
     try {
-      const response = await localApiRequest<{ user: AdminUser; session: AdminSession }>('/api/admin/login', {
+      const response = await localApiRequest<{ user: AdminUser; session: AdminSession; token?: string }>('/api/admin/login', {
         method: 'POST',
         body: JSON.stringify({ email, password }),
       });
 
       localStorage.setItem('portfolio-admin-session', JSON.stringify(response.session));
+      if (response.token) {
+        localStorage.setItem('portfolio-admin-token', response.token);
+      }
       setUser(response.user);
       setSession(response.session);
 
@@ -73,6 +54,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = useCallback(async () => {
     localStorage.removeItem('portfolio-admin-session');
+    localStorage.removeItem('portfolio-admin-token');
     setUser(null);
     setSession(null);
   }, []);
@@ -89,12 +71,4 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-}
-
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
 }

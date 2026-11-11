@@ -1,6 +1,7 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import type { ReactNode } from 'react';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { AuthProvider } from './contexts/AuthProvider';
+import { useAuth } from './contexts/useAuth';
 import { AdminLayout } from './components/admin/AdminLayout';
 import { LoginPage } from './pages/admin/LoginPage';
 import { DashboardOverviewPage } from './pages/admin/DashboardOverviewPage';

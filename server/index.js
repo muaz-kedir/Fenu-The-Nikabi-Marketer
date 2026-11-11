@@ -2,102 +2,165 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import pg from 'pg';
+import crypto from 'node:crypto';
+import path from 'node:path';
+import fs from 'node:fs';
+import { fileURLToPath } from 'node:url';
 
 const { Pool } = pg;
 const app = express();
 const port = Number(process.env.PORT || 3001);
 const databaseUrl = process.env.DATABASE_URL || '';
-
-const seedPortfolio = {
-  siteSettings: {
-    id: 'site-settings',
-    site_name: 'Fenu Portfolio',
-    owner_name: 'Azmina Zahra',
-    professional_title: 'Social Media Marketing Strategist',
-    email: 'hello@fenu-portfolio.com',
-    phone: '+123456789',
-    location: 'Addis Ababa, Ethiopia',
-    logo_url: null,
-    favicon_url: null,
-    profile_image_url: null,
-    resume_url: null,
-    instagram_url: 'https://instagram.com',
-    tiktok_url: 'https://tiktok.com',
-    linkedin_url: 'https://linkedin.com',
-    whatsapp_url: 'https://wa.me/123456789',
-    seo_title: 'Fenu Portfolio',
-    seo_description: 'Premium portfolio for a social media marketing specialist.',
-    copyright_text: '© 2026 Fenu Portfolio',
-    updated_at: new Date().toISOString(),
-  },
-  hero: {
-    id: 'hero',
-    greeting: 'Hello, I am',
-    full_name: 'Azmina Zahra',
-    professional_title: 'Social Media Marketing Strategist',
-    description: 'I help brands grow with strategy, content systems, and creator-first campaigns that actually convert attention into revenue.',
-    profile_image_url: null,
-    background_image_url: null,
-    primary_button_text: 'Book a Call',
-    primary_button_url: '#contact',
-    secondary_button_text: 'See My Work',
-    secondary_button_url: '#work',
-    updated_at: new Date().toISOString(),
-  },
-  about: {
-    id: 'about',
-    title: 'About Me',
-    subtitle: 'Growth marketer & content strategist',
-    description: 'I design premium social media systems that turn clarity, creativity, and consistency into measurable business growth.',
-    profile_image_url: null,
-    additional_description: 'I blend brand storytelling, campaign planning, and data-informed creative direction to help founders scale online.',
-    updated_at: new Date().toISOString(),
-  },
-  stats: [
-    { id: 's1', label: 'Campaigns launched', value: '120', suffix: '+', icon: 'rocket', display_order: 1, is_visible: true, updated_at: new Date().toISOString() },
-    { id: 's2', label: 'Engagement growth', value: '300', suffix: '%', icon: 'trending', display_order: 2, is_visible: true, updated_at: new Date().toISOString() },
-    { id: 's3', label: 'Brands supported', value: '45', suffix: '+', icon: 'users', display_order: 3, is_visible: true, updated_at: new Date().toISOString() },
-  ],
-  services: [
-    { id: 'service-1', title: 'Brand Strategy', description: 'Positioning and channel planning that aligns your brand with the right audience.', icon: 'sparkles', image_url: null, display_order: 1, is_visible: true, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-    { id: 'service-2', title: 'Content Systems', description: 'High-converting content calendars and creative systems for consistent execution.', icon: 'pencil', image_url: null, display_order: 2, is_visible: true, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-    { id: 'service-3', title: 'Social Growth', description: 'Performance growth plans focused on reach, engagement, and conversion.', icon: 'growth', image_url: null, display_order: 3, is_visible: true, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-  ],
-  projects: [
-    { id: 'project-1', title: 'Neon Studio Launch', slug: 'neon-studio-launch', description: 'Launch campaign for a wellness brand targetting Gen Z audiences.', category: 'Brand Launch', cover_image_url: null, result_metric: '4.2x', result_description: 'Higher email signups after relaunch', case_study_url: '#', is_featured: true, is_published: true, display_order: 1, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-    { id: 'project-2', title: 'Creator Funnel Revamp', slug: 'creator-funnel-revamp', description: 'Organic-to-paid funnel rebuild for a fast-growing creator studio.', category: 'Growth Strategy', cover_image_url: null, result_metric: '67%', result_description: 'Increase in lead quality', case_study_url: '#', is_featured: true, is_published: true, display_order: 2, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-  ],
-  skills: [
-    { id: 'skill-1', name: 'Content Strategy', icon: 'strategy', display_order: 1, is_visible: true },
-    { id: 'skill-2', name: 'Social Media Ads', icon: 'ads', display_order: 2, is_visible: true },
-    { id: 'skill-3', name: 'Brand Positioning', icon: 'brand', display_order: 3, is_visible: true },
-  ],
-  process: [
-    { id: 'process-1', step_number: '01', title: 'Discovery', description: 'I define goals, audience, offers, and content gaps.', display_order: 1, is_visible: true },
-    { id: 'process-2', step_number: '02', title: 'Build', description: 'I create the channel strategy and content framework.', display_order: 2, is_visible: true },
-    { id: 'process-3', step_number: '03', title: 'Scale', description: 'I optimize the system based on engagement and conversion signals.', display_order: 3, is_visible: true },
-  ],
-  testimonials: [
-    { id: 'testimonial-1', client_name: 'Selam T.', client_designation: 'Founder, Luma Studio', client_image_url: null, testimonial: 'The strategy and social system changed how we communicated our value. We finally saw a clear sales funnel.', display_order: 1, is_published: true, created_at: new Date().toISOString() },
-  ],
-  sections: [],
-};
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const uploadsDir = path.join(process.cwd(), 'uploads');
+const localContactMessagesPath = path.join(process.cwd(), '.local-data', 'contact-messages.json');
 
 const pool = databaseUrl ? new Pool({ connectionString: databaseUrl }) : null;
-
-app.use(cors());
-app.use(express.json());
+const adminTokens = new Map();
 
 const localAdminEmail = process.env.LOCAL_ADMIN_EMAIL || 'admin@example.com';
 const localAdminPassword = process.env.LOCAL_ADMIN_PASSWORD || 'admin123';
 
-function buildPortfolioPayload(rows) {
-  if (!rows || rows.length === 0) {
+app.use(cors());
+app.use(express.json({ limit: '25mb' }));
+app.use('/uploads', express.static(uploadsDir));
+
+function ok(res, data) {
+  res.json(data);
+}
+
+function fail(res, status, message) {
+  res.status(status).json({ message });
+}
+
+function readLocalContactMessages() {
+  if (!fs.existsSync(localContactMessagesPath)) return [];
+
+  const messages = JSON.parse(fs.readFileSync(localContactMessagesPath, 'utf8'));
+  if (!Array.isArray(messages)) {
+    throw new Error('Local contact messages file must contain an array.');
+  }
+  return messages;
+}
+
+function writeLocalContactMessages(messages) {
+  fs.mkdirSync(path.dirname(localContactMessagesPath), { recursive: true });
+  const temporaryPath = `${localContactMessagesPath}.${process.pid}.tmp`;
+  fs.writeFileSync(temporaryPath, JSON.stringify(messages, null, 2));
+  fs.renameSync(temporaryPath, localContactMessagesPath);
+}
+
+async function query(text, params = []) {
+  if (!pool) throw new Error('Database is not configured.');
+  return pool.query(text, params);
+}
+
+function requireAdmin(req, res, next) {
+  const header = req.headers.authorization || '';
+  const token = header.startsWith('Bearer ') ? header.slice(7) : '';
+  const session = adminTokens.get(token);
+  if (!token || !session || session.expiresAt < Date.now()) {
+    fail(res, 401, 'Authentication required.');
+    return;
+  }
+  req.admin = session.user;
+  next();
+}
+
+function slugify(value) {
+  return String(value || '')
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '') || `item-${Date.now()}`;
+}
+
+const seedPortfolio = {
+  siteSettings: {
+    id: 'seed-site',
+    site_name: 'Azmina Zahra',
+    owner_name: 'Azmina Zahra',
+    professional_title: 'Social Media Marketing Specialist',
+    email: 'hello@azminazahra.com',
+    phone: '+971 52 123 4567',
+    location: 'Dubai, UAE',
+    logo_url: null,
+    favicon_url: null,
+    profile_image_url: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=900&q=80',
+    resume_url: null,
+    instagram_url: 'https://instagram.com',
+    tiktok_url: 'https://tiktok.com',
+    linkedin_url: 'https://linkedin.com',
+    whatsapp_url: 'https://wa.me/971521234567',
+    seo_title: 'Azmina Zahra | Social Media Marketing Specialist',
+    seo_description: 'Premium social media marketing strategy and creative services for brands ready to grow.',
+    copyright_text: '© 2025 Azmina Zahra. All rights reserved.',
+    updated_at: new Date().toISOString(),
+  },
+  hero: {
+    id: 'seed-hero',
+    greeting: "Hello, I'm",
+    full_name: 'Azmina Zahra',
+    professional_title: 'Social Media Marketing Specialist',
+    description: 'I help brands turn attention into action with strategic content, story-led campaigns, and performance-driven growth systems.',
+    profile_image_url: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=900&q=80',
+    background_image_url: null,
+    primary_button_text: 'View My Work',
+    primary_button_url: '#work',
+    secondary_button_text: "Let's Work Together",
+    secondary_button_url: '#contact',
+    updated_at: new Date().toISOString(),
+  },
+  about: {
+    id: 'seed-about',
+    title: 'A brand storyteller with strategy in her DNA.',
+    subtitle: 'About Me',
+    description: 'I design thoughtful marketing experiences that connect with people, elevate brands, and turn engagement into measurable results.',
+    profile_image_url: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=1000&q=80',
+    additional_description: 'I partner with founders and growing brands to build modern, people-first digital marketing systems that feel premium and perform in real life.',
+    updated_at: new Date().toISOString(),
+  },
+  stats: [],
+  services: [],
+  projects: [],
+  skills: [],
+  process: [],
+  testimonials: [],
+  sections: [],
+};
+
+async function buildPortfolio() {
+  if (!pool) return seedPortfolio;
+  try {
+    const [site, hero, about, stats, services, projects, skills, process, testimonials, sections] = await Promise.all([
+      query('SELECT * FROM site_settings WHERE is_published = TRUE ORDER BY updated_at DESC LIMIT 1'),
+      query('SELECT * FROM hero_content WHERE is_published = TRUE ORDER BY updated_at DESC LIMIT 1'),
+      query('SELECT * FROM about_content WHERE is_published = TRUE ORDER BY updated_at DESC LIMIT 1'),
+      query('SELECT * FROM statistics WHERE is_published = TRUE AND is_visible = TRUE ORDER BY display_order, id'),
+      query('SELECT * FROM services WHERE is_published = TRUE AND is_visible = TRUE ORDER BY display_order, id'),
+      query('SELECT * FROM projects WHERE is_published = TRUE ORDER BY display_order, id'),
+      query('SELECT * FROM skills WHERE is_published = TRUE AND is_visible = TRUE ORDER BY display_order, id'),
+      query('SELECT * FROM process_steps WHERE is_published = TRUE AND is_visible = TRUE ORDER BY display_order, id'),
+      query('SELECT * FROM testimonials WHERE is_published = TRUE ORDER BY display_order, id'),
+      query('SELECT * FROM page_sections WHERE is_published = TRUE AND is_visible = TRUE ORDER BY display_order, id'),
+    ]);
+
+    return {
+      siteSettings: site.rows[0] || seedPortfolio.siteSettings,
+      hero: hero.rows[0] || seedPortfolio.hero,
+      about: about.rows[0] || seedPortfolio.about,
+      stats: stats.rows,
+      services: services.rows,
+      projects: projects.rows,
+      skills: skills.rows,
+      process: process.rows,
+      testimonials: testimonials.rows,
+      sections: sections.rows,
+    };
+  } catch (error) {
+    console.error('portfolio query failed:', error);
     return seedPortfolio;
   }
-
-  const data = rows[0]?.portfolio ?? seedPortfolio;
-  return data;
 }
 
 app.get('/api/health', (_req, res) => {
@@ -105,47 +168,44 @@ app.get('/api/health', (_req, res) => {
 });
 
 app.get('/api/portfolio', async (_req, res) => {
-  if (!pool) {
-    res.json(seedPortfolio);
-    return;
-  }
-
-  try {
-    const result = await pool.query('SELECT portfolio FROM portfolio_content LIMIT 1');
-    res.json(buildPortfolioPayload(result.rows));
-  } catch (error) {
-    console.error('portfolio query failed:', error);
-    res.json(seedPortfolio);
-  }
+  res.json(await buildPortfolio());
 });
 
 app.get('/api/dashboard', async (_req, res) => {
-  const payload = {
-    totalProjects: 3,
-    totalServices: 3,
-    totalTestimonials: 1,
+  const fallback = {
+    totalProjects: 0,
+    totalServices: 0,
+    totalTestimonials: 0,
     totalMessages: 0,
     unreadMessages: 0,
-    publishedProjects: 3,
+    publishedProjects: 0,
     hiddenSections: 0,
   };
-
   if (!pool) {
-    res.json(payload);
+    try {
+      const messages = readLocalContactMessages();
+      res.json({
+        ...fallback,
+        totalMessages: messages.length,
+        unreadMessages: messages.filter((message) => message.status !== 'read').length,
+      });
+    } catch (error) {
+      console.error('local contact messages read failed:', error);
+      fail(res, 500, 'Failed to load dashboard data.');
+    }
     return;
   }
-
   try {
-    const result = await pool.query(`
+    const result = await query(`
       SELECT
         (SELECT COUNT(*) FROM projects) AS total_projects,
         (SELECT COUNT(*) FROM services) AS total_services,
         (SELECT COUNT(*) FROM testimonials) AS total_testimonials,
         (SELECT COUNT(*) FROM contact_messages) AS total_messages,
         (SELECT COUNT(*) FROM contact_messages WHERE status <> 'read') AS unread_messages,
-        (SELECT COUNT(*) FROM projects WHERE is_published = true) AS published_projects
+        (SELECT COUNT(*) FROM projects WHERE is_published = TRUE) AS published_projects,
+        (SELECT COUNT(*) FROM page_sections WHERE is_visible = FALSE) AS hidden_sections
     `);
-
     const row = result.rows[0] || {};
     res.json({
       totalProjects: Number(row.total_projects || 0),
@@ -154,57 +214,392 @@ app.get('/api/dashboard', async (_req, res) => {
       totalMessages: Number(row.total_messages || 0),
       unreadMessages: Number(row.unread_messages || 0),
       publishedProjects: Number(row.published_projects || 0),
-      hiddenSections: 0,
+      hiddenSections: Number(row.hidden_sections || 0),
     });
   } catch (error) {
     console.error('dashboard query failed:', error);
-    res.json(payload);
+    res.json(fallback);
   }
 });
 
-app.get('/api/contact-messages', async (_req, res) => {
-  if (!pool) {
-    res.json([]);
-    return;
-  }
-
-  try {
-    const result = await pool.query('SELECT * FROM contact_messages ORDER BY created_at DESC');
-    res.json(result.rows);
-  } catch (error) {
-    console.error('contact messages query failed:', error);
-    res.json([]);
-  }
-});
-
+// Auth
 app.post('/api/admin/login', async (req, res) => {
   const { email, password } = req.body || {};
-
   if (!email || !password) {
-    res.status(400).json({ message: 'Email and password are required.' });
+    fail(res, 400, 'Email and password are required.');
     return;
   }
-
   if (email !== localAdminEmail || password !== localAdminPassword) {
-    res.status(401).json({ message: 'Invalid email or password.' });
+    fail(res, 401, 'Invalid email or password.');
     return;
   }
-
-  res.json({
-    user: {
-      id: 'local-admin',
-      email,
-      role: 'admin',
-    },
-    session: {
-      user: { id: 'local-admin', email, role: 'admin' },
-      expiresAt: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
-    },
+  const token = crypto.randomUUID();
+  const user = { id: 'local-admin', email, role: 'admin' };
+  adminTokens.set(token, { user, expiresAt: Date.now() + 24 * 60 * 60 * 1000 });
+  ok(res, {
+    user,
+    session: { user, expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() },
+    token,
   });
 });
 
-app.post('/api/admin/logout', (_req, res) => {
-  res.json({ ok: true });
+app.post('/api/admin/logout', requireAdmin, (req, res) => {
+  const header = req.headers.authorization || '';
+  const token = header.startsWith('Bearer ') ? header.slice(7) : '';
+  adminTokens.delete(token);
+  ok(res, { ok: true });
+});
+
+app.get('/api/admin/me', requireAdmin, (req, res) => {
+  ok(res, { user: req.admin });
+});
+
+// Generic helpers for singleton tables
+function singletonRoutes(table, columns) {
+  app.get(`/api/admin/${table}`, requireAdmin, async (req, res) => {
+    try {
+      const result = await query(`SELECT * FROM ${table} ORDER BY is_published DESC, updated_at DESC`);
+      const published = result.rows.find((row) => row.is_published) || null;
+      const draft = result.rows.find((row) => !row.is_published) || null;
+      ok(res, { published, draft, items: result.rows });
+    } catch (error) {
+      console.error(error);
+      fail(res, 500, 'Failed to load content.');
+    }
+  });
+
+  app.post(`/api/admin/${table}`, requireAdmin, async (req, res) => {
+    try {
+      const isPublished = req.body.is_published === true;
+      const fields = columns;
+      const existing = await query(`SELECT id FROM ${table} WHERE is_published = $1 ORDER BY updated_at DESC LIMIT 1`, [isPublished]);
+      const values = fields.map((field) => req.body[field] ?? null);
+      if (existing.rows[0]) {
+        const setClause = fields.map((field, index) => `${field} = $${index + 2}`).join(', ');
+        await query(`UPDATE ${table} SET ${setClause}, updated_at = NOW() WHERE id = $1`, [existing.rows[0].id, ...values]);
+        ok(res, { id: existing.rows[0].id, updated: true });
+      } else {
+        const placeholders = fields.map((_, index) => `$${index + 2}`).join(', ');
+        const result = await query(`INSERT INTO ${table} (is_published, ${fields.join(', ')}) VALUES ($1, ${placeholders}) RETURNING id`, [isPublished, ...values]);
+        ok(res, { id: result.rows[0].id, created: true });
+      }
+    } catch (error) {
+      console.error(error);
+      fail(res, 500, 'Failed to save content.');
+    }
+  });
+
+  app.post(`/api/admin/${table}/publish`, requireAdmin, async (req, res) => {
+    try {
+      const draft = await query(`SELECT * FROM ${table} WHERE is_published = FALSE ORDER BY updated_at DESC LIMIT 1`);
+      if (!draft.rows[0]) {
+        fail(res, 404, 'No draft to publish.');
+        return;
+      }
+      const row = draft.rows[0];
+      const published = await query(`SELECT id FROM ${table} WHERE is_published = TRUE ORDER BY updated_at DESC LIMIT 1`);
+      const fields = columns;
+      const values = fields.map((field) => row[field] ?? null);
+      if (published.rows[0]) {
+        const setClause = fields.map((field, index) => `${field} = $${index + 2}`).join(', ');
+        await query(`UPDATE ${table} SET ${setClause}, updated_at = NOW() WHERE id = $1`, [published.rows[0].id, ...values]);
+      } else {
+        const placeholders = fields.map((_, index) => `$${index + 2}`).join(', ');
+        await query(`INSERT INTO ${table} (is_published, ${fields.join(', ')}) VALUES (TRUE, ${placeholders})`, [true, ...values]);
+      }
+      ok(res, { published: true });
+    } catch (error) {
+      console.error(error);
+      fail(res, 500, 'Failed to publish content.');
+    }
+  });
+}
+
+singletonRoutes('site_settings', ['site_name', 'owner_name', 'professional_title', 'email', 'phone', 'location', 'logo_url', 'favicon_url', 'profile_image_url', 'resume_url', 'instagram_url', 'tiktok_url', 'linkedin_url', 'whatsapp_url', 'seo_title', 'seo_description', 'copyright_text']);
+singletonRoutes('hero_content', ['greeting', 'full_name', 'professional_title', 'description', 'profile_image_url', 'background_image_url', 'primary_button_text', 'primary_button_url', 'secondary_button_text', 'secondary_button_url']);
+singletonRoutes('about_content', ['title', 'subtitle', 'description', 'profile_image_url', 'additional_description']);
+singletonRoutes('cta_content', ['script_greeting', 'main_heading', 'supporting_description', 'highlighted_words', 'button_text', 'button_url']);
+singletonRoutes('footer_content', ['copyright_text', 'email', 'phone', 'instagram_url', 'tiktok_url', 'linkedin_url', 'whatsapp_url', 'footer_description']);
+
+// Collection routes factory
+function collectionRoutes(resource, table, columns, options = {}) {
+  const slugField = options.slugField || null;
+  app.get(`/api/admin/${resource}`, requireAdmin, async (req, res) => {
+    try {
+      const result = await query(`SELECT * FROM ${table} ORDER BY display_order, id`);
+      ok(res, result.rows);
+    } catch (error) {
+      console.error(error);
+      fail(res, 500, 'Failed to load records.');
+    }
+  });
+
+  app.post(`/api/admin/${resource}`, requireAdmin, async (req, res) => {
+    try {
+      const fields = columns;
+      const values = fields.map((field) => {
+        if (field === 'slug' && !req.body.slug) return slugify(req.body.title || req.body.name);
+        if (req.body[field] !== undefined) return req.body[field];
+        if (field === 'is_featured') return false;
+        if (field.startsWith('is_')) return true;
+        if (field === 'display_order') return 0;
+        return null;
+      });
+      const placeholders = fields.map((_, index) => `$${index + 1}`).join(', ');
+      const result = await query(`INSERT INTO ${table} (${fields.join(', ')}) VALUES (${placeholders}) RETURNING id`, values);
+      ok(res, { id: result.rows[0].id, created: true });
+    } catch (error) {
+      console.error(error);
+      fail(res, 500, 'Failed to create record.');
+    }
+  });
+
+  app.put(`/api/admin/${resource}/:id`, requireAdmin, async (req, res) => {
+    try {
+      const fields = columns;
+      const values = fields.map((field) => {
+        if (req.body[field] !== undefined) return req.body[field];
+        if (field === 'is_featured') return false;
+        if (field.startsWith('is_')) return true;
+        if (field === 'display_order') return 0;
+        return null;
+      });
+      const setClause = fields.map((field, index) => `${field} = $${index + 2}`).join(', ');
+      await query(`UPDATE ${table} SET ${setClause}, updated_at = NOW() WHERE id = $1`, [req.params.id, ...values]);
+      ok(res, { id: req.params.id, updated: true });
+    } catch (error) {
+      console.error(error);
+      fail(res, 500, 'Failed to update record.');
+    }
+  });
+
+  app.delete(`/api/admin/${resource}/:id`, requireAdmin, async (req, res) => {
+    try {
+      await query(`DELETE FROM ${table} WHERE id = $1`, [req.params.id]);
+      ok(res, { deleted: true });
+    } catch (error) {
+      console.error(error);
+      fail(res, 500, 'Failed to delete record.');
+    }
+  });
+
+  app.post(`/api/admin/${resource}/:id/publish`, requireAdmin, async (req, res) => {
+    try {
+      await query(`UPDATE ${table} SET is_published = TRUE, updated_at = NOW() WHERE id = $1`, [req.params.id]);
+      ok(res, { published: true });
+    } catch (error) {
+      console.error(error);
+      fail(res, 500, 'Failed to publish record.');
+    }
+  });
+
+  app.post(`/api/admin/${resource}/:id/unpublish`, requireAdmin, async (req, res) => {
+    try {
+      await query(`UPDATE ${table} SET is_published = FALSE, updated_at = NOW() WHERE id = $1`, [req.params.id]);
+      ok(res, { published: false });
+    } catch (error) {
+      console.error(error);
+      fail(res, 500, 'Failed to unpublish record.');
+    }
+  });
+
+  app.post(`/api/admin/${resource}/publish-all`, requireAdmin, async (req, res) => {
+    try {
+      await query(`UPDATE ${table} SET is_published = TRUE, updated_at = NOW()`);
+      ok(res, { published: true });
+    } catch (error) {
+      console.error(error);
+      fail(res, 500, 'Failed to publish records.');
+    }
+  });
+
+  app.put(`/api/admin/${resource}/reorder`, requireAdmin, async (req, res) => {
+    try {
+      const ids = Array.isArray(req.body.ids) ? req.body.ids : [];
+      for (let index = 0; index < ids.length; index += 1) {
+        await query(`UPDATE ${table} SET display_order = $1, updated_at = NOW() WHERE id = $2`, [index + 1, ids[index]]);
+      }
+      ok(res, { reordered: true });
+    } catch (error) {
+      console.error(error);
+      fail(res, 500, 'Failed to reorder records.');
+    }
+  });
+}
+
+collectionRoutes('statistics', 'statistics', ['is_published', 'is_visible', 'label', 'value', 'suffix', 'icon', 'display_order']);
+collectionRoutes('services', 'services', ['is_published', 'is_visible', 'title', 'description', 'icon', 'image_url', 'display_order']);
+collectionRoutes('projects', 'projects', ['is_published', 'is_featured', 'title', 'slug', 'description', 'category', 'cover_image_url', 'result_metric', 'result_description', 'case_study_url', 'display_order']);
+collectionRoutes('skills', 'skills', ['is_published', 'is_visible', 'name', 'icon', 'display_order']);
+collectionRoutes('process', 'process_steps', ['is_published', 'is_visible', 'step_number', 'title', 'description', 'display_order']);
+collectionRoutes('testimonials', 'testimonials', ['is_published', 'client_name', 'client_designation', 'client_image_url', 'testimonial', 'display_order']);
+
+// Page sections
+collectionRoutes('sections', 'page_sections', ['is_published', 'section_key', 'title', 'subtitle', 'description', 'is_visible', 'display_order']);
+
+// Media
+app.get('/api/media', requireAdmin, async (req, res) => {
+  try {
+    const result = await query('SELECT * FROM media_items ORDER BY uploaded_at DESC');
+    ok(res, result.rows);
+  } catch (error) {
+    console.error(error);
+    fail(res, 500, 'Failed to load media.');
+  }
+});
+
+app.post('/api/media/upload', requireAdmin, async (req, res) => {
+  try {
+    const { fileName, contentType, dataUrl, altText, folder } = req.body || {};
+    if (!fileName || !contentType || !dataUrl) {
+      fail(res, 400, 'File name, content type, and file data are required.');
+      return;
+    }
+    if (!String(contentType).startsWith('image/')) {
+      fail(res, 400, 'Only image files are allowed.');
+      return;
+    }
+    const base64 = String(dataUrl).split(',')[1];
+    if (!base64) {
+      fail(res, 400, 'Invalid file data.');
+      return;
+    }
+    const buffer = Buffer.from(base64, 'base64');
+    if (buffer.length > 10 * 1024 * 1024) {
+      fail(res, 400, 'File must be smaller than 10 MB.');
+      return;
+    }
+    fs.mkdirSync(uploadsDir, { recursive: true });
+    const safeFolder = String(folder || 'general').replace(/[^a-zA-Z0-9_-]/g, '') || 'general';
+    const targetDir = path.join(uploadsDir, safeFolder);
+    fs.mkdirSync(targetDir, { recursive: true });
+    const safeName = `${Date.now()}-${String(fileName).replace(/[^a-zA-Z0-9._-]/g, '')}`;
+    const filePath = path.join(targetDir, safeName);
+    fs.writeFileSync(filePath, buffer);
+    const storagePath = `${safeFolder}/${safeName}`;
+    const fileUrl = `/uploads/${storagePath}`;
+    const result = await query(
+      'INSERT INTO media_items (file_name, file_url, storage_path, file_type, file_size, alt_text) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+      [fileName, fileUrl, storagePath, contentType, buffer.length, altText || null],
+    );
+    ok(res, result.rows[0]);
+  } catch (error) {
+    console.error(error);
+    fail(res, 500, 'Failed to upload media.');
+  }
+});
+
+app.patch('/api/media/:id', requireAdmin, async (req, res) => {
+  try {
+    await query('UPDATE media_items SET alt_text = $1 WHERE id = $2', [req.body.alt_text ?? null, req.params.id]);
+    ok(res, { updated: true });
+  } catch (error) {
+    console.error(error);
+    fail(res, 500, 'Failed to update media.');
+  }
+});
+
+app.delete('/api/media/:id', requireAdmin, async (req, res) => {
+  try {
+    const item = await query('SELECT storage_path FROM media_items WHERE id = $1', [req.params.id]);
+    if (item.rows[0]?.storage_path) {
+      const filePath = path.join(uploadsDir, item.rows[0].storage_path);
+      if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+    }
+    await query('DELETE FROM media_items WHERE id = $1', [req.params.id]);
+    ok(res, { deleted: true });
+  } catch (error) {
+    console.error(error);
+    fail(res, 500, 'Failed to delete media.');
+  }
+});
+
+// Contact messages
+app.post('/api/contact-messages', async (req, res) => {
+  try {
+    const { sender_name, sender_email, subject, message } = req.body || {};
+    if (!sender_name || !sender_email || !message) {
+      fail(res, 400, 'Name, email, and message are required.');
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(sender_email)) {
+      fail(res, 400, 'A valid email is required.');
+      return;
+    }
+    if (pool) {
+      const result = await query(
+        'INSERT INTO contact_messages (sender_name, sender_email, subject, message) VALUES ($1, $2, $3, $4) RETURNING *',
+        [sender_name, sender_email, subject || null, message],
+      );
+      ok(res, result.rows[0]);
+    } else {
+      const contactMessage = {
+        id: crypto.randomUUID(),
+        sender_name,
+        sender_email,
+        subject: subject || null,
+        message,
+        status: 'new',
+        created_at: new Date().toISOString(),
+      };
+      writeLocalContactMessages([contactMessage, ...readLocalContactMessages()]);
+      ok(res, contactMessage);
+    }
+  } catch (error) {
+    console.error(error);
+    fail(res, 500, 'Failed to submit message.');
+  }
+});
+
+app.get('/api/contact-messages', requireAdmin, async (req, res) => {
+  try {
+    if (pool) {
+      const result = await query('SELECT * FROM contact_messages ORDER BY created_at DESC');
+      ok(res, result.rows);
+    } else {
+      ok(res, readLocalContactMessages());
+    }
+  } catch (error) {
+    console.error(error);
+    fail(res, 500, 'Failed to load messages.');
+  }
+});
+
+app.patch('/api/contact-messages/:id', requireAdmin, async (req, res) => {
+  try {
+    const status = req.body.status;
+    if (!['new', 'read', 'replied'].includes(status)) {
+      fail(res, 400, 'Invalid status.');
+      return;
+    }
+    if (pool) {
+      await query('UPDATE contact_messages SET status = $1 WHERE id = $2', [status, req.params.id]);
+    } else {
+      const messages = readLocalContactMessages();
+      writeLocalContactMessages(messages.map((message) => (
+        message.id === req.params.id ? { ...message, status } : message
+      )));
+    }
+    ok(res, { updated: true });
+  } catch (error) {
+    console.error(error);
+    fail(res, 500, 'Failed to update message.');
+  }
+});
+
+app.delete('/api/contact-messages/:id', requireAdmin, async (req, res) => {
+  try {
+    if (pool) {
+      await query('DELETE FROM contact_messages WHERE id = $1', [req.params.id]);
+    } else {
+      const messages = readLocalContactMessages();
+      writeLocalContactMessages(messages.filter((message) => message.id !== req.params.id));
+    }
+    ok(res, { deleted: true });
+  } catch (error) {
+    console.error(error);
+    fail(res, 500, 'Failed to delete message.');
+  }
 });
 
 export default app;

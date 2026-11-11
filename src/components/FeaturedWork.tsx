@@ -6,11 +6,8 @@ type FeaturedWorkProps = {
 };
 
 export function FeaturedWork({ projects }: FeaturedWorkProps) {
-  const items = projects ?? [
-    { id: '1', title: 'Brand Lift Campaign', description: 'A lifestyle beauty launch strategy that grew organic reach and strengthened community trust.', result_metric: '+186% engagement', cover_image_url: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=900&q=80', case_study_url: '#contact', is_featured: true, is_published: true, slug: 'brand-lift-campaign', category: 'social', display_order: 1, created_at: '', updated_at: '', result_description: 'Organic growth' },
-    { id: '2', title: 'E-commerce Growth', description: 'Creative ads and retention messaging for a boutique retail brand with a sharper conversion funnel.', result_metric: '3.4x ROAS', cover_image_url: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=900&q=80', case_study_url: '#contact', is_featured: true, is_published: true, slug: 'ecommerce-growth', category: 'performance', display_order: 2, created_at: '', updated_at: '', result_description: 'Ad performance' },
-    { id: '3', title: 'Creator Brand Story', description: 'A cohesive content system that translated expertise into visibility, authority, and sales.', result_metric: '+72% leads', cover_image_url: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=900&q=80', case_study_url: '#contact', is_featured: true, is_published: true, slug: 'creator-brand-story', category: 'storytelling', display_order: 3, created_at: '', updated_at: '', result_description: 'Qualified leads' },
-  ];
+  const items = projects ?? [];
+
 
   return (
     <section id="work" className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-24">

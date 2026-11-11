@@ -5,14 +5,8 @@ type SkillsProps = {
 };
 
 export function Skills({ skills }: SkillsProps) {
-  const items = skills ?? [
-    { id: '1', name: 'Copywriting', icon: '', display_order: 1, is_visible: true },
-    { id: '2', name: 'Canva', icon: '', display_order: 2, is_visible: true },
-    { id: '3', name: 'CapCut', icon: '', display_order: 3, is_visible: true },
-    { id: '4', name: 'Meta Business Suite', icon: '', display_order: 4, is_visible: true },
-    { id: '5', name: 'Analytics', icon: '', display_order: 5, is_visible: true },
-    { id: '6', name: 'Community Management', icon: '', display_order: 6, is_visible: true },
-  ];
+  const items = skills ?? [];
+
 
   return (
     <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-24">

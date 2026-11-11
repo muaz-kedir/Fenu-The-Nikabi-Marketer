@@ -2,9 +2,11 @@ export const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL ?? '').replace(/\/$
 export const isLocalApiConfigured = true;
 
 export async function localApiRequest<T>(path: string, options: RequestInit = {}): Promise<T> {
+  const token = localStorage.getItem('portfolio-admin-token');
   const response = await fetch(`${apiBaseUrl}${path}`, {
     headers: {
       'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...(options.headers ?? {}),
     },
     ...options,

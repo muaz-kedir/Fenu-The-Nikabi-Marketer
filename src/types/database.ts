@@ -29,6 +29,7 @@ export type PageSection = {
   subtitle: string | null;
   description: string | null;
   is_visible: boolean;
+  is_published?: boolean;
   display_order: number;
   updated_at: string;
 };
@@ -66,6 +67,7 @@ export type Statistic = {
   icon: string;
   display_order: number;
   is_visible: boolean;
+  is_published?: boolean;
   updated_at: string;
 };
 
@@ -77,6 +79,7 @@ export type ServiceItem = {
   image_url: string | null;
   display_order: number;
   is_visible: boolean;
+  is_published?: boolean;
   created_at: string;
   updated_at: string;
 };
@@ -104,6 +107,7 @@ export type SkillItem = {
   icon: string;
   display_order: number;
   is_visible: boolean;
+  is_published?: boolean;
 };
 
 export type ProcessStep = {
@@ -113,6 +117,7 @@ export type ProcessStep = {
   description: string;
   display_order: number;
   is_visible: boolean;
+  is_published?: boolean;
 };
 
 export type TestimonialItem = {

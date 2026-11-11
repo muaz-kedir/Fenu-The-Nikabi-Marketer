@@ -6,17 +6,8 @@ type TestimonialsProps = {
 };
 
 export function Testimonials({ testimonials }: TestimonialsProps) {
-  const item = testimonials?.[0] ?? {
-    id: '1',
-    client_name: 'Nadia Rahman',
-    client_designation: 'Founder, Noor Atelier',
-    client_image_url: '',
-    testimonial:
-      'Azmina brought clarity, creativity, and consistent execution to our brand. The content felt elevated, strategic, and genuinely aligned with our audience. We saw stronger engagement and a much more polished online presence within weeks.',
-    display_order: 1,
-    is_published: true,
-    created_at: new Date().toISOString(),
-  };
+  const item = testimonials?.[0];
+  if (!item) return null;
 
   return (
     <section className="mx-auto max-w-5xl px-4 py-16 sm:px-6 lg:px-8 lg:py-24">

@@ -6,12 +6,8 @@ type ProcessProps = {
 };
 
 export function Process({ process }: ProcessProps) {
-  const steps = process ?? [
-    { id: '1', step_number: '01', title: 'Understand', description: 'I learn your goals, audience, and brand positioning.', display_order: 1, is_visible: true },
-    { id: '2', step_number: '02', title: 'Plan', description: 'We map a content strategy aligned with your growth objectives.', display_order: 2, is_visible: true },
-    { id: '3', step_number: '03', title: 'Create', description: 'I develop content systems, campaigns, and creative direction.', display_order: 3, is_visible: true },
-    { id: '4', step_number: '04', title: 'Improve', description: 'We refine performance with insights and optimisation loops.', display_order: 4, is_visible: true },
-  ];
+  const steps = process ?? [];
+
 
   return (
     <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-24">

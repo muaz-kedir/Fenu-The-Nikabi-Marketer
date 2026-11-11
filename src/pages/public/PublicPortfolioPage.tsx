@@ -1,3 +1,4 @@
+import { Fragment } from 'react';
 import { Navbar } from '../../components/Navbar';
 import { Hero } from '../../components/Hero';
 import { Stats } from '../../components/Stats';
@@ -26,20 +27,27 @@ export function PublicPortfolioPage() {
     );
   }
 
+  const sections = (data.sections || []).filter((section) => section.is_visible && section.is_published !== false).sort((a, b) => a.display_order - b.display_order);
+  const sectionRenderers: Record<string, React.ReactNode> = {
+    hero: <Hero hero={data.hero} site={data.siteSettings} />,
+    stats: <Stats stats={data.stats.filter((stat) => stat.is_visible)} />,
+    about: <About about={data.about} />,
+    services: <Services services={data.services.filter((service) => service.is_visible)} />,
+    work: <FeaturedWork projects={data.projects.filter((project) => project.is_published !== false && project.is_featured)} />,
+    skills: <Skills skills={data.skills.filter((skill) => skill.is_visible)} />,
+    process: <Process process={data.process.filter((step) => step.is_visible)} />,
+    testimonials: <Testimonials testimonials={data.testimonials.filter((item) => item.is_published !== false)} />,
+    contact: <Contact site={data.siteSettings} />,
+  };
+
+  const renderedSections = sections.length
+    ? sections.map((section) => <div key={section.section_key}>{sectionRenderers[section.section_key] ?? null}</div>)
+    : Object.entries(sectionRenderers).map(([key, section]) => <Fragment key={key}>{section}</Fragment>);
+
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white antialiased">
-      <Navbar />
-      <main>
-        <Hero hero={data.hero} site={data.siteSettings} />
-        <Stats stats={data.stats.filter((stat) => stat.is_visible)} />
-        <About about={data.about} />
-        <Services services={data.services.filter((service) => service.is_visible)} />
-        <FeaturedWork projects={data.projects.filter((project) => project.is_published)} />
-        <Skills skills={data.skills.filter((skill) => skill.is_visible)} />
-        <Process process={data.process.filter((step) => step.is_visible)} />
-        <Testimonials testimonials={data.testimonials.filter((item) => item.is_published)} />
-        <Contact site={data.siteSettings} />
-      </main>
+      <Navbar site={data.siteSettings} />
+      <main>{renderedSections}</main>
       <Footer site={data.siteSettings} />
     </div>
   );

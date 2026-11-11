@@ -14,12 +14,7 @@ type StatsProps = {
 };
 
 export function Stats({ stats }: StatsProps) {
-  const items = stats ?? [
-    { id: '1', label: 'Impressions', value: '12K', suffix: '+', icon: 'TrendingUp', display_order: 1, is_visible: true, updated_at: new Date().toISOString() },
-    { id: '2', label: 'Likes', value: '502', suffix: '+', icon: 'Heart', display_order: 2, is_visible: true, updated_at: new Date().toISOString() },
-    { id: '3', label: 'Comments', value: '73', suffix: '+', icon: 'MessageSquare', display_order: 3, is_visible: true, updated_at: new Date().toISOString() },
-    { id: '4', label: 'Happy Clients', value: '20', suffix: '+', icon: 'Users', display_order: 4, is_visible: true, updated_at: new Date().toISOString() },
-  ];
+  const items = stats ?? [];
 
   return (
     <section className="mx-auto max-w-7xl px-4 pb-10 sm:px-6 lg:px-8 lg:pb-20">

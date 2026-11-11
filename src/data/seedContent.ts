@@ -19,13 +19,13 @@ export const seedPortfolio = {
     seo_title: 'Azmina Zahra | Social Media Marketing Specialist',
     seo_description:
       'Social media marketing specialist helping brands grow with strategic content, campaigns, and measurable engagement.',
-    copyright_text: '© 2025 Azmina Zahra. All rights reserved.',
+    copyright_text: '© 2025 Fenu|The Nikabi Marketer. All rights reserved.',
     updated_at: new Date().toISOString(),
   },
   hero: {
     id: 'seed-hero',
     greeting: 'Hello, I\'m',
-    full_name: 'Azmina Zahra',
+    full_name: 'Fenu| The Nikabi Marketer',
     professional_title: 'Social Media Marketing Specialist',
     description:
       'I help brands turn attention into action with strategic content, story-led campaigns, and performance-driven growth systems.',

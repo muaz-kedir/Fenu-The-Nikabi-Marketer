@@ -15,7 +15,7 @@ import {
   Users,
   X,
 } from 'lucide-react';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../contexts/useAuth';
 
 const navItems = [
   { label: 'Overview', to: '/admin', icon: LayoutDashboard },

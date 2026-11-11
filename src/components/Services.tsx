@@ -14,13 +14,8 @@ type ServicesProps = {
 };
 
 export function Services({ services }: ServicesProps) {
-  const items = services ?? [
-    { id: '1', title: 'Social Media Management', description: 'Content calendars, daily engagement, and community growth strategies built around your brand voice.', icon: 'Megaphone', image_url: '', display_order: 1, is_visible: true, created_at: '', updated_at: '' },
-    { id: '2', title: 'Content Strategy', description: 'Audience-focused plans that align your content with marketing goals, campaigns, and conversion funnels.', icon: 'Target', image_url: '', display_order: 2, is_visible: true, created_at: '', updated_at: '' },
-    { id: '3', title: 'Content Creation', description: 'Scroll-stopping visuals, short-form videos, and branded storytelling designed for consistent engagement.', icon: 'PenTool', image_url: '', display_order: 3, is_visible: true, created_at: '', updated_at: '' },
-    { id: '4', title: 'Paid Advertising', description: 'Performance-led campaigns across Meta and social channels to drive awareness, leads, and ROI.', icon: 'Rocket', image_url: '', display_order: 4, is_visible: true, created_at: '', updated_at: '' },
-    { id: '5', title: 'Analytics & Reports', description: 'Clear reporting dashboards and insights that show what is working and what to optimise next.', icon: 'BarChart3', image_url: '', display_order: 5, is_visible: true, created_at: '', updated_at: '' },
-  ];
+  const items = services ?? [];
+
 
   return (
     <section id="services" className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-24">

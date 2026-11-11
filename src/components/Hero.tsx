@@ -13,12 +13,6 @@ export function Hero({ hero, site }: HeroProps) {
   const title = hero?.professional_title ?? site?.professional_title ?? 'Social Media Marketing Specialist';
   const description = hero?.description ?? 'I help brands turn attention into action with strategic content, story-led campaigns, and performance-driven growth systems.';
   const image = hero?.profile_image_url ?? site?.profile_image_url ?? 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=900&q=80';
-  const heroStats = [
-    { value: '12K+', label: 'Impressions' },
-    { value: '3x', label: 'ROAS' },
-    { value: '98%', label: 'Retention' },
-  ];
-
   return (
     <section id="home" className="relative overflow-hidden">
       <div className="absolute inset-x-0 top-0 h-[500px] bg-[radial-gradient(circle_at_50%_20%,rgba(240,71,150,0.38),transparent_45%)]" />
@@ -64,14 +58,6 @@ export function Hero({ hero, site }: HeroProps) {
             </a>
           </div>
 
-          <div className="mt-10 flex flex-wrap items-center gap-4">
-            {heroStats.map((item) => (
-              <div key={item.label} className="rounded-2xl border border-white/10 bg-white/3 px-4 py-3">
-                <div className="text-xl font-bold text-[#f6b7d2]">{item.value}</div>
-                <div className="text-xs uppercase tracking-[0.18em] text-white/60">{item.label}</div>
-              </div>
-            ))}
-          </div>
         </motion.div>
 
         <motion.div
