@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { ArrowRight, Menu, X } from 'lucide-react';
-import type { SiteSettings } from '../types/database';
 
 const navLinks = [
   { label: 'Home', href: '#home' },
@@ -10,23 +9,15 @@ const navLinks = [
   { label: 'Contact', href: '#contact' },
 ];
 
-type NavbarProps = {
-  site?: Partial<SiteSettings>;
-};
-
-export function Navbar({ site }: NavbarProps) {
+export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
-  const name = site?.owner_name ?? 'Azmina Zahra';
-  const brandInitials = (name || 'AZ').split(' ').map((part) => part[0]).slice(0, 2).join('').toUpperCase();
 
   return (
     <header className="sticky top-0 z-50 border-b border-white/10 bg-[#0a0a0a]/80 backdrop-blur-xl">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-        <a href="#home" className="flex items-center gap-3" aria-label="Go to home section">
-          <span className="flex h-10 w-10 items-center justify-center rounded-full border border-[#f04796]/60 bg-[#f04796]/10 text-sm font-semibold text-[#f6b7d2]">
-            {brandInitials}
-          </span>
-          <span className="text-lg font-semibold tracking-wide text-white">{name}</span>
+        <a href="#home" className="flex min-w-0 items-center gap-2 sm:gap-3" aria-label="Fenu|The Nikabi Marketer home">
+          <img src="/fenu-brand.png" alt="" className="h-10 w-10 shrink-0 rounded-full object-cover" />
+          <span className="whitespace-nowrap text-sm font-semibold tracking-wide text-white sm:text-base">Fenu|The Nikabi Marketer</span>
         </a>
 
         <nav className="hidden items-center gap-8 md:flex">

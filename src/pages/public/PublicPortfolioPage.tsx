@@ -72,7 +72,7 @@ export function PublicPortfolioPage() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white antialiased">
-      <Navbar site={data.siteSettings} />
+      <Navbar />
       <main>{renderedSections}</main>
       <Footer site={data.siteSettings} footer={data.footer} />
     </div>

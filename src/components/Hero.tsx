@@ -9,11 +9,11 @@ type HeroProps = {
 
 export function Hero({ hero, site }: HeroProps) {
   const greeting = hero?.greeting ?? "Hello, I'm";
-  const name = hero?.full_name ?? site?.owner_name ?? 'Azmina Zahra';
+  const name = hero?.full_name ?? site?.owner_name ?? 'Fenu|The Nikabi Marketer';
   const title = hero?.professional_title ?? site?.professional_title ?? 'Social Media Marketing Specialist';
   const description = hero?.description ?? 'I help brands turn attention into action with strategic content, story-led campaigns, and performance-driven growth systems.';
-  const image = hero?.profile_image_url ?? site?.profile_image_url ?? 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=900&q=80';
-  const altText = hero?.profile_image_alt || name;
+  const image = '/fenu-brand.png';
+  const altText = 'Fenu|The Nikabi Marketer';
   const bgImage = hero?.background_image_url;
 
   return (

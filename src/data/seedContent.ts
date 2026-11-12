@@ -1,22 +1,21 @@
 export const seedPortfolio = {
   siteSettings: {
     id: 'seed-site',
-    site_name: 'Azmina Zahra',
-    owner_name: 'Azmina Zahra',
+    site_name: 'Fenu|The Nikabi Marketer',
+    owner_name: 'Fenu|The Nikabi Marketer',
     professional_title: 'Social Media Marketing Specialist',
     email: 'hello@azminazahra.com',
     phone: '+971 52 123 4567',
     location: 'Dubai, UAE',
-    logo_url: '',
-    favicon_url: '',
-    profile_image_url:
-      'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=900&q=80',
+    logo_url: '/fenu-brand.png',
+    favicon_url: '/fenu-brand.png',
+    profile_image_url: '/fenu-brand.png',
     resume_url: '',
     instagram_url: 'https://instagram.com',
     tiktok_url: 'https://tiktok.com',
     linkedin_url: 'https://linkedin.com',
     whatsapp_url: 'https://wa.me/971521234567',
-    seo_title: 'Azmina Zahra | Social Media Marketing Specialist',
+    seo_title: 'Fenu|The Nikabi Marketer | Social Media Marketing Specialist',
     seo_description:
       'Social media marketing specialist helping brands grow with strategic content, campaigns, and measurable engagement.',
     copyright_text: '© 2025 Fenu|The Nikabi Marketer. All rights reserved.',
@@ -25,12 +24,11 @@ export const seedPortfolio = {
   hero: {
     id: 'seed-hero',
     greeting: 'Hello, I\'m',
-    full_name: 'Fenu| The Nikabi Marketer',
+    full_name: 'Fenu|The Nikabi Marketer',
     professional_title: 'Social Media Marketing Specialist',
     description:
       'I help brands turn attention into action with strategic content, story-led campaigns, and performance-driven growth systems.',
-    profile_image_url:
-      'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=900&q=80',
+    profile_image_url: '/fenu-brand.png',
     background_image_url: '',
     primary_button_text: 'View My Work',
     primary_button_url: '#work',
