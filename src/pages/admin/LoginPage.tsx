@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/useAuth';
+import { apiBaseUrl } from '../../services/localApi';
+import { isSupabaseConfigured } from '../../services/supabase';
 
 export function LoginPage() {
   const [email, setEmail] = useState('admin@example.com');
@@ -9,6 +11,12 @@ export function LoginPage() {
   const [error, setError] = useState('');
   const navigate = useNavigate();
   const { signIn } = useAuth();
+
+  const authModeLabel = isSupabaseConfigured && !apiBaseUrl
+    ? 'Supabase Auth'
+    : apiBaseUrl
+    ? `Backend API (${apiBaseUrl})`
+    : 'Direct Application Server (/api)';
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -35,6 +43,10 @@ export function LoginPage() {
           </div>
           <h1 className="text-3xl font-semibold text-white">Admin Login</h1>
           <p className="mt-2 text-sm text-white/60">Secure content management portal</p>
+          <div className="mt-3 inline-flex items-center rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/50">
+            <span className="mr-1.5 h-1.5 w-1.5 rounded-full bg-[#f04796]"></span>
+            {authModeLabel}
+          </div>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -62,7 +74,11 @@ export function LoginPage() {
             />
           </div>
 
-          {error && <div className="rounded-2xl border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-200">{error}</div>}
+          {error && (
+            <div className="rounded-2xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-200 leading-relaxed">
+              {error}
+            </div>
+          )}
 
           <button
             type="submit"

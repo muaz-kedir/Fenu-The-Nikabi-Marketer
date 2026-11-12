@@ -20,9 +20,34 @@ const localTestimonialsPath = path.join(process.cwd(), '.local-data', 'testimoni
 
 const JWT_SECRET = process.env.ADMIN_JWT_SECRET || 'fenu-portfolio-secure-admin-token-secret-2026';
 const adminTokens = new Map();
+const revokedTokens = new Set();
 
-const localAdminEmail = process.env.LOCAL_ADMIN_EMAIL || 'admin@example.com';
-const localAdminPassword = process.env.LOCAL_ADMIN_PASSWORD || 'admin123';
+const localAdminEmail = (process.env.ADMIN_EMAIL || process.env.LOCAL_ADMIN_EMAIL || 'admin@example.com').trim().toLowerCase();
+const localAdminPassword = process.env.ADMIN_PASSWORD || process.env.LOCAL_ADMIN_PASSWORD || 'admin123';
+
+function hashPassword(password, salt = crypto.randomBytes(16).toString('hex')) {
+  const hash = crypto.scryptSync(password, salt, 64).toString('hex');
+  return `${salt}:${hash}`;
+}
+
+function verifyPassword(password, stored) {
+  if (!stored || typeof stored !== 'string') return false;
+  try {
+    if (stored.includes(':')) {
+      const [salt, key] = stored.split(':');
+      if (!salt || !key) return false;
+      const keyBuffer = Buffer.from(key, 'hex');
+      const derivedKey = crypto.scryptSync(password, salt, 64);
+      return crypto.timingSafeEqual(keyBuffer, derivedKey);
+    }
+    // Safe constant-time fallback for plain string comparison
+    const hashA = crypto.createHash('sha256').update(String(password)).digest();
+    const hashB = crypto.createHash('sha256').update(String(stored)).digest();
+    return crypto.timingSafeEqual(hashA, hashB);
+  } catch {
+    return false;
+  }
+}
 
 let pool = null;
 
@@ -48,8 +73,10 @@ function getPool() {
   if (!dbUrl) return null;
   if (!pool) {
     try {
+      const isLocalhost = dbUrl.includes('localhost') || dbUrl.includes('127.0.0.1');
       pool = new Pool({
         connectionString: dbUrl,
+        ssl: isLocalhost ? false : { rejectUnauthorized: false },
         connectionTimeoutMillis: 5000,
         idleTimeoutMillis: 30000,
         max: 10,
@@ -77,6 +104,7 @@ function signToken(user, expiresInMs = 7 * 24 * 60 * 60 * 1000) {
 
 function verifyToken(token) {
   if (!token) return null;
+  if (revokedTokens.has(token)) return null;
   
   // 1. Verify HMAC signed token
   const dotIndex = token.indexOf('.');
@@ -105,7 +133,12 @@ function verifyToken(token) {
   return null;
 }
 
-app.use(cors());
+app.use(cors({
+  origin: true,
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+}));
 app.use(express.json({ limit: '25mb' }));
 app.use('/uploads', express.static(uploadsDir));
 
@@ -143,6 +176,41 @@ function writeLocalTestimonials(testimonials) {
   const temporaryPath = `${localTestimonialsPath}.${process.pid}.tmp`;
   fs.writeFileSync(temporaryPath, JSON.stringify(testimonials, null, 2));
   fs.renameSync(temporaryPath, localTestimonialsPath);
+}
+
+let adminTableChecked = false;
+async function ensureAdminUsersTable() {
+  if (adminTableChecked) return;
+  const activePool = getPool();
+  if (!activePool) return;
+  try {
+    await activePool.query(`
+      CREATE TABLE IF NOT EXISTS admin_users (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        email TEXT UNIQUE NOT NULL,
+        password_hash TEXT NOT NULL,
+        role TEXT NOT NULL DEFAULT 'admin',
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        updated_at TIMESTAMPTZ DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS idx_admin_users_email ON admin_users(LOWER(email));
+    `);
+
+    const res = await activePool.query('SELECT COUNT(*) FROM admin_users');
+    if (Number(res.rows[0].count) === 0) {
+      const defaultEmail = (process.env.ADMIN_EMAIL || process.env.LOCAL_ADMIN_EMAIL || 'admin@example.com').trim().toLowerCase();
+      const defaultPass = process.env.ADMIN_PASSWORD || process.env.LOCAL_ADMIN_PASSWORD || 'admin123';
+      const hashed = hashPassword(defaultPass);
+      await activePool.query(
+        'INSERT INTO admin_users (email, password_hash, role) VALUES ($1, $2, $3) ON CONFLICT (email) DO NOTHING',
+        [defaultEmail, hashed, 'admin']
+      );
+      console.log(`[auth] Initialized admin user (${defaultEmail}) in database.`);
+    }
+    adminTableChecked = true;
+  } catch (err) {
+    console.error('Failed to ensure admin_users table:', err.message);
+  }
 }
 
 async function query(text, params = []) {
@@ -307,8 +375,23 @@ async function buildPortfolio() {
   }
 }
 
-app.get('/api/health', (_req, res) => {
-  res.json({ ok: true, database: getPool() ? 'configured' : 'fallback' });
+app.get('/api/health', async (_req, res) => {
+  let dbStatus = 'unconfigured';
+  if (getPool()) {
+    try {
+      await query('SELECT 1');
+      dbStatus = 'connected';
+    } catch (err) {
+      dbStatus = `disconnected (${err.message})`;
+    }
+  }
+  res.json({
+    status: 'ok',
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString(),
+    database: dbStatus,
+    environment: process.env.NODE_ENV || 'development',
+  });
 });
 
 app.get('/api/portfolio', async (_req, res) => {
@@ -383,16 +466,51 @@ app.post('/api/admin/login', async (req, res) => {
     fail(res, 400, 'Email and password are required.');
     return;
   }
-  if (email !== localAdminEmail || password !== localAdminPassword) {
+
+  const normalizedEmail = String(email).trim().toLowerCase();
+  let authenticatedUser = null;
+
+  // 1. Try database admin user if DB is connected
+  if (getPool()) {
+    try {
+      await ensureAdminUsersTable();
+      const result = await query(
+        'SELECT id, email, password_hash, role FROM admin_users WHERE LOWER(email) = $1',
+        [normalizedEmail]
+      );
+      if (result.rows.length > 0) {
+        const row = result.rows[0];
+        if (verifyPassword(password, row.password_hash)) {
+          authenticatedUser = { id: row.id, email: row.email, role: row.role || 'admin' };
+        }
+      }
+    } catch (err) {
+      console.error('Database authentication check failed:', err.message);
+    }
+  }
+
+  // 2. Fallback to configured environment credentials if not in database
+  if (!authenticatedUser) {
+    const configuredAdminEmail = (process.env.ADMIN_EMAIL || process.env.LOCAL_ADMIN_EMAIL || 'admin@example.com').trim().toLowerCase();
+    const configuredAdminPassword = process.env.ADMIN_PASSWORD || process.env.LOCAL_ADMIN_PASSWORD || 'admin123';
+
+    if (normalizedEmail === configuredAdminEmail && verifyPassword(password, configuredAdminPassword)) {
+      authenticatedUser = { id: 'admin-primary', email: configuredAdminEmail, role: 'admin' };
+    }
+  }
+
+  if (!authenticatedUser) {
     fail(res, 401, 'Invalid email or password.');
     return;
   }
-  const user = { id: 'local-admin', email, role: 'admin' };
-  const token = signToken(user, 7 * 24 * 60 * 60 * 1000);
-  adminTokens.set(token, { user, expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000 });
+
+  const token = signToken(authenticatedUser, 7 * 24 * 60 * 60 * 1000);
+  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+  adminTokens.set(token, { user: authenticatedUser, expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000 });
+
   ok(res, {
-    user,
-    session: { user, expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() },
+    user: authenticatedUser,
+    session: { user: authenticatedUser, expiresAt },
     token,
   });
 });
@@ -400,8 +518,11 @@ app.post('/api/admin/login', async (req, res) => {
 app.post('/api/admin/logout', requireAdmin, (req, res) => {
   const header = req.headers.authorization || '';
   const token = header.startsWith('Bearer ') ? header.slice(7) : '';
-  adminTokens.delete(token);
-  ok(res, { ok: true });
+  if (token) {
+    adminTokens.delete(token);
+    revokedTokens.add(token);
+  }
+  ok(res, { ok: true, message: 'Successfully logged out.' });
 });
 
 app.get('/api/admin/me', requireAdmin, (req, res) => {
@@ -1057,5 +1178,30 @@ app.delete('/api/contact-messages/:id', requireAdmin, async (req, res) => {
     fail(res, 500, error.message || 'Failed to delete message.');
   }
 });
+
+// Unknown API routes handler - always return JSON 404
+app.use('/api', (_req, res) => {
+  res.status(404).json({ error: 'API route not found' });
+});
+
+// Serve frontend static build and React Router SPA fallback in production
+const distDir = path.join(process.cwd(), 'dist');
+const isViteDev = process.env.VITE === 'true' || process.env.npm_lifecycle_event === 'dev' || process.env.npm_lifecycle_event === 'dev:web';
+
+if (!isViteDev && fs.existsSync(distDir)) {
+  // Serve static assets from dist
+  app.use(express.static(distDir, {
+    maxAge: '1d',
+    index: false,
+  }));
+
+  // Client-side SPA routing fallback for all non-API GET requests
+  app.use((req, res, next) => {
+    if (req.method === 'GET' && !req.path.startsWith('/api')) {
+      return res.sendFile(path.join(distDir, 'index.html'));
+    }
+    next();
+  });
+}
 
 export default app;

@@ -7,6 +7,7 @@
     "dev": "vite --host 0.0.0.0",
     "dev:web": "vite --host 0.0.0.0",
     "dev:server": "node server/start.js",
+    "start": "node server/start.js",
     "build": "tsc -b && vite build && node scripts/verify-build.js",
     "preview": "vite preview --host 0.0.0.0"
   },

@@ -205,3 +205,14 @@ CREATE INDEX IF NOT EXISTS idx_process_order ON process_steps (display_order);
 CREATE INDEX IF NOT EXISTS idx_testimonials_order ON testimonials (display_order);
 CREATE INDEX IF NOT EXISTS idx_page_sections_order ON page_sections (display_order);
 CREATE INDEX IF NOT EXISTS idx_contact_messages_created ON contact_messages (created_at DESC);
+
+-- 16. Admin Users for Persistent Authentication
+CREATE TABLE IF NOT EXISTS admin_users (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  email TEXT UNIQUE NOT NULL,
+  password_hash TEXT NOT NULL,
+  role TEXT NOT NULL DEFAULT 'admin',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_admin_users_email ON admin_users (LOWER(email));
