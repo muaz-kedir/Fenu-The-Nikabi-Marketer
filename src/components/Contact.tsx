@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ArrowRight, CheckCircle2, Mail, MapPin, Phone } from 'lucide-react';
+import { BentoCard } from './ui/BentoCard';
 import { submitContactMessage } from '../services/contentService';
 import type { CtaContent, SiteSettings } from '../types/database';
 
@@ -142,31 +143,31 @@ export function Contact({ site, cta }: ContactProps) {
         </form>
 
         <div className="mt-10 grid gap-4 sm:grid-cols-3">
-          <div className="rounded-2xl border border-white/10 bg-[#141414]/70 p-4 text-left">
-            <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-full bg-[#f04796]/10 text-[#f6b7d2]">
+          <BentoCard radius={16} glowColor="#f04796" className="group p-4 bg-[#141414]/70 text-left">
+            <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-full bg-[#f04796]/10 text-[#f6b7d2] transition duration-300 group-hover:scale-110 group-hover:bg-[#f04796]/20">
               <Mail size={18} />
             </div>
             <div className="text-xs uppercase tracking-[0.2em] text-white/55">Email</div>
-            <a href={`mailto:${email}`} className="mt-2 block text-sm text-white/80 hover:text-[#f6b7d2]">
+            <a href={`mailto:${email}`} className="mt-2 block text-sm text-white/80 transition duration-300 group-hover:text-[#f6b7d2]">
               {email}
             </a>
-          </div>
-          <div className="rounded-2xl border border-white/10 bg-[#141414]/70 p-4 text-left">
-            <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-full bg-[#f04796]/10 text-[#f6b7d2]">
+          </BentoCard>
+          <BentoCard radius={16} glowColor="#f04796" className="group p-4 bg-[#141414]/70 text-left">
+            <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-full bg-[#f04796]/10 text-[#f6b7d2] transition duration-300 group-hover:scale-110 group-hover:bg-[#f04796]/20">
               <Phone size={18} />
             </div>
             <div className="text-xs uppercase tracking-[0.2em] text-white/55">Phone</div>
-            <a href={`tel:${phone}`} className="mt-2 block text-sm text-white/80 hover:text-[#f6b7d2]">
+            <a href={`tel:${phone}`} className="mt-2 block text-sm text-white/80 transition duration-300 group-hover:text-[#f6b7d2]">
               {phone}
             </a>
-          </div>
-          <div className="rounded-2xl border border-white/10 bg-[#141414]/70 p-4 text-left">
-            <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-full bg-[#f04796]/10 text-[#f6b7d2]">
+          </BentoCard>
+          <BentoCard radius={16} glowColor="#f04796" className="group p-4 bg-[#141414]/70 text-left">
+            <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-full bg-[#f04796]/10 text-[#f6b7d2] transition duration-300 group-hover:scale-110 group-hover:bg-[#f04796]/20">
               <MapPin size={18} />
             </div>
             <div className="text-xs uppercase tracking-[0.2em] text-white/55">Location</div>
-            <div className="mt-2 text-sm text-white/80">{location}</div>
-          </div>
+            <div className="mt-2 text-sm text-white/80 transition duration-300 group-hover:text-white">{location}</div>
+          </BentoCard>
         </div>
       </div>
     </section>

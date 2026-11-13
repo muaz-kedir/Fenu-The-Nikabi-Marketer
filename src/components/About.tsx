@@ -1,4 +1,5 @@
 import { ArrowRight, Award, Sparkles } from 'lucide-react';
+import { BentoCard } from './ui/BentoCard';
 import type { AboutContent } from '../types/database';
 
 type AboutProps = {
@@ -35,20 +36,20 @@ export function About({ about }: AboutProps) {
           <p className="mt-5 max-w-2xl text-base leading-8 text-white/70">{additionalDescription}</p>
 
           <div className="mt-8 grid gap-4 sm:grid-cols-2">
-            <div className="rounded-2xl border border-white/10 bg-[#141414] p-5">
-              <div className="mb-3 inline-flex h-11 w-11 items-center justify-center rounded-full bg-[#f04796]/10 text-[#f6b7d2]">
+            <BentoCard radius={16} glowColor="#f04796" className="group p-5 bg-[#141414]">
+              <div className="mb-3 inline-flex h-11 w-11 items-center justify-center rounded-full bg-[#f04796]/10 text-[#f6b7d2] transition duration-300 group-hover:scale-110 group-hover:bg-[#f04796]/20">
                 <Award size={20} />
               </div>
-              <div className="text-xl font-semibold text-white">Creative direction</div>
+              <div className="text-xl font-semibold text-white transition duration-300 group-hover:text-[#f6b7d2]">Creative direction</div>
               <p className="mt-2 text-sm leading-6 text-white/65">Visual storytelling and positioning that elevate your brand across channels.</p>
-            </div>
-            <div className="rounded-2xl border border-white/10 bg-[#141414] p-5">
-              <div className="mb-3 inline-flex h-11 w-11 items-center justify-center rounded-full bg-[#f04796]/10 text-[#f6b7d2]">
+            </BentoCard>
+            <BentoCard radius={16} glowColor="#f04796" className="group p-5 bg-[#141414]">
+              <div className="mb-3 inline-flex h-11 w-11 items-center justify-center rounded-full bg-[#f04796]/10 text-[#f6b7d2] transition duration-300 group-hover:scale-110 group-hover:bg-[#f04796]/20">
                 <ArrowRight size={20} />
               </div>
-              <div className="text-xl font-semibold text-white">Growth strategy</div>
+              <div className="text-xl font-semibold text-white transition duration-300 group-hover:text-[#f6b7d2]">Growth strategy</div>
               <p className="mt-2 text-sm leading-6 text-white/65">Performance marketing that connects content with measurable business results.</p>
-            </div>
+            </BentoCard>
           </div>
         </div>
       </div>

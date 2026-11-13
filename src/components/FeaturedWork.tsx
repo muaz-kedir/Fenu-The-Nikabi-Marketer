@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ArrowUpRight, CheckCircle2 } from 'lucide-react';
+import { BentoCard } from './ui/BentoCard';
 import type { ProjectItem } from '../types/database';
 
 const categories = [
@@ -62,9 +63,12 @@ export function FeaturedWork({ projects }: FeaturedWorkProps) {
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {filtered.map((project) => (
-            <article
+            <BentoCard
               key={project.id || project.title}
-              className="group flex flex-col justify-between overflow-hidden rounded-[28px] border border-white/10 bg-[#141414] transition duration-300 hover:-translate-y-2 hover:border-[#f04796]/40 hover:shadow-[0_0_30px_rgba(240,71,150,0.12)]"
+              as="article"
+              radius={28}
+              glowColor="#f04796"
+              className="group flex flex-col justify-between overflow-hidden bg-[#141414]"
             >
               <div>
                 <div className="relative overflow-hidden aspect-video bg-[#0d0d0f]">
@@ -131,7 +135,7 @@ export function FeaturedWork({ projects }: FeaturedWorkProps) {
                   <ArrowUpRight size={16} />
                 </a>
               </div>
-            </article>
+            </BentoCard>
           ))}
         </div>
       )}

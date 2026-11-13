@@ -1,4 +1,5 @@
 import { Quote } from 'lucide-react';
+import { BentoCard } from './ui/BentoCard';
 import type { TestimonialItem } from '../types/database';
 
 type TestimonialsProps = {
@@ -21,7 +22,11 @@ export function Testimonials({ testimonials }: TestimonialsProps) {
       </div>
 
       {items.length === 1 ? (
-        <div className="mx-auto max-w-4xl rounded-[32px] border border-[#f04796]/40 bg-[linear-gradient(135deg,rgba(240,71,150,0.1),rgba(255,255,255,0.02))] p-6 shadow-[0_0_40px_rgba(240,71,150,0.08)] sm:p-10 lg:p-12">
+        <BentoCard
+          radius={32}
+          glowColor="#f04796"
+          className="mx-auto max-w-4xl bg-[linear-gradient(135deg,rgba(240,71,150,0.1),rgba(20,20,20,0.95))] p-6 sm:p-10 lg:p-12"
+        >
           <div className="mb-6 inline-flex h-16 w-16 items-center justify-center rounded-full border border-[#f04796]/50 bg-[#f04796]/10 text-[#f6b7d2]">
             <Quote size={28} fill="currentColor" />
           </div>
@@ -45,16 +50,18 @@ export function Testimonials({ testimonials }: TestimonialsProps) {
               <div className="text-sm uppercase tracking-[0.18em] text-white/55">{items[0].client_designation}</div>
             </div>
           </div>
-        </div>
+        </BentoCard>
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {items.map((item) => (
-            <div
+            <BentoCard
               key={item.id}
-              className="flex flex-col justify-between rounded-[28px] border border-white/10 bg-[#141416] p-6 transition duration-300 hover:border-[#f04796]/40 hover:shadow-[0_0_30px_rgba(240,71,150,0.1)]"
+              radius={28}
+              glowColor="#f04796"
+              className="group flex flex-col justify-between bg-[#141416] p-6"
             >
               <div>
-                <div className="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-full bg-[#f04796]/10 text-[#f6b7d2]">
+                <div className="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-full bg-[#f04796]/10 text-[#f6b7d2] transition duration-300 group-hover:scale-110 group-hover:bg-[#f04796]/20">
                   <Quote size={18} fill="currentColor" />
                 </div>
                 <p className="text-sm leading-7 text-white/80 italic">“{item.testimonial}”</p>
@@ -68,16 +75,16 @@ export function Testimonials({ testimonials }: TestimonialsProps) {
                     className="h-11 w-11 rounded-full object-cover border border-[#f04796]/30"
                   />
                 ) : (
-                  <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#f04796]/20 text-sm font-bold text-[#f6b7d2]">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#f04796]/20 text-sm font-semibold text-[#f6b7d2]">
                     {item.client_name.charAt(0)}
                   </div>
                 )}
                 <div>
-                  <div className="text-sm font-semibold text-white">{item.client_name}</div>
-                  <div className="text-xs text-white/50">{item.client_designation}</div>
+                  <div className="text-base font-semibold text-white transition duration-300 group-hover:text-[#f6b7d2]">{item.client_name}</div>
+                  <div className="text-xs uppercase tracking-[0.16em] text-white/50">{item.client_designation}</div>
                 </div>
               </div>
-            </div>
+            </BentoCard>
           ))}
         </div>
       )}

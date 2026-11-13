@@ -1,3 +1,4 @@
+import { BentoCard } from './ui/BentoCard';
 import type { SkillItem } from '../types/database';
 
 type SkillsProps = {
@@ -6,7 +7,6 @@ type SkillsProps = {
 
 export function Skills({ skills }: SkillsProps) {
   const items = skills ?? [];
-
 
   return (
     <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
@@ -21,12 +21,17 @@ export function Skills({ skills }: SkillsProps) {
 
       <div className="flex flex-wrap justify-center gap-4">
         {items.map((skill) => (
-          <span
+          <BentoCard
             key={skill.id}
-            className="rounded-full border border-[#f04796]/40 bg-[#f04796]/8 px-5 py-3 text-sm font-medium text-white/80 shadow-[0_0_22px_rgba(240,71,150,0.12)]"
+            radius={9999}
+            spotlightRadius={160}
+            glowColor="#f04796"
+            className="group px-6 py-3 bg-[#141416] cursor-default"
           >
-            {skill.name}
-          </span>
+            <span className="text-sm font-medium text-white/80 transition duration-300 group-hover:text-[#f6b7d2]">
+              {skill.name}
+            </span>
+          </BentoCard>
         ))}
       </div>
     </section>

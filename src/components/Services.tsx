@@ -1,4 +1,5 @@
 import { BarChart3, Megaphone, PenTool, Rocket, Target } from 'lucide-react';
+import { BentoCard } from './ui/BentoCard';
 import type { ServiceItem } from '../types/database';
 
 const iconMap = {
@@ -32,16 +33,19 @@ export function Services({ services }: ServicesProps) {
           const Icon = iconMap[icon as keyof typeof iconMap] ?? Megaphone;
 
           return (
-            <article
+            <BentoCard
               key={title}
-              className="group rounded-[28px] border border-white/10 bg-[#141414] p-6 transition duration-300 hover:-translate-y-2 hover:border-[#f04796]/40 hover:shadow-[0_0_30px_rgba(240,71,150,0.15)]"
+              as="article"
+              radius={28}
+              glowColor="#f04796"
+              className="group p-6 bg-[#141414]"
             >
-              <div className="mb-5 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-[#f04796]/10 text-[#f6b7d2]">
+              <div className="mb-5 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-[#f04796]/10 text-[#f6b7d2] transition duration-300 group-hover:scale-110 group-hover:bg-[#f04796]/20">
                 <Icon size={26} />
               </div>
-              <h3 className="text-xl font-semibold text-white">{title}</h3>
+              <h3 className="text-xl font-semibold text-white transition duration-300 group-hover:text-[#f6b7d2]">{title}</h3>
               <p className="mt-4 text-sm leading-7 text-white/65">{description}</p>
-            </article>
+            </BentoCard>
           );
         })}
       </div>

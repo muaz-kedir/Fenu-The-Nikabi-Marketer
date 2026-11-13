@@ -1,4 +1,5 @@
 import { BarChart3, Heart, MessageSquare, TrendingUp, Users } from 'lucide-react';
+import { BentoCard } from './ui/BentoCard';
 import type { Statistic } from '../types/database';
 
 const iconMap = {
@@ -23,16 +24,21 @@ export function Stats({ stats }: StatsProps) {
           const Icon = iconMap[icon as keyof typeof iconMap] ?? TrendingUp;
 
           return (
-            <div key={label} className="group rounded-3xl border border-white/10 bg-[#0f0f10] p-6 transition hover:-translate-y-1 hover:border-[#f04796]/40 hover:shadow-[0_0_25px_rgba(240,71,150,0.12)]">
-              <div className="mb-3 inline-flex h-12 w-12 items-center justify-center rounded-full bg-[#f04796]/10 text-[#f6b7d2]">
+            <BentoCard
+              key={label}
+              radius={24}
+              glowColor="#f04796"
+              className="group p-6 bg-[#0f0f10]"
+            >
+              <div className="mb-3 inline-flex h-12 w-12 items-center justify-center rounded-full bg-[#f04796]/10 text-[#f6b7d2] transition duration-300 group-hover:scale-110 group-hover:bg-[#f04796]/20">
                 <Icon size={20} />
               </div>
-              <div className="text-3xl font-bold text-[#f6b7d2] lg:text-4xl">
+              <div className="text-3xl font-bold text-[#f6b7d2] transition duration-300 group-hover:text-white lg:text-4xl">
                 {value}
                 {suffix ? <span className="ml-1 text-xl">{suffix}</span> : null}
               </div>
               <div className="mt-2 text-sm uppercase tracking-[0.18em] text-white/60">{label}</div>
-            </div>
+            </BentoCard>
           );
         })}
       </div>
