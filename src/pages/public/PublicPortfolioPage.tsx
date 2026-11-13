@@ -4,6 +4,7 @@ import { Hero } from '../../components/Hero';
 import { Stats } from '../../components/Stats';
 import { About } from '../../components/About';
 import { Services } from '../../components/Services';
+import { GrowthMatrix } from '../../components/GrowthMatrix';
 import { FeaturedWork } from '../../components/FeaturedWork';
 import { Skills } from '../../components/Skills';
 import { Process } from '../../components/Process';
@@ -73,12 +74,30 @@ export function PublicPortfolioPage() {
     );
   }
 
+  const hasMatrixSection = Boolean(
+    data.sections?.some((s) => s.section_key === 'matrix' || s.section_key === 'bento')
+  );
+
   const sectionRenderers: Record<string, React.ReactNode> = {
     hero: <Hero hero={data.hero} site={data.siteSettings} />,
     stats: <Stats stats={(data.stats || []).filter((s) => s.is_visible && (isPreview || s.is_published !== false))} />,
     about: <About about={data.about} />,
-    services: <Services services={(data.services || []).filter((s) => s.is_visible && (isPreview || s.is_published !== false))} />,
+    services: (
+      <>
+        <Services services={(data.services || []).filter((s) => s.is_visible && (isPreview || s.is_published !== false))} />
+        {!hasMatrixSection && <GrowthMatrix />}
+      </>
+    ),
+    matrix: <GrowthMatrix />,
+    bento: <GrowthMatrix />,
     work: (
+      <FeaturedWork
+        projects={(data.projects || []).filter(
+          (p) => p.is_visible !== false && (isPreview || p.is_published !== false)
+        )}
+      />
+    ),
+    projects: (
       <FeaturedWork
         projects={(data.projects || []).filter(
           (p) => p.is_visible !== false && (isPreview || p.is_published !== false)
