@@ -393,46 +393,84 @@ async function buildPortfolio(previewDraft = false) {
         .sort((a, b) => a.display_order - b.display_order),
     };
   }
-  try {
-    const singletonOrder = previewDraft ? 'is_published ASC, updated_at DESC' : 'updated_at DESC';
-    const singletonFilter = previewDraft ? 'TRUE' : 'is_published = TRUE';
-    const collectionFilter = previewDraft ? 'is_visible = TRUE' : 'is_published = TRUE AND is_visible = TRUE';
-    const sectionsFilter = previewDraft ? 'TRUE' : 'is_published = TRUE';
 
-    const [site, hero, about, cta, footer, stats, services, projects, skills, process, testimonials, sections, navigation] =
-      await Promise.all([
-        query(`SELECT * FROM site_settings WHERE ${singletonFilter} ORDER BY ${singletonOrder} LIMIT 1`),
-        query(`SELECT * FROM hero_content WHERE ${singletonFilter} ORDER BY ${singletonOrder} LIMIT 1`),
-        query(`SELECT * FROM about_content WHERE ${singletonFilter} ORDER BY ${singletonOrder} LIMIT 1`),
-        query(`SELECT * FROM cta_content WHERE ${singletonFilter} ORDER BY ${singletonOrder} LIMIT 1`),
-        query(`SELECT * FROM footer_content WHERE ${singletonFilter} ORDER BY ${singletonOrder} LIMIT 1`),
-        query(`SELECT * FROM statistics WHERE ${collectionFilter} ORDER BY display_order, id`),
-        query(`SELECT * FROM services WHERE ${collectionFilter} ORDER BY display_order, id`),
-        query(`SELECT * FROM projects WHERE ${collectionFilter} ORDER BY display_order, id`),
-        query(`SELECT * FROM skills WHERE ${collectionFilter} ORDER BY display_order, id`),
-        query(`SELECT * FROM process_steps WHERE ${collectionFilter} ORDER BY display_order, id`),
-        query(`SELECT * FROM testimonials WHERE ${collectionFilter} ORDER BY display_order, id`),
-        query(`SELECT * FROM page_sections WHERE ${sectionsFilter} ORDER BY display_order, id`),
-        query(`SELECT * FROM navigation_items WHERE ${collectionFilter} ORDER BY display_order, id`).catch(() => ({ rows: [] })),
-      ]);
+  const singletonOrder = previewDraft ? 'is_published ASC, updated_at DESC' : 'updated_at DESC';
+  const singletonFilter = previewDraft ? 'TRUE' : 'is_published = TRUE';
+  const collectionFilter = previewDraft ? 'is_visible = TRUE' : 'is_published = TRUE AND is_visible = TRUE';
+  const sectionsFilter = previewDraft ? 'TRUE' : 'is_published = TRUE';
+
+  const safeQuery = async (sql, fallback = []) => {
+    try {
+      const res = await query(sql);
+      return res.rows;
+    } catch (err) {
+      console.error(`[buildPortfolio query failed]: ${sql} -> ${err.message}`);
+      return fallback;
+    }
+  };
+
+  try {
+    const [
+      siteRows,
+      heroRows,
+      aboutRows,
+      ctaRows,
+      footerRows,
+      statsRows,
+      servicesRows,
+      projectsRows,
+      skillsRows,
+      processRows,
+      testimonialsRows,
+      sectionsRows,
+      navigationRows,
+    ] = await Promise.all([
+      safeQuery(`SELECT * FROM site_settings WHERE ${singletonFilter} ORDER BY ${singletonOrder} LIMIT 1`),
+      safeQuery(`SELECT * FROM hero_content WHERE ${singletonFilter} ORDER BY ${singletonOrder} LIMIT 1`),
+      safeQuery(`SELECT * FROM about_content WHERE ${singletonFilter} ORDER BY ${singletonOrder} LIMIT 1`),
+      safeQuery(`SELECT * FROM cta_content WHERE ${singletonFilter} ORDER BY ${singletonOrder} LIMIT 1`),
+      safeQuery(`SELECT * FROM footer_content WHERE ${singletonFilter} ORDER BY ${singletonOrder} LIMIT 1`),
+      safeQuery(`SELECT * FROM statistics WHERE ${collectionFilter} ORDER BY display_order, id`),
+      safeQuery(`SELECT * FROM services WHERE ${collectionFilter} ORDER BY display_order, id`),
+      safeQuery(`SELECT * FROM projects WHERE ${collectionFilter} ORDER BY display_order, id`),
+      safeQuery(`SELECT * FROM skills WHERE ${collectionFilter} ORDER BY display_order, id`),
+      safeQuery(`SELECT * FROM process_steps WHERE ${collectionFilter} ORDER BY display_order, id`),
+      safeQuery(`SELECT * FROM testimonials WHERE ${collectionFilter} ORDER BY display_order, id`),
+      safeQuery(`SELECT * FROM page_sections WHERE ${sectionsFilter} ORDER BY display_order, id`),
+      safeQuery(`SELECT * FROM navigation_items WHERE ${collectionFilter} ORDER BY display_order, id`),
+    ]);
+
+    // If published row was not found, fallback to any existing row in DB before seed
+    const activeSite = siteRows[0] || (await safeQuery('SELECT * FROM site_settings ORDER BY updated_at DESC LIMIT 1'))[0] || seedPortfolio.siteSettings;
+    const activeHero = heroRows[0] || (await safeQuery('SELECT * FROM hero_content ORDER BY updated_at DESC LIMIT 1'))[0] || seedPortfolio.hero;
+    const activeAbout = aboutRows[0] || (await safeQuery('SELECT * FROM about_content ORDER BY updated_at DESC LIMIT 1'))[0] || seedPortfolio.about;
+    const activeCta = ctaRows[0] || (await safeQuery('SELECT * FROM cta_content ORDER BY updated_at DESC LIMIT 1'))[0] || seedPortfolio.cta;
+    const activeFooter = footerRows[0] || (await safeQuery('SELECT * FROM footer_content ORDER BY updated_at DESC LIMIT 1'))[0] || seedPortfolio.footer;
+
+    const activeStats = statsRows.length > 0 ? statsRows : (await safeQuery('SELECT * FROM statistics ORDER BY display_order, id'));
+    const activeServices = servicesRows.length > 0 ? servicesRows : (await safeQuery('SELECT * FROM services ORDER BY display_order, id'));
+    const activeProjects = projectsRows.length > 0 ? projectsRows : (await safeQuery('SELECT * FROM projects ORDER BY display_order, id'));
+    const activeSkills = skillsRows.length > 0 ? skillsRows : (await safeQuery('SELECT * FROM skills ORDER BY display_order, id'));
+    const activeProcess = processRows.length > 0 ? processRows : (await safeQuery('SELECT * FROM process_steps ORDER BY display_order, id'));
+    const activeTestimonials = testimonialsRows.length > 0 ? testimonialsRows : (await safeQuery('SELECT * FROM testimonials ORDER BY display_order, id'));
 
     return {
-      siteSettings: site.rows[0] || seedPortfolio.siteSettings,
-      hero: hero.rows[0] || seedPortfolio.hero,
-      about: about.rows[0] || seedPortfolio.about,
-      cta: cta.rows[0] || seedPortfolio.cta,
-      footer: footer.rows[0] || seedPortfolio.footer,
-      stats: stats.rows,
-      services: services.rows,
-      projects: projects.rows,
-      skills: skills.rows,
-      process: process.rows,
-      testimonials: testimonials.rows,
-      sections: sections.rows,
-      navigation: navigation.rows,
+      siteSettings: activeSite,
+      hero: activeHero,
+      about: activeAbout,
+      cta: activeCta,
+      footer: activeFooter,
+      stats: activeStats,
+      services: activeServices,
+      projects: activeProjects,
+      skills: activeSkills,
+      process: activeProcess,
+      testimonials: activeTestimonials,
+      sections: sectionsRows,
+      navigation: navigationRows,
     };
   } catch (error) {
-    console.error('portfolio query failed:', error);
+    console.error('buildPortfolio uncaught error:', error);
     return seedPortfolio;
   }
 }
