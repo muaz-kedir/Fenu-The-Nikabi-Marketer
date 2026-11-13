@@ -180,6 +180,7 @@ CREATE TABLE IF NOT EXISTS media_items (
   file_type TEXT NOT NULL,
   file_size BIGINT NOT NULL,
   alt_text TEXT,
+  data_url TEXT,
   uploaded_at TIMESTAMPTZ DEFAULT NOW()
 );
 

@@ -129,6 +129,7 @@ export function LivePreviewModal({ isOpen, onClose }: LivePreviewModalProps) {
             key={refreshKey}
             src={previewUrl}
             title="Live Draft Preview"
+            sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
             className="flex-1 w-full h-full border-0 bg-black"
           />
         </div>

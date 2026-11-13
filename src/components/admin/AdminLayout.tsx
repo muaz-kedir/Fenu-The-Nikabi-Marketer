@@ -107,9 +107,19 @@ export function AdminLayout() {
   useEffect(() => {
     void fetchOverview();
     const interval = setInterval(() => {
+      if (typeof document !== 'undefined' && document.hidden) return;
       void fetchOverview();
-    }, 15000);
-    return () => clearInterval(interval);
+    }, 60000);
+
+    const onFocus = () => {
+      void fetchOverview();
+    };
+    window.addEventListener('focus', onFocus);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('focus', onFocus);
+    };
   }, [fetchOverview]);
 
   useEffect(() => {

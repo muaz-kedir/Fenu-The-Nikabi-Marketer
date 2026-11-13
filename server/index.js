@@ -140,7 +140,46 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
 }));
 app.use(express.json({ limit: '25mb' }));
-app.use('/uploads', express.static(uploadsDir));
+
+// Uploads serving: static file if exists, database fallback if container restarted
+app.use('/uploads', async (req, res, next) => {
+  if (req.method !== 'GET' && req.method !== 'HEAD') return next();
+  const relativePath = decodeURIComponent(req.path.replace(/^\//, ''));
+  const filePath = path.join(uploadsDir, relativePath);
+
+  if (fs.existsSync(filePath)) {
+    return res.sendFile(filePath);
+  }
+
+  // Fallback to database if ephemeral container storage was wiped
+  try {
+    const fileUrl = `/uploads/${relativePath}`;
+    const media = await query(
+      'SELECT file_name, file_type, data_url FROM media_items WHERE file_url = $1 OR storage_path = $2 LIMIT 1',
+      [fileUrl, relativePath]
+    );
+
+    if (media.rows.length > 0 && media.rows[0].data_url) {
+      const base64Data = media.rows[0].data_url.split(',')[1];
+      if (base64Data) {
+        const buffer = Buffer.from(base64Data, 'base64');
+        try {
+          fs.mkdirSync(path.dirname(filePath), { recursive: true });
+          fs.writeFileSync(filePath, buffer);
+        } catch {
+          // ignore disk cache write errors
+        }
+        res.setHeader('Content-Type', media.rows[0].file_type || 'image/png');
+        res.setHeader('Cache-Control', 'public, max-age=86400');
+        return res.send(buffer);
+      }
+    }
+  } catch (err) {
+    console.error('[uploads DB fallback error]:', err.message);
+  }
+
+  res.status(404).send('Image not found');
+});
 
 function ok(res, data) {
   res.json(data);
@@ -496,6 +535,9 @@ app.get('/api/health', async (_req, res) => {
 
 app.get('/api/portfolio', async (req, res) => {
   const isPreview = req.query.preview === 'true';
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.set('Pragma', 'no-cache');
+  res.set('Expires', '0');
   res.json(await buildPortfolio(isPreview));
 });
 
@@ -693,7 +735,7 @@ function singletonRoutes(table, columns) {
     }
   });
 
-  app.post(`/api/admin/${table}`, requireAdmin, async (req, res) => {
+  const handleSaveSingleton = async (req, res) => {
     try {
       const isPublished = req.body.is_published === true;
       const fields = columns;
@@ -721,7 +763,11 @@ function singletonRoutes(table, columns) {
       console.error(`Error saving admin ${table}:`, error);
       fail(res, 500, error.message || 'Failed to save content.');
     }
-  });
+  };
+
+  app.post(`/api/admin/${table}`, requireAdmin, handleSaveSingleton);
+  app.put(`/api/admin/${table}`, requireAdmin, handleSaveSingleton);
+  app.patch(`/api/admin/${table}`, requireAdmin, handleSaveSingleton);
 
   app.post(`/api/admin/${table}/publish`, requireAdmin, async (req, res) => {
     try {
@@ -1216,7 +1262,9 @@ app.post('/api/admin/publish-all-drafts', requireAdmin, async (req, res) => {
 // Media
 app.get('/api/media', requireAdmin, async (_req, res) => {
   try {
-    const result = await query('SELECT * FROM media_items ORDER BY uploaded_at DESC');
+    const result = await query(
+      'SELECT id, file_name, file_url, storage_path, file_type, file_size, alt_text, uploaded_at FROM media_items ORDER BY uploaded_at DESC'
+    );
     ok(res, result.rows);
   } catch (error) {
     console.error('Error fetching media:', error);
@@ -1254,10 +1302,18 @@ app.post('/api/media/upload', requireAdmin, async (req, res) => {
     fs.writeFileSync(filePath, buffer);
     const storagePath = `${safeFolder}/${safeName}`;
     const fileUrl = `/uploads/${storagePath}`;
-    const result = await query(
-      'INSERT INTO media_items (file_name, file_url, storage_path, file_type, file_size, alt_text) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
-      [fileName, fileUrl, storagePath, contentType, buffer.length, altText || null],
-    );
+    let result;
+    try {
+      result = await query(
+        'INSERT INTO media_items (file_name, file_url, storage_path, file_type, file_size, alt_text, data_url) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, file_name, file_url, storage_path, file_type, file_size, alt_text, uploaded_at',
+        [fileName, fileUrl, storagePath, contentType, buffer.length, altText || null, dataUrl],
+      );
+    } catch {
+      result = await query(
+        'INSERT INTO media_items (file_name, file_url, storage_path, file_type, file_size, alt_text) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, file_name, file_url, storage_path, file_type, file_size, alt_text, uploaded_at',
+        [fileName, fileUrl, storagePath, contentType, buffer.length, altText || null],
+      );
+    }
     ok(res, result.rows[0]);
   } catch (error) {
     console.error('Error uploading media:', error);
@@ -1333,7 +1389,11 @@ app.delete('/api/media/:id', requireAdmin, async (req, res) => {
 // Contact messages
 app.post('/api/contact-messages', async (req, res) => {
   try {
-    const { sender_name, sender_email, subject, message } = req.body || {};
+    const sender_name = req.body?.sender_name || req.body?.name;
+    const sender_email = req.body?.sender_email || req.body?.email;
+    const subject = req.body?.subject || null;
+    const message = req.body?.message;
+
     if (!sender_name || !sender_email || !message) {
       fail(res, 400, 'Name, email, and message are required.');
       return;
@@ -1345,7 +1405,7 @@ app.post('/api/contact-messages', async (req, res) => {
     if (getPool()) {
       const result = await query(
         'INSERT INTO contact_messages (sender_name, sender_email, subject, message) VALUES ($1, $2, $3, $4) RETURNING *',
-        [sender_name, sender_email, subject || null, message],
+        [sender_name, sender_email, subject, message],
       );
       ok(res, result.rows[0]);
     } else {
@@ -1353,7 +1413,7 @@ app.post('/api/contact-messages', async (req, res) => {
         id: crypto.randomUUID(),
         sender_name,
         sender_email,
-        subject: subject || null,
+        subject,
         message,
         status: 'new',
         created_at: new Date().toISOString(),
@@ -1434,9 +1494,13 @@ if (!isViteDev && fs.existsSync(distDir)) {
     index: false,
   }));
 
-  // Client-side SPA routing fallback for all non-API GET / HEAD requests
+  // Client-side SPA routing fallback for all non-API and non-Uploads GET / HEAD requests
   app.use((req, res, next) => {
-    if ((req.method === 'GET' || req.method === 'HEAD') && !req.path.startsWith('/api')) {
+    if (
+      (req.method === 'GET' || req.method === 'HEAD') &&
+      !req.path.startsWith('/api') &&
+      !req.path.startsWith('/uploads')
+    ) {
       return res.sendFile(path.join(distDir, 'index.html'));
     }
     next();

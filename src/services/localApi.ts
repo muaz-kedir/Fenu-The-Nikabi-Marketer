@@ -7,8 +7,10 @@ export async function localApiRequest<T>(path: string, options: RequestInit = {}
   let response: Response;
   try {
     response = await fetch(`${apiBaseUrl}${path}`, {
+      cache: 'no-store',
       headers: {
         'Content-Type': 'application/json',
+        'Cache-Control': 'no-cache',
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
         ...(options.headers ?? {}),
       },
