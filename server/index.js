@@ -297,6 +297,17 @@ async function ensureDatabaseSchema() {
       }
     }
 
+    // 4. Ensure migration 005_media_persistence is applied
+    try {
+      const mig005Path = path.join(process.cwd(), 'database', 'migrations', '005_media_persistence.sql');
+      if (fs.existsSync(mig005Path)) {
+        const mig005Sql = fs.readFileSync(mig005Path, 'utf8');
+        await activePool.query(mig005Sql);
+      }
+    } catch (migErr) {
+      console.warn('[db] Note on migration 005:', migErr.message);
+    }
+
     schemaInitialized = true;
   } catch (err) {
     console.error('[db] Error initializing database schema:', err.message);
