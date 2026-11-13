@@ -26,7 +26,7 @@ export function About({ about }: AboutProps) {
         <div>
           <div className="mb-4 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.25em] text-[#f6b7d2]">
             <Sparkles size={14} />
-            {subtitle}
+            {about?.intro_heading || subtitle}
           </div>
           <h2 className="font-display text-5xl text-white sm:text-6xl">{title}</h2>
           <div className="mt-4 h-px w-28 bg-[#f04796]" />

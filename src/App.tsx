@@ -6,6 +6,7 @@ import { AdminLayout } from './components/admin/AdminLayout';
 import { LoginPage } from './pages/admin/LoginPage';
 import { DashboardOverviewPage } from './pages/admin/DashboardOverviewPage';
 import { LandingPageEditorPage } from './pages/admin/LandingPageEditorPage';
+import { HeroEditorPage } from './pages/admin/HeroEditorPage';
 import { AboutEditorPage } from './pages/admin/AboutEditorPage';
 import { ServicesPage } from './pages/admin/ServicesPage';
 import { ProjectsPage } from './pages/admin/ProjectsPage';
@@ -13,6 +14,11 @@ import { SkillsPage } from './pages/admin/SkillsPage';
 import { ProcessPage } from './pages/admin/ProcessPage';
 import { TestimonialsPage } from './pages/admin/TestimonialsPage';
 import { StatisticsPage } from './pages/admin/StatisticsPage';
+import { NavigationManagerPage } from './pages/admin/NavigationManagerPage';
+import { ContactSettingsPage } from './pages/admin/ContactSettingsPage';
+import { SeoSettingsPage } from './pages/admin/SeoSettingsPage';
+import { PublishingHistoryPage } from './pages/admin/PublishingHistoryPage';
+import { AdminProfilePage } from './pages/admin/AdminProfilePage';
 import { MediaLibraryPage } from './pages/admin/MediaLibraryPage';
 import { ContactMessagesPage } from './pages/admin/ContactMessagesPage';
 import { WebsiteSettingsPage } from './pages/admin/WebsiteSettingsPage';
@@ -22,7 +28,11 @@ function ProtectedRoute({ children }: { children: ReactNode }) {
   const { session, isLoading } = useAuth();
 
   if (isLoading) {
-    return <div className="flex min-h-screen items-center justify-center bg-[#0a0a0a] text-white">Loading...</div>;
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#F8F4ED] text-[#29251F]">
+        Loading session...
+      </div>
+    );
   }
 
   if (!session) {
@@ -47,6 +57,7 @@ function AppRoutes() {
       >
         <Route index element={<DashboardOverviewPage />} />
         <Route path="landing-page" element={<LandingPageEditorPage />} />
+        <Route path="hero" element={<HeroEditorPage />} />
         <Route path="about" element={<AboutEditorPage />} />
         <Route path="services" element={<ServicesPage />} />
         <Route path="projects" element={<ProjectsPage />} />
@@ -54,9 +65,14 @@ function AppRoutes() {
         <Route path="process" element={<ProcessPage />} />
         <Route path="testimonials" element={<TestimonialsPage />} />
         <Route path="statistics" element={<StatisticsPage />} />
-        <Route path="media" element={<MediaLibraryPage />} />
+        <Route path="navigation" element={<NavigationManagerPage />} />
+        <Route path="contact" element={<ContactSettingsPage />} />
         <Route path="messages" element={<ContactMessagesPage />} />
+        <Route path="media" element={<MediaLibraryPage />} />
+        <Route path="seo" element={<SeoSettingsPage />} />
         <Route path="settings" element={<WebsiteSettingsPage />} />
+        <Route path="history" element={<PublishingHistoryPage />} />
+        <Route path="profile" element={<AdminProfilePage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

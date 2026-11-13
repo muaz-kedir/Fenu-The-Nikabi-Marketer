@@ -14,9 +14,10 @@ export function Contact({ site, cta }: ContactProps) {
   const location = site?.location ?? 'Dubai, UAE';
 
   const scriptGreeting = cta?.script_greeting ?? 'Thank you for your support!';
-  const mainHeading = cta?.main_heading ?? 'Ready to grow your brand?';
+  const mainHeading = site?.contact_heading || cta?.main_heading || 'Ready to grow your brand?';
   const supportingDescription =
-    cta?.supporting_description ??
+    site?.contact_description ||
+    cta?.supporting_description ||
     "Let's focus on building and growing your presence with strategy, creativity, and performance that feels premium from day one.";
   const highlightedWords = (cta?.highlighted_words || 'building,growing')
     .split(',')

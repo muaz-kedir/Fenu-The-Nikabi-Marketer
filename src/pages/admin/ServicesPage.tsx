@@ -1,5 +1,18 @@
 import { useEffect, useState } from 'react';
-import { ArrowDown, ArrowUp, Eye, EyeOff, Loader2, Megaphone, Pencil, Plus, Trash2 } from 'lucide-react';
+import { useOutletContext } from 'react-router-dom';
+import {
+  ArrowDown,
+  ArrowUp,
+  CheckCircle,
+  Eye,
+  EyeOff,
+  Layers,
+  Pencil,
+  Plus,
+  Send,
+  Trash2,
+  X,
+} from 'lucide-react';
 import { ImageUploadField } from '../../components/admin/ImageUploadField';
 import {
   adminCreate,
@@ -15,7 +28,9 @@ import type { ServiceItem } from '../../types/database';
 const emptyForm = {
   title: '',
   description: '',
-  icon: 'Megaphone',
+  category: 'Social Media Management',
+  price_starting_from: '$500/mo',
+  icon: 'Layers',
   image_url: '',
   image_alt: '',
   display_order: 1,
@@ -24,17 +39,21 @@ const emptyForm = {
 };
 
 export function ServicesPage() {
+  const { refreshOverview } = useOutletContext<{ refreshOverview?: () => void }>() || {};
+
   const [items, setItems] = useState<ServiceItem[]>([]);
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [isFormOpen, setIsFormOpen] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  const load = async () => {
+  const loadData = async () => {
     setLoading(true);
     try {
-      setItems(await adminList<ServiceItem>('services'));
+      const data = await adminList<ServiceItem>('services');
+      setItems(data.sort((a, b) => a.display_order - b.display_order));
     } catch (error) {
       setMessage({
         type: 'error',
@@ -46,12 +65,13 @@ export function ServicesPage() {
   };
 
   useEffect(() => {
-    void load();
+    void loadData();
   }, []);
 
-  const reset = () => {
+  const resetForm = () => {
     setForm(emptyForm);
     setEditingId(null);
+    setIsFormOpen(false);
   };
 
   const startEdit = (service: ServiceItem) => {
@@ -59,29 +79,36 @@ export function ServicesPage() {
     setForm({
       title: service.title,
       description: service.description,
-      icon: service.icon || 'Megaphone',
+      category: service.category || 'Social Media Management',
+      price_starting_from: service.price_starting_from || '',
+      icon: service.icon || 'Layers',
       image_url: service.image_url || '',
       image_alt: service.image_alt || '',
       display_order: service.display_order,
       is_visible: service.is_visible,
       is_published: service.is_published !== false,
     });
+    setIsFormOpen(true);
   };
 
-  const save = async (event: React.FormEvent) => {
-    event.preventDefault();
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
     setSaving(true);
     setMessage(null);
     try {
-      const payload = { ...form, display_order: Number(form.display_order) || 1 };
+      const payload = {
+        ...form,
+        display_order: Number(form.display_order) || 1,
+      };
       if (editingId) {
         await adminUpdate('services', editingId, payload);
       } else {
         await adminCreate('services', payload);
       }
-      await load();
-      reset();
-      setMessage({ type: 'success', text: `Service ${editingId ? 'updated' : 'created'} successfully.` });
+      await loadData();
+      resetForm();
+      setMessage({ type: 'success', text: `Service successfully ${editingId ? 'updated' : 'created'}.` });
+      if (refreshOverview) refreshOverview();
     } catch (error) {
       setMessage({
         type: 'error',
@@ -92,13 +119,13 @@ export function ServicesPage() {
     }
   };
 
-  const remove = async (id: string, title: string) => {
-    if (!window.confirm(`Are you sure you want to delete service "${title}"?`)) return;
+  const handleDelete = async (id: string, title: string) => {
+    if (!confirm(`Are you sure you want to delete the service "${title}"?`)) return;
     try {
       await adminDelete('services', id);
-      await load();
-      if (editingId === id) reset();
+      await loadData();
       setMessage({ type: 'success', text: 'Service deleted.' });
+      if (refreshOverview) refreshOverview();
     } catch (error) {
       setMessage({
         type: 'error',
@@ -107,245 +134,322 @@ export function ServicesPage() {
     }
   };
 
-  const handleReorder = async (fromIndex: number, toIndex: number) => {
-    if (toIndex < 0 || toIndex >= items.length) return;
-    const reordered = [...items];
-    const [moved] = reordered.splice(fromIndex, 1);
-    reordered.splice(toIndex, 0, moved);
-    const ids = reordered.map((item) => item.id);
+  const toggleVisibility = async (service: ServiceItem) => {
     try {
-      await adminReorder('services', ids);
-      await load();
-    } catch {
-      setMessage({ type: 'error', text: 'Failed to reorder services.' });
+      await adminUpdate('services', service.id, { is_visible: !service.is_visible });
+      await loadData();
+    } catch (err) {
+      alert('Failed to toggle visibility.');
+    }
+  };
+
+  const togglePublish = async (service: ServiceItem) => {
+    try {
+      if (service.is_published) {
+        await adminUnpublish('services', service.id);
+      } else {
+        await adminPublish('services', service.id);
+      }
+      await loadData();
+      if (refreshOverview) refreshOverview();
+    } catch (err) {
+      alert('Failed to update publish state.');
+    }
+  };
+
+  const moveOrder = async (index: number, direction: 'up' | 'down') => {
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= items.length) return;
+    const reordered = [...items];
+    const temp = reordered[index];
+    reordered[index] = reordered[targetIndex];
+    reordered[targetIndex] = temp;
+    setItems(reordered);
+
+    try {
+      await adminReorder('services', reordered.map((s) => s.id));
+      await loadData();
+    } catch (err) {
+      await loadData();
     }
   };
 
   return (
-    <div className="space-y-6 max-w-5xl">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="mx-auto max-w-5xl space-y-6">
+      {/* Header */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-xs uppercase tracking-[0.22em] text-[#f6b7d2]">Services</p>
-          <h1 className="mt-1 text-3xl font-semibold text-white">Bespoke Marketing Services</h1>
+          <h1 className="text-xl font-bold tracking-tight text-[#29251F]">Services & Offerings</h1>
+          <p className="mt-1 text-xs text-[#8B806D]">
+            Manage the client marketing services Azmina provides, along with pricing, categories, and icons.
+          </p>
         </div>
+
         <button
           type="button"
           onClick={() => {
-            reset();
-            setForm({ ...emptyForm, display_order: items.length + 1 });
+            resetForm();
+            setForm((prev) => ({ ...prev, display_order: items.length + 1 }));
+            setIsFormOpen(true);
           }}
-          className="inline-flex items-center gap-2 rounded-full border border-[#f04796] bg-[#f04796] px-4 py-2 text-xs font-semibold text-[#0d0d0f] hover:bg-[#ff6ab3]"
+          className="inline-flex items-center gap-1.5 rounded-xl bg-[#344238] px-4 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-[#29251F]"
         >
-          <Plus size={14} /> New Service
+          <Plus size={15} /> Add Service
         </button>
       </div>
 
       {message && (
         <div
-          className={`flex items-center justify-between rounded-2xl border px-4 py-3 text-sm ${
+          className={`rounded-xl p-3 text-xs font-medium border ${
             message.type === 'success'
-              ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-200'
-              : 'border-red-500/30 bg-red-500/10 text-red-200'
+              ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
+              : 'border-rose-200 bg-rose-50 text-rose-800'
           }`}
         >
-          <span>{message.text}</span>
-          <button type="button" onClick={() => setMessage(null)} className="text-white/60 hover:text-white">
-            ✕
-          </button>
+          {message.text}
         </div>
       )}
 
-      {/* Editor Form */}
-      <form onSubmit={save} className="rounded-[28px] border border-white/10 bg-[#141416] p-6 space-y-5">
-        <h3 className="text-base font-semibold text-white">
-          {editingId ? 'Edit Service' : 'Add New Service Offer'}
-        </h3>
-        <div className="grid gap-4 md:grid-cols-2">
-          <div>
-            <label className="block text-xs font-medium text-white/70 mb-1.5">Service Title</label>
-            <input
-              required
-              value={form.title}
-              onChange={(e) => setForm({ ...form, title: e.target.value })}
-              className="w-full rounded-2xl border border-white/10 bg-[#0d0d0f] px-3.5 py-2.5 text-sm text-white focus:border-[#f04796] focus:outline-none"
-              placeholder="e.g. Social Media Management"
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-white/70 mb-1.5">Icon</label>
-            <select
-              value={form.icon}
-              onChange={(e) => setForm({ ...form, icon: e.target.value })}
-              className="w-full rounded-2xl border border-white/10 bg-[#0d0d0f] px-3.5 py-2.5 text-sm text-white focus:border-[#f04796] focus:outline-none"
-            >
-              <option value="Megaphone">Megaphone</option>
-              <option value="Target">Target</option>
-              <option value="PenTool">PenTool</option>
-              <option value="Rocket">Rocket</option>
-              <option value="BarChart3">BarChart3</option>
-            </select>
-          </div>
-          <div className="md:col-span-2">
-            <label className="block text-xs font-medium text-white/70 mb-1.5">Description</label>
-            <textarea
-              required
-              rows={3}
-              value={form.description}
-              onChange={(e) => setForm({ ...form, description: e.target.value })}
-              className="w-full rounded-2xl border border-white/10 bg-[#0d0d0f] px-3.5 py-2.5 text-sm text-white focus:border-[#f04796] focus:outline-none"
-              placeholder="Outline deliverables and strategy included..."
-            />
-          </div>
-          <div className="md:col-span-2">
-            <ImageUploadField
-              label="Optional Service Graphic / Image"
-              value={form.image_url}
-              onChange={(url) => setForm({ ...form, image_url: url })}
-              altText={form.image_alt}
-              onAltTextChange={(alt) => setForm({ ...form, image_alt: alt })}
-              folder="services"
-            />
-          </div>
-        </div>
-
-        <div className="flex flex-wrap items-center justify-between gap-4 border-t border-white/10 pt-4">
-          <div className="flex items-center gap-4">
-            <label className="flex items-center gap-2 text-xs text-white/80 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={form.is_visible}
-                onChange={(e) => setForm({ ...form, is_visible: e.target.checked })}
-                className="rounded border-white/20 bg-black/40 text-[#f04796] focus:ring-0"
-              />
-              Visible on Website
-            </label>
-            <label className="flex items-center gap-2 text-xs text-white/80 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={form.is_published}
-                onChange={(e) => setForm({ ...form, is_published: e.target.checked })}
-                className="rounded border-white/20 bg-black/40 text-[#f04796] focus:ring-0"
-              />
-              Published
-            </label>
-          </div>
-
-          <div className="flex gap-2">
-            {editingId && (
-              <button
-                type="button"
-                onClick={reset}
-                className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs text-white/70 hover:bg-white/10"
-              >
-                Cancel Edit
-              </button>
-            )}
+      {/* Editor Modal / Card */}
+      {isFormOpen && (
+        <div className="rounded-2xl border border-[#344238]/30 bg-white p-6 shadow-md space-y-4">
+          <div className="flex items-center justify-between border-b border-[#E7DCCB] pb-3">
+            <h2 className="text-sm font-bold text-[#29251F]">
+              {editingId ? 'Edit Service' : 'Create New Service'}
+            </h2>
             <button
-              type="submit"
-              disabled={saving}
-              className="rounded-full bg-[#f04796] px-5 py-2.5 text-xs font-semibold text-[#0d0d0f] shadow-[0_0_20px_rgba(240,71,150,0.3)] hover:bg-[#ff6ab3] disabled:opacity-50"
+              type="button"
+              onClick={resetForm}
+              className="text-[#8B806D] hover:text-[#29251F]"
             >
-              {saving ? 'Saving...' : editingId ? 'Update Service' : 'Add Service'}
+              <X size={18} />
             </button>
           </div>
-        </div>
-      </form>
 
-      {/* Services List */}
-      <div className="space-y-3">
-        <h3 className="text-sm font-semibold text-white/70">Current Services ({items.length})</h3>
-        {loading ? (
-          <div className="flex h-32 items-center justify-center text-white/50">
-            <Loader2 size={20} className="animate-spin mr-2 text-[#f04796]" /> Loading services...
-          </div>
-        ) : items.length === 0 ? (
-          <div className="rounded-2xl border border-white/10 bg-[#141416] p-8 text-center text-white/40 text-sm">
-            No services configured yet.
+          <form onSubmit={handleSave} className="space-y-4">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <label className="block text-xs font-medium text-[#29251F]">Service Title *</label>
+                <input
+                  type="text"
+                  required
+                  value={form.title}
+                  onChange={(e) => setForm({ ...form, title: e.target.value })}
+                  placeholder="e.g. Social Media Management"
+                  className="mt-1 w-full rounded-xl border border-[#E7DCCB] bg-[#F8F4ED]/50 px-3 py-2 text-xs text-[#29251F] focus:border-[#344238] focus:bg-white focus:outline-hidden"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-[#29251F]">Category</label>
+                <select
+                  value={form.category}
+                  onChange={(e) => setForm({ ...form, category: e.target.value })}
+                  className="mt-1 w-full rounded-xl border border-[#E7DCCB] bg-[#F8F4ED]/50 px-3 py-2 text-xs text-[#29251F] focus:border-[#344238] focus:bg-white focus:outline-hidden"
+                >
+                  <option value="Social Media Management">Social Media Management</option>
+                  <option value="Content Creation">Content Creation</option>
+                  <option value="Paid Advertising">Paid Advertising</option>
+                  <option value="Branding & Identity">Branding & Identity</option>
+                  <option value="Strategy & Consulting">Strategy & Consulting</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <label className="block text-xs font-medium text-[#29251F]">Starting Price (Optional)</label>
+                <input
+                  type="text"
+                  value={form.price_starting_from}
+                  onChange={(e) => setForm({ ...form, price_starting_from: e.target.value })}
+                  placeholder="e.g. Starting from $650 / month"
+                  className="mt-1 w-full rounded-xl border border-[#E7DCCB] bg-[#F8F4ED]/50 px-3 py-2 text-xs text-[#29251F] focus:border-[#344238] focus:bg-white focus:outline-hidden"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-[#29251F]">Display Order</label>
+                <input
+                  type="number"
+                  value={form.display_order}
+                  onChange={(e) => setForm({ ...form, display_order: Number(e.target.value) })}
+                  className="mt-1 w-full rounded-xl border border-[#E7DCCB] bg-[#F8F4ED]/50 px-3 py-2 text-xs text-[#29251F] focus:border-[#344238] focus:bg-white focus:outline-hidden"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-[#29251F]">Service Description</label>
+              <textarea
+                rows={3}
+                required
+                value={form.description}
+                onChange={(e) => setForm({ ...form, description: e.target.value })}
+                placeholder="Describe deliverables, scope, and strategic value for the client..."
+                className="mt-1 w-full rounded-xl border border-[#E7DCCB] bg-[#F8F4ED]/50 p-3 text-xs text-[#29251F] focus:border-[#344238] focus:bg-white focus:outline-hidden"
+              />
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <ImageUploadField
+                label="Service Illustration / Graphic"
+                value={form.image_url}
+                onChange={(url) => setForm({ ...form, image_url: url })}
+                folder="services"
+                helperText="Optional visual preview card"
+              />
+
+              <div className="flex flex-col justify-end space-y-3 pb-2">
+                <label className="flex items-center gap-2 cursor-pointer text-xs font-medium text-[#29251F]">
+                  <input
+                    type="checkbox"
+                    checked={form.is_visible}
+                    onChange={(e) => setForm({ ...form, is_visible: e.target.checked })}
+                    className="h-4 w-4 rounded-sm border-[#E7DCCB] text-[#344238]"
+                  />
+                  <span>Visible on public site</span>
+                </label>
+
+                <label className="flex items-center gap-2 cursor-pointer text-xs font-medium text-[#29251F]">
+                  <input
+                    type="checkbox"
+                    checked={form.is_published}
+                    onChange={(e) => setForm({ ...form, is_published: e.target.checked })}
+                    className="h-4 w-4 rounded-sm border-[#E7DCCB] text-[#344238]"
+                  />
+                  <span>Published (Live)</span>
+                </label>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 border-t border-[#E7DCCB] pt-4">
+              <button
+                type="button"
+                onClick={resetForm}
+                className="rounded-xl border border-[#E7DCCB] bg-[#F8F4ED] px-4 py-2 text-xs font-semibold text-[#29251F] transition hover:bg-[#E7DCCB]/60"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={saving}
+                className="inline-flex items-center gap-1.5 rounded-xl bg-[#344238] px-5 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-[#29251F] disabled:opacity-50"
+              >
+                {saving ? 'Saving...' : editingId ? 'Update Service' : 'Create Service'}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* Services List Table */}
+      <div className="overflow-hidden rounded-2xl border border-[#E7DCCB] bg-white shadow-xs">
+        <div className="p-4 border-b border-[#E7DCCB] flex items-center justify-between">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-[#8B806D]">
+            All Services ({items.length})
+          </h2>
+          <span className="text-[11px] text-[#8B806D]">Drag or use arrows to reorder items</span>
+        </div>
+
+        {items.length === 0 ? (
+          <div className="p-12 text-center text-xs text-[#8B806D]">
+            No services added yet. Click &quot;Add Service&quot; to create one.
           </div>
         ) : (
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {items.map((service, idx) => (
+          <div className="divide-y divide-[#E7DCCB]/60">
+            {items.map((service, index) => (
               <div
                 key={service.id}
-                className="flex flex-col justify-between rounded-[24px] border border-white/10 bg-[#141416] p-5 transition hover:border-[#f04796]/40"
+                className="flex flex-col gap-4 p-4 transition hover:bg-[#F8F4ED]/40 sm:flex-row sm:items-center sm:justify-between"
               >
-                <div>
-                  <div className="flex items-center justify-between">
-                    <span className="rounded-xl bg-[#f04796]/10 px-2.5 py-1 text-xs font-semibold text-[#f6b7d2]">
-                      {service.icon || 'Megaphone'}
-                    </span>
-                    <div className="flex items-center gap-1">
-                      <button
-                        type="button"
-                        onClick={() => void handleReorder(idx, idx - 1)}
-                        disabled={idx === 0}
-                        className="p-1 text-white/40 hover:text-white disabled:opacity-20"
-                        title="Move Up"
-                      >
-                        <ArrowUp size={13} />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => void handleReorder(idx, idx + 1)}
-                        disabled={idx === items.length - 1}
-                        className="p-1 text-white/40 hover:text-white disabled:opacity-20"
-                        title="Move Down"
-                      >
-                        <ArrowDown size={13} />
-                      </button>
-                    </div>
+                <div className="flex items-center gap-3">
+                  <div className="flex flex-col gap-1 text-[#8B806D]">
+                    <button
+                      type="button"
+                      disabled={index === 0}
+                      onClick={() => void moveOrder(index, 'up')}
+                      className="hover:text-[#29251F] disabled:opacity-20"
+                    >
+                      <ArrowUp size={14} />
+                    </button>
+                    <button
+                      type="button"
+                      disabled={index === items.length - 1}
+                      onClick={() => void moveOrder(index, 'down')}
+                      className="hover:text-[#29251F] disabled:opacity-20"
+                    >
+                      <ArrowDown size={14} />
+                    </button>
                   </div>
-                  <h4 className="mt-3 text-base font-semibold text-white">{service.title}</h4>
-                  <p className="mt-1 text-xs text-white/60 line-clamp-3 leading-5">{service.description}</p>
+
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#F8F4ED] text-[#344238] border border-[#E7DCCB]">
+                    <Layers size={18} />
+                  </div>
+
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-xs font-bold text-[#29251F]">{service.title}</h3>
+                      {service.category && (
+                        <span className="rounded-md bg-[#F8F4ED] px-2 py-0.5 text-[10px] font-medium text-[#344238] border border-[#E7DCCB]">
+                          {service.category}
+                        </span>
+                      )}
+                      {service.price_starting_from && (
+                        <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md">
+                          {service.price_starting_from}
+                        </span>
+                      )}
+                    </div>
+                    <p className="mt-0.5 line-clamp-1 text-[11px] text-[#8B806D] max-w-md">
+                      {service.description}
+                    </p>
+                  </div>
                 </div>
 
-                <div className="mt-4 flex items-center justify-between border-t border-white/5 pt-3">
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={async () => {
-                        await adminUpdate('services', service.id, { is_visible: !service.is_visible });
-                        await load();
-                      }}
-                      className={`text-xs inline-flex items-center gap-1 ${
-                        service.is_visible ? 'text-emerald-400' : 'text-white/40'
-                      }`}
-                    >
-                      {service.is_visible ? <Eye size={12} /> : <EyeOff size={12} />}
-                      {service.is_visible ? 'Visible' : 'Hidden'}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={async () => {
-                        if (service.is_published) {
-                          await adminUnpublish('services', service.id);
-                        } else {
-                          await adminPublish('services', service.id);
-                        }
-                        await load();
-                      }}
-                      className={`text-[11px] ${service.is_published ? 'text-[#f6b7d2]' : 'text-white/40'}`}
-                    >
-                      {service.is_published ? 'Published' : 'Draft'}
-                    </button>
-                  </div>
+                <div className="flex items-center gap-2 self-end sm:self-center">
+                  <button
+                    type="button"
+                    onClick={() => void togglePublish(service)}
+                    className={`rounded-lg px-2.5 py-1 text-[11px] font-semibold transition ${
+                      service.is_published
+                        ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                        : 'bg-amber-50 text-amber-800 border border-amber-200'
+                    }`}
+                  >
+                    {service.is_published ? 'Published' : 'Draft'}
+                  </button>
 
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => startEdit(service)}
-                      className="text-xs text-white/60 hover:text-white"
-                    >
-                      <Pencil size={13} />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => void remove(service.id, service.title)}
-                      className="text-xs text-red-400/80 hover:text-red-300"
-                    >
-                      <Trash2 size={13} />
-                    </button>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => void toggleVisibility(service)}
+                    title={service.is_visible ? 'Visible' : 'Hidden'}
+                    className={`h-8 w-8 flex items-center justify-center rounded-lg border transition ${
+                      service.is_visible
+                        ? 'border-[#E7DCCB] bg-white text-[#344238]'
+                        : 'border-[#E7DCCB] bg-[#F8F4ED] text-[#8B806D]'
+                    }`}
+                  >
+                    {service.is_visible ? <Eye size={14} /> : <EyeOff size={14} />}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => startEdit(service)}
+                    title="Edit Service"
+                    className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#E7DCCB] bg-white text-[#29251F] transition hover:bg-[#F8F4ED]"
+                  >
+                    <Pencil size={14} />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => void handleDelete(service.id, service.title)}
+                    title="Delete Service"
+                    className="flex h-8 w-8 items-center justify-center rounded-lg border border-rose-200 bg-rose-50 text-rose-600 transition hover:bg-rose-100"
+                  >
+                    <Trash2 size={14} />
+                  </button>
                 </div>
               </div>
             ))}

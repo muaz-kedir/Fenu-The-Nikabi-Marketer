@@ -14,6 +14,8 @@ import type {
   ProcessStep,
   PageSection,
   MediaItem,
+  NavigationItem,
+  PublishingHistoryItem,
 } from '../types/database';
 
 const fallbackPortfolio: PortfolioData = seedPortfolio;
@@ -22,6 +24,18 @@ export async function getPortfolioContent(): Promise<PortfolioData> {
   if (isLocalApiConfigured) {
     try {
       return await localApiRequest<PortfolioData>('/api/portfolio');
+    } catch {
+      return fallbackPortfolio;
+    }
+  }
+
+  return fallbackPortfolio;
+}
+
+export async function getPreviewPortfolioContent(): Promise<PortfolioData> {
+  if (isLocalApiConfigured) {
+    try {
+      return await localApiRequest<PortfolioData>('/api/portfolio?preview=true');
     } catch {
       return fallbackPortfolio;
     }
@@ -41,6 +55,13 @@ export async function getDashboardOverview() {
         unreadMessages: number;
         publishedProjects: number;
         hiddenSections: number;
+        publishedSections: number;
+        totalSkills: number;
+        totalProcessSteps: number;
+        totalMedia: number;
+        draftChanges: number;
+        lastPublishedAt: string | null;
+        recentActivities: PublishingHistoryItem[];
       }>('/api/dashboard');
     } catch {
       return {
@@ -51,6 +72,13 @@ export async function getDashboardOverview() {
         unreadMessages: 0,
         publishedProjects: 0,
         hiddenSections: 0,
+        publishedSections: 0,
+        totalSkills: 0,
+        totalProcessSteps: 0,
+        totalMedia: 0,
+        draftChanges: 0,
+        lastPublishedAt: null,
+        recentActivities: [],
       };
     }
   }
@@ -63,6 +91,13 @@ export async function getDashboardOverview() {
     unreadMessages: 0,
     publishedProjects: 0,
     hiddenSections: 0,
+    publishedSections: 0,
+    totalSkills: 0,
+    totalProcessSteps: 0,
+    totalMedia: 0,
+    draftChanges: 0,
+    lastPublishedAt: null,
+    recentActivities: [],
   };
 }
 
@@ -176,4 +211,25 @@ export async function deleteMedia(id: string) {
 
 export async function checkMediaReferences(id: string): Promise<{ inUse: boolean; references: string[] }> {
   return localApiRequest<{ inUse: boolean; references: string[] }>(`/api/media/${id}/references`);
+}
+
+export async function publishAllDrafts() {
+  return localApiRequest<{ published: boolean; message: string }>('/api/admin/publish-all-drafts', {
+    method: 'POST',
+  });
+}
+
+export async function getPublishingHistory(): Promise<PublishingHistoryItem[]> {
+  return localApiRequest<PublishingHistoryItem[]>('/api/admin/history');
+}
+
+export async function recordPublishHistory(data: {
+  action: 'publish' | 'draft_save' | 'restore';
+  section_name: string;
+  summary?: string;
+}) {
+  return localApiRequest<PublishingHistoryItem>('/api/admin/history', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
 }

@@ -1,90 +1,234 @@
 import { useEffect, useState } from 'react';
-import { adminCreate, adminDelete, adminList, adminPublish, adminUnpublish, adminUpdate } from '../../services/contentService';
+import { useOutletContext } from 'react-router-dom';
+import { ArrowDown, ArrowUp, Compass, Pencil, Plus, Trash2 } from 'lucide-react';
+import {
+  adminCreate,
+  adminDelete,
+  adminList,
+  adminUpdate,
+} from '../../services/contentService';
 import type { ProcessStep } from '../../types/database';
 
-const emptyForm = { step_number: '', title: '', description: '', display_order: 1, is_visible: true, is_published: true };
+const emptyForm = {
+  step_number: '01',
+  title: '',
+  description: '',
+  display_order: 1,
+  is_visible: true,
+  is_published: true,
+};
 
 export function ProcessPage() {
+  const { refreshOverview } = useOutletContext<{ refreshOverview?: () => void }>() || {};
+
   const [items, setItems] = useState<ProcessStep[]>([]);
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  const load = async () => {
+  const loadData = async () => {
     setLoading(true);
-    try { setItems(await adminList<ProcessStep>('process')); }
-    catch (error) { setMessage(error instanceof Error ? error.message : 'Failed to load process steps.'); }
-    finally { setLoading(false); }
+    try {
+      const data = await adminList<ProcessStep>('process');
+      setItems(data.sort((a, b) => a.display_order - b.display_order));
+    } catch (error) {
+      setMessage({ type: 'error', text: error instanceof Error ? error.message : 'Failed to load process steps.' });
+    } finally {
+      setLoading(false);
+    }
   };
 
-  useEffect(() => { void load(); }, []);
+  useEffect(() => {
+    void loadData();
+  }, []);
 
-  const reset = () => { setForm(emptyForm); setEditingId(null); };
+  const resetForm = () => {
+    setForm(emptyForm);
+    setEditingId(null);
+  };
 
   const save = async (event: React.FormEvent) => {
     event.preventDefault();
     setSaving(true);
-    setMessage('');
+    setMessage(null);
     try {
       const payload = { ...form, display_order: Number(form.display_order) || 1 };
       if (editingId) await adminUpdate('process', editingId, payload);
       else await adminCreate('process', payload);
-      await load();
-      reset();
-      setMessage('Process step saved successfully.');
+      await loadData();
+      resetForm();
+      setMessage({ type: 'success', text: `Process step ${editingId ? 'updated' : 'added'} successfully.` });
+      if (refreshOverview) refreshOverview();
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'Failed to save process step.');
-    } finally { setSaving(false); }
+      setMessage({ type: 'error', text: error instanceof Error ? error.message : 'Failed to save process step.' });
+    } finally {
+      setSaving(false);
+    }
   };
 
   const remove = async (id: string) => {
-    if (!window.confirm('Delete this process step?')) return;
-    try { await adminDelete('process', id); await load(); setMessage('Process step deleted.'); }
-    catch (error) { setMessage(error instanceof Error ? error.message : 'Failed to delete process step.'); }
+    if (!window.confirm('Delete this workflow step?')) return;
+    try {
+      await adminDelete('process', id);
+      await loadData();
+      setMessage({ type: 'success', text: 'Step deleted.' });
+      if (refreshOverview) refreshOverview();
+    } catch (error) {
+      setMessage({ type: 'error', text: error instanceof Error ? error.message : 'Failed to delete process step.' });
+    }
   };
 
   return (
-    <div className="space-y-6">
+    <div className="mx-auto max-w-4xl space-y-6">
       <div>
-        <p className="text-xs uppercase tracking-[0.22em] text-[#f6b7d2]">Process</p>
-        <h1 className="mt-2 text-3xl font-semibold text-white">Edit workflow steps</h1>
+        <h1 className="text-xl font-bold tracking-tight text-[#29251F]">Workflow Process Steps</h1>
+        <p className="mt-1 text-xs text-[#8B806D]">
+          Explain your 3-to-4 stage marketing engagement methodology (Audit, Strategy, Execution, Scaling).
+        </p>
       </div>
-      {message && <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/80">{message}</div>}
-      <form onSubmit={save} className="rounded-[28px] border border-white/10 bg-[#141414] p-6">
-        <div className="grid gap-4 md:grid-cols-2">
-          <label className="block text-sm text-white/70">Step number<input required value={form.step_number} onChange={(event) => setForm({ ...form, step_number: event.target.value })} className="mt-2 w-full rounded-2xl border border-white/10 bg-[#0f1011] px-3 py-2.5 text-white" /></label>
-          <label className="block text-sm text-white/70">Title<input required value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} className="mt-2 w-full rounded-2xl border border-white/10 bg-[#0f1011] px-3 py-2.5 text-white" /></label>
-          <label className="block text-sm text-white/70 md:col-span-2">Description<textarea required rows={3} value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} className="mt-2 w-full rounded-2xl border border-white/10 bg-[#0f1011] px-3 py-2.5 text-white" /></label>
-          <label className="block text-sm text-white/70">Display order<input type="number" value={form.display_order} onChange={(event) => setForm({ ...form, display_order: Number(event.target.value) })} className="mt-2 w-full rounded-2xl border border-white/10 bg-[#0f1011] px-3 py-2.5 text-white" /></label>
-          <label className="flex items-center gap-2 text-sm text-white/70"><input type="checkbox" checked={form.is_visible} onChange={(event) => setForm({ ...form, is_visible: event.target.checked })} /> Visible</label>
-          <label className="flex items-center gap-2 text-sm text-white/70"><input type="checkbox" checked={form.is_published} onChange={(event) => setForm({ ...form, is_published: event.target.checked })} /> Published</label>
+
+      {message && (
+        <div
+          className={`rounded-xl p-3 text-xs font-medium border ${
+            message.type === 'success'
+              ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
+              : 'border-rose-200 bg-rose-50 text-rose-800'
+          }`}
+        >
+          {message.text}
         </div>
-        <div className="mt-5 flex justify-end gap-3">
-          <button type="button" onClick={reset} className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/80">Cancel</button>
-          <button type="submit" disabled={saving} className="rounded-full border border-[#f04796] bg-[#f04796] px-5 py-2.5 text-sm font-medium text-[#0d0d0f] disabled:opacity-70">{saving ? 'Saving...' : editingId ? 'Update step' : 'Add step'}</button>
+      )}
+
+      {/* Form */}
+      <form onSubmit={save} className="rounded-2xl border border-[#E7DCCB] bg-white p-6 shadow-xs space-y-4">
+        <h2 className="text-xs font-bold uppercase tracking-wider text-[#8B806D] border-b border-[#E7DCCB]/60 pb-3">
+          {editingId ? 'Edit Process Step' : 'Add New Process Step'}
+        </h2>
+
+        <div className="grid gap-4 sm:grid-cols-3">
+          <div>
+            <label className="block text-xs font-medium text-[#29251F]">Step Number (e.g. 01)</label>
+            <input
+              required
+              value={form.step_number}
+              onChange={(e) => setForm({ ...form, step_number: e.target.value })}
+              className="mt-1 w-full rounded-xl border border-[#E7DCCB] bg-[#F8F4ED]/50 px-3 py-2 text-xs text-[#29251F] focus:border-[#344238] focus:bg-white focus:outline-hidden"
+            />
+          </div>
+
+          <div className="sm:col-span-2">
+            <label className="block text-xs font-medium text-[#29251F]">Step Title</label>
+            <input
+              required
+              value={form.title}
+              onChange={(e) => setForm({ ...form, title: e.target.value })}
+              placeholder="e.g. Strategic Brand Discovery & Audit"
+              className="mt-1 w-full rounded-xl border border-[#E7DCCB] bg-[#F8F4ED]/50 px-3 py-2 text-xs text-[#29251F] focus:border-[#344238] focus:bg-white focus:outline-hidden"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-xs font-medium text-[#29251F]">Step Description</label>
+          <textarea
+            rows={3}
+            required
+            value={form.description}
+            onChange={(e) => setForm({ ...form, description: e.target.value })}
+            placeholder="Explain what happens in this stage..."
+            className="mt-1 w-full rounded-xl border border-[#E7DCCB] bg-[#F8F4ED]/50 p-3 text-xs text-[#29251F] focus:border-[#344238] focus:bg-white focus:outline-hidden"
+          />
+        </div>
+
+        <div className="flex items-center justify-between pt-2">
+          <div className="flex gap-4">
+            <label className="flex items-center gap-2 cursor-pointer text-xs font-medium text-[#29251F]">
+              <input
+                type="checkbox"
+                checked={form.is_visible}
+                onChange={(e) => setForm({ ...form, is_visible: e.target.checked })}
+                className="h-4 w-4 rounded-sm border-[#E7DCCB] text-[#344238]"
+              />
+              <span>Visible</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer text-xs font-medium text-[#29251F]">
+              <input
+                type="checkbox"
+                checked={form.is_published}
+                onChange={(e) => setForm({ ...form, is_published: e.target.checked })}
+                className="h-4 w-4 rounded-sm border-[#E7DCCB] text-[#344238]"
+              />
+              <span>Published</span>
+            </label>
+          </div>
+
+          <div className="flex gap-2">
+            {editingId && (
+              <button
+                type="button"
+                onClick={resetForm}
+                className="rounded-xl border border-[#E7DCCB] bg-[#F8F4ED] px-4 py-2 text-xs font-semibold text-[#29251F]"
+              >
+                Cancel
+              </button>
+            )}
+            <button
+              type="submit"
+              disabled={saving}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-[#344238] px-5 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-[#29251F] disabled:opacity-50"
+            >
+              <Plus size={14} />
+              {saving ? 'Saving...' : editingId ? 'Update Step' : 'Add Step'}
+            </button>
+          </div>
         </div>
       </form>
 
-      {loading ? <div className="text-white/60">Loading process steps...</div> : (
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {items.map((item) => (
-            <div key={item.id} className="rounded-[28px] border border-white/10 bg-[#141414] p-5">
-              <div className="mb-4 text-3xl font-semibold text-[#f6b7d2]">{item.step_number}</div>
-              <h2 className="text-xl font-semibold text-white">{item.title}</h2>
-              <p className="mt-3 text-sm leading-7 text-white/65">{item.description}</p>
-              <div className="mt-4 text-xs text-white/50">{item.is_published ? 'Published' : 'Draft'} {item.is_visible ? '' : '(Hidden)'}</div>
-              <div className="mt-4 flex gap-2">
-                <button type="button" onClick={() => { setEditingId(item.id); setForm({ step_number: item.step_number, title: item.title, description: item.description, display_order: item.display_order, is_visible: item.is_visible, is_published: item.is_published ?? true }); }} className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/70">Edit</button>
-                <button type="button" onClick={() => void adminPublish('process', item.id).then(load)} className="rounded-full border border-[#f04796]/40 bg-[#f04796]/10 px-3 py-1.5 text-xs text-[#f6b7d2]">Publish</button>
-                <button type="button" onClick={() => void adminUnpublish('process', item.id).then(load)} className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/70">Unpublish</button>
-                <button type="button" onClick={() => void remove(item.id)} className="rounded-full border border-red-500/30 bg-red-500/10 px-3 py-1.5 text-xs text-red-200">Delete</button>
+      {/* List */}
+      <div className="overflow-hidden rounded-2xl border border-[#E7DCCB] bg-white shadow-xs divide-y divide-[#E7DCCB]/60">
+        {items.map((step) => (
+          <div key={step.id} className="p-4 flex items-center justify-between transition hover:bg-[#F8F4ED]/40">
+            <div className="flex items-center gap-3">
+              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#F8F4ED] font-mono text-xs font-bold text-[#344238] border border-[#E7DCCB]">
+                {step.step_number}
+              </span>
+              <div>
+                <h3 className="text-xs font-bold text-[#29251F]">{step.title}</h3>
+                <p className="mt-0.5 line-clamp-1 text-[11px] text-[#8B806D] max-w-md">{step.description}</p>
               </div>
             </div>
-          ))}
-        </div>
-      )}
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setEditingId(step.id);
+                  setForm({
+                    step_number: step.step_number,
+                    title: step.title,
+                    description: step.description,
+                    display_order: step.display_order,
+                    is_visible: step.is_visible,
+                    is_published: step.is_published !== false,
+                  });
+                }}
+                className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#E7DCCB] bg-white text-[#29251F] hover:bg-[#F8F4ED]"
+              >
+                <Pencil size={13} />
+              </button>
+              <button
+                type="button"
+                onClick={() => void remove(step.id)}
+                className="flex h-8 w-8 items-center justify-center rounded-lg border border-rose-200 bg-rose-50 text-rose-600 hover:bg-rose-100"
+              >
+                <Trash2 size={13} />
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

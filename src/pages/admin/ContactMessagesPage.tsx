@@ -3,10 +3,8 @@ import {
   CheckCheck,
   Clock,
   Eye,
-  Loader2,
   Mail,
   MailOpen,
-  MessageSquare,
   Reply,
   Trash2,
   X,
@@ -25,7 +23,7 @@ export function ContactMessagesPage() {
   const [activeMessage, setActiveMessage] = useState<ContactMessage | null>(null);
   const [filter, setFilter] = useState<'all' | 'new' | 'read' | 'replied'>('all');
 
-  const load = async () => {
+  const loadData = async () => {
     setLoading(true);
     try {
       const data = await getContactMessages();
@@ -41,43 +39,29 @@ export function ContactMessagesPage() {
   };
 
   useEffect(() => {
-    void load();
+    void loadData();
   }, []);
 
-  const mark = async (id: string, status: 'new' | 'read' | 'replied') => {
+  const markStatus = async (id: string, status: 'new' | 'read' | 'replied') => {
     try {
       await updateContactMessageStatus(id, status);
-      await load();
+      await loadData();
       if (activeMessage && activeMessage.id === id) {
         setActiveMessage({ ...activeMessage, status });
       }
-      setMessage({ type: 'success', text: `Message marked as ${status}.` });
-      setTimeout(() => setMessage(null), 3000);
     } catch (error) {
-      setMessage({
-        type: 'error',
-        text: error instanceof Error ? error.message : 'Failed to update message status.',
-      });
+      alert('Failed to update status.');
     }
   };
 
-  const remove = async (id: string, name: string) => {
-    if (!window.confirm(`Are you sure you want to permanently delete the message from "${name}"?`)) {
-      return;
-    }
+  const removeMessage = async (id: string, name: string) => {
+    if (!confirm(`Delete message from "${name}"?`)) return;
     try {
       await deleteContactMessage(id);
-      if (activeMessage && activeMessage.id === id) {
-        setActiveMessage(null);
-      }
-      await load();
-      setMessage({ type: 'success', text: 'Message deleted successfully.' });
-      setTimeout(() => setMessage(null), 3000);
+      if (activeMessage?.id === id) setActiveMessage(null);
+      await loadData();
     } catch (error) {
-      setMessage({
-        type: 'error',
-        text: error instanceof Error ? error.message : 'Failed to delete message.',
-      });
+      alert('Failed to delete message.');
     }
   };
 
@@ -86,283 +70,174 @@ export function ContactMessagesPage() {
     return m.status === filter;
   });
 
-  const unreadCount = messages.filter((m) => m.status === 'new').length;
-
   return (
-    <div className="space-y-6 max-w-5xl">
+    <div className="mx-auto max-w-5xl space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-xs uppercase tracking-[0.22em] text-[#f6b7d2]">Inbox</p>
-          <h1 className="mt-1 text-3xl font-semibold text-white">Contact Submissions</h1>
-        </div>
-        <div className="flex items-center gap-2">
-          {unreadCount > 0 && (
-            <span className="rounded-full bg-[#f04796]/20 px-3 py-1 text-xs font-semibold text-[#f6b7d2] border border-[#f04796]/40">
-              {unreadCount} unread message{unreadCount === 1 ? '' : 's'}
-            </span>
-          )}
-        </div>
-      </div>
-
-      {/* Message Banner */}
-      {message && (
-        <div
-          className={`flex items-center justify-between rounded-2xl border px-4 py-3 text-sm ${
-            message.type === 'success'
-              ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-200'
-              : 'border-red-500/30 bg-red-500/10 text-red-200'
-          }`}
-        >
-          <span>{message.text}</span>
-          <button type="button" onClick={() => setMessage(null)} className="text-white/60 hover:text-white">
-            ✕
-          </button>
-        </div>
-      )}
-
-      {/* Filters */}
-      <div className="flex gap-2">
-        {(['all', 'new', 'read', 'replied'] as const).map((key) => (
-          <button
-            key={key}
-            type="button"
-            onClick={() => setFilter(key)}
-            className={`rounded-full px-4 py-1.5 text-xs font-semibold transition ${
-              filter === key
-                ? 'bg-[#f04796] text-[#0d0d0f]'
-                : 'border border-white/10 bg-[#141416] text-white/70 hover:bg-white/10 hover:text-white'
-            }`}
-          >
-            {key.toUpperCase()} {key === 'new' && unreadCount > 0 ? `(${unreadCount})` : ''}
-          </button>
-        ))}
-      </div>
-
-      {/* Message List */}
-      {loading ? (
-        <div className="flex h-64 items-center justify-center text-white/50">
-          <Loader2 size={24} className="animate-spin mr-2 text-[#f04796]" />
-          Loading messages...
-        </div>
-      ) : filtered.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-[28px] border border-white/10 bg-[#141416] p-12 text-center text-white/50">
-          <MessageSquare size={44} className="mb-3 text-white/30" />
-          <h3 className="text-base font-medium text-white">No messages found</h3>
-          <p className="mt-1 text-xs text-white/40">
-            {filter !== 'all' ? `No messages matching the "${filter}" filter.` : 'Submissions from the public contact form will appear here.'}
+          <h1 className="text-xl font-bold tracking-tight text-[#29251F]">Client Inquiries & Messages</h1>
+          <p className="mt-1 text-xs text-[#8B806D]">
+            Incoming leads and partnership requests submitted from the public landing page contact form.
           </p>
         </div>
-      ) : (
-        <div className="space-y-3">
-          {filtered.map((item) => {
-            const isNew = item.status === 'new';
-            const dateStr = item.created_at
-              ? new Date(item.created_at).toLocaleDateString(undefined, {
-                  month: 'short',
-                  day: 'numeric',
-                  year: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit',
-                })
-              : '';
 
-            return (
-              <div
-                key={item.id}
-                className={`rounded-[24px] border p-5 transition ${
-                  isNew
-                    ? 'border-[#f04796]/40 bg-[#1a1318] shadow-[0_0_25px_rgba(240,71,150,0.08)]'
-                    : 'border-white/10 bg-[#141416] hover:border-white/20'
-                }`}
-              >
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/5 pb-3">
-                  <div className="flex items-center gap-3">
-                    <div
-                      className={`flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold ${
-                        isNew
-                          ? 'bg-[#f04796] text-[#0d0d0f]'
-                          : 'bg-white/10 text-white/80'
-                      }`}
-                    >
-                      {item.sender_name.charAt(0).toUpperCase()}
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-semibold text-white">{item.sender_name}</span>
-                        {isNew && (
-                          <span className="rounded-full bg-[#f04796] px-2 py-0.5 text-[9px] font-bold text-[#0d0d0f]">
-                            NEW
-                          </span>
-                        )}
-                      </div>
-                      <a
-                        href={`mailto:${item.sender_email}`}
-                        className="text-xs text-white/50 hover:text-[#f6b7d2]"
-                      >
-                        {item.sender_email}
-                      </a>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-3">
-                    {dateStr && (
-                      <span className="inline-flex items-center gap-1 text-[11px] text-white/40">
-                        <Clock size={12} /> {dateStr}
-                      </span>
-                    )}
-                    <span
-                      className={`rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider ${
-                        item.status === 'replied'
-                          ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
-                          : item.status === 'read'
-                            ? 'bg-white/10 text-white/60'
-                            : 'bg-[#f04796]/20 text-[#f6b7d2] border border-[#f04796]/40'
-                      }`}
-                    >
-                      {item.status}
-                    </span>
-                  </div>
-                </div>
-
-                {item.subject && (
-                  <h4 className="mt-3 text-xs font-semibold text-white/90">
-                    Subject: {item.subject}
-                  </h4>
-                )}
-
-                <p className="mt-2 text-xs leading-6 text-white/70 line-clamp-3 whitespace-pre-line">
-                  {item.message}
-                </p>
-
-                {/* Controls */}
-                <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-white/5 pt-3">
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setActiveMessage(item);
-                        if (item.status === 'new') {
-                          void mark(item.id, 'read');
-                        }
-                      }}
-                      className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-white/80 hover:bg-white/10 hover:text-white"
-                    >
-                      <Eye size={13} /> Read Full Message
-                    </button>
-                    <a
-                      href={`mailto:${item.sender_email}?subject=Re: ${encodeURIComponent(item.subject || 'Your inquiry')}`}
-                      onClick={() => {
-                        if (item.status !== 'replied') {
-                          void mark(item.id, 'replied');
-                        }
-                      }}
-                      className="inline-flex items-center gap-1.5 rounded-full border border-[#f04796]/30 bg-[#f04796]/10 px-3 py-1.5 text-xs font-medium text-[#f6b7d2] hover:bg-[#f04796]/20"
-                    >
-                      <Reply size={13} /> Reply via Email
-                    </a>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    {item.status !== 'read' && (
-                      <button
-                        type="button"
-                        onClick={() => void mark(item.id, 'read')}
-                        className="inline-flex items-center gap-1 text-xs text-white/50 hover:text-white"
-                        title="Mark as Read"
-                      >
-                        <MailOpen size={13} /> Read
-                      </button>
-                    )}
-                    {item.status !== 'replied' && (
-                      <button
-                        type="button"
-                        onClick={() => void mark(item.id, 'replied')}
-                        className="inline-flex items-center gap-1 text-xs text-emerald-400/80 hover:text-emerald-300"
-                        title="Mark as Replied"
-                      >
-                        <CheckCheck size={13} /> Replied
-                      </button>
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => void remove(item.id, item.sender_name)}
-                      className="inline-flex items-center gap-1 text-xs text-red-400/80 hover:text-red-300 ml-2"
-                      title="Delete Message"
-                    >
-                      <Trash2 size={13} /> Delete
-                    </button>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+        {/* Filter Pills */}
+        <div className="flex items-center gap-1.5 rounded-xl border border-[#E7DCCB] bg-white p-1">
+          {(['all', 'new', 'read', 'replied'] as const).map((tab) => (
+            <button
+              key={tab}
+              type="button"
+              onClick={() => setFilter(tab)}
+              className={`rounded-lg px-3 py-1.5 text-xs font-semibold capitalize transition ${
+                filter === tab
+                  ? 'bg-[#344238] text-white shadow-xs'
+                  : 'text-[#8B806D] hover:text-[#29251F]'
+              }`}
+            >
+              {tab}
+            </button>
+          ))}
         </div>
-      )}
+      </div>
 
-      {/* Message Reader Modal */}
-      {activeMessage && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="w-full max-w-xl rounded-3xl border border-white/10 bg-[#161619] p-6 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between border-b border-white/10 pb-4">
-              <div className="flex items-center gap-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#f04796]/20 text-[#f6b7d2] font-bold">
-                  {activeMessage.sender_name.charAt(0)}
+      {/* Grid: Messages List & Message Reader */}
+      <div className="grid gap-6 lg:grid-cols-5">
+        {/* Messages List (3 cols) */}
+        <div className="lg:col-span-3 overflow-hidden rounded-2xl border border-[#E7DCCB] bg-white shadow-xs">
+          <div className="p-4 border-b border-[#E7DCCB] flex items-center justify-between">
+            <h2 className="text-xs font-bold uppercase tracking-wider text-[#8B806D]">
+              Inbox ({filtered.length})
+            </h2>
+          </div>
+
+          {loading ? (
+            <div className="p-12 text-center text-xs text-[#8B806D]">Loading inbox...</div>
+          ) : filtered.length === 0 ? (
+            <div className="p-12 text-center text-xs text-[#8B806D]">No inquiries found in this view.</div>
+          ) : (
+            <div className="divide-y divide-[#E7DCCB]/60">
+              {filtered.map((item) => (
+                <div
+                  key={item.id}
+                  onClick={() => {
+                    setActiveMessage(item);
+                    if (item.status === 'new') void markStatus(item.id, 'read');
+                  }}
+                  className={`p-4 cursor-pointer transition flex items-start gap-3 ${
+                    activeMessage?.id === item.id
+                      ? 'bg-[#F8F4ED]'
+                      : 'hover:bg-[#F8F4ED]/40 bg-white'
+                  }`}
+                >
+                  <div
+                    className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${
+                      item.status === 'new' ? 'bg-emerald-500' : 'bg-transparent'
+                    }`}
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-[#29251F] truncate">{item.sender_name}</span>
+                      <span className="text-[10px] text-[#8B806D] font-mono">
+                        {new Date(item.created_at).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <div className="text-[11px] font-medium text-[#344238] truncate mt-0.5">
+                      {item.subject || 'New Website Inquiry'}
+                    </div>
+                    <p className="text-[11px] text-[#8B806D] line-clamp-1 mt-0.5">{item.message}</p>
+                  </div>
                 </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Message Reader (2 cols) */}
+        <div className="lg:col-span-2 rounded-2xl border border-[#E7DCCB] bg-white p-6 shadow-xs">
+          {activeMessage ? (
+            <div className="space-y-4">
+              <div className="flex items-start justify-between border-b border-[#E7DCCB] pb-4">
                 <div>
-                  <h3 className="text-base font-semibold text-white">{activeMessage.sender_name}</h3>
+                  <h3 className="text-sm font-bold text-[#29251F]">{activeMessage.sender_name}</h3>
                   <a
                     href={`mailto:${activeMessage.sender_email}`}
-                    className="text-xs text-[#f6b7d2] hover:underline"
+                    className="text-xs text-[#344238] hover:underline block mt-0.5"
                   >
                     {activeMessage.sender_email}
                   </a>
+                  <span className="text-[10px] text-[#8B806D] block mt-1">
+                    Received: {new Date(activeMessage.created_at).toLocaleString()}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => void removeMessage(activeMessage.id, activeMessage.sender_name)}
+                    title="Delete message"
+                    className="flex h-8 w-8 items-center justify-center rounded-lg border border-rose-200 bg-rose-50 text-rose-600 hover:bg-rose-100"
+                  >
+                    <Trash2 size={13} />
+                  </button>
                 </div>
               </div>
-              <button
-                type="button"
-                onClick={() => setActiveMessage(null)}
-                className="flex h-8 w-8 items-center justify-center rounded-full bg-white/5 text-white/60 hover:text-white"
-              >
-                <X size={16} />
-              </button>
-            </div>
 
-            {activeMessage.subject && (
               <div>
-                <span className="text-xs text-white/40 block">Subject</span>
-                <p className="text-sm font-semibold text-white mt-0.5">{activeMessage.subject}</p>
+                <span className="text-[11px] uppercase tracking-wider text-[#8B806D] block">Subject</span>
+                <span className="text-xs font-semibold text-[#29251F] mt-0.5 block">
+                  {activeMessage.subject || 'General Inquiry'}
+                </span>
               </div>
-            )}
 
-            <div>
-              <span className="text-xs text-white/40 block">Message Body</span>
-              <div className="mt-1.5 rounded-2xl border border-white/10 bg-[#0d0d0f] p-4 text-sm leading-7 text-white/90 whitespace-pre-wrap max-h-80 overflow-y-auto">
+              <div className="rounded-xl border border-[#E7DCCB]/60 bg-[#F8F4ED]/50 p-4 text-xs text-[#29251F] leading-relaxed whitespace-pre-wrap">
                 {activeMessage.message}
               </div>
-            </div>
 
-            <div className="flex items-center justify-between border-t border-white/10 pt-4">
-              <span className="text-xs text-white/40">Status: {activeMessage.status}</span>
-              <div className="flex gap-2">
-                <a
-                  href={`mailto:${activeMessage.sender_email}?subject=Re: ${encodeURIComponent(activeMessage.subject || 'Your message')}`}
-                  className="inline-flex items-center gap-1.5 rounded-full bg-[#f04796] px-4 py-2 text-xs font-semibold text-[#0d0d0f] hover:bg-[#ff6ab3]"
-                >
-                  <Mail size={13} /> Reply Email
-                </a>
-                <button
-                  type="button"
-                  onClick={() => setActiveMessage(null)}
-                  className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs text-white/70 hover:bg-white/10"
-                >
-                  Close
-                </button>
+              {/* Status Actions */}
+              <div className="border-t border-[#E7DCCB] pt-4 space-y-2">
+                <span className="text-[11px] text-[#8B806D] block">Update Status:</span>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => void markStatus(activeMessage.id, 'read')}
+                    className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition ${
+                      activeMessage.status === 'read'
+                        ? 'border-[#344238] bg-[#344238] text-white'
+                        : 'border-[#E7DCCB] bg-white text-[#29251F]'
+                    }`}
+                  >
+                    Mark Read
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void markStatus(activeMessage.id, 'replied')}
+                    className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition ${
+                      activeMessage.status === 'replied'
+                        ? 'border-emerald-600 bg-emerald-600 text-white'
+                        : 'border-[#E7DCCB] bg-white text-[#29251F]'
+                    }`}
+                  >
+                    Mark Replied
+                  </button>
+                  <a
+                    href={`mailto:${activeMessage.sender_email}?subject=Re: ${encodeURIComponent(
+                      activeMessage.subject || 'Inquiry'
+                    )}`}
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-[#344238] px-3 py-1.5 text-xs font-medium text-white shadow-xs"
+                  >
+                    <Reply size={13} /> Reply via Email
+                  </a>
+                </div>
               </div>
             </div>
-          </div>
+          ) : (
+            <div className="flex h-64 flex-col items-center justify-center text-center text-xs text-[#8B806D]">
+              <Mail size={32} className="mb-2 text-[#8B806D]/40" />
+              <span>Select an inquiry from the list to view its contents.</span>
+            </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 }

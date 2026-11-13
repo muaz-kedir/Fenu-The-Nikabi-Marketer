@@ -240,6 +240,24 @@ async function ensureDatabaseSchema() {
       console.log(`[auth] Initialized admin user (${defaultEmail}) in database.`);
     }
 
+    // 3. Ensure CMS expansion tables and columns exist (migration 004)
+    const navExists = await activePool.query(`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_schema = 'public' 
+        AND table_name = 'navigation_items'
+      );
+    `);
+    if (!navExists.rows[0]?.exists) {
+      console.log('[db] Applying migration 004_cms_expansion.sql...');
+      const migPath = path.join(process.cwd(), 'database', 'migrations', '004_cms_expansion.sql');
+      if (fs.existsSync(migPath)) {
+        const migSql = fs.readFileSync(migPath, 'utf8');
+        await activePool.query(migSql);
+        console.log('[db] 004_cms_expansion.sql applied successfully.');
+      }
+    }
+
     schemaInitialized = true;
   } catch (err) {
     console.error('[db] Error initializing database schema:', err.message);
@@ -264,6 +282,7 @@ function requireAdmin(req, res, next) {
     return;
   }
   req.admin = user;
+  req.user = user;
   next();
 }
 
@@ -365,7 +384,7 @@ const seedPortfolio = {
   sections: [],
 };
 
-async function buildPortfolio() {
+async function buildPortfolio(previewDraft = false) {
   if (!getPool()) {
     return {
       ...seedPortfolio,
@@ -375,20 +394,26 @@ async function buildPortfolio() {
     };
   }
   try {
-    const [site, hero, about, cta, footer, stats, services, projects, skills, process, testimonials, sections] =
+    const singletonOrder = previewDraft ? 'is_published ASC, updated_at DESC' : 'updated_at DESC';
+    const singletonFilter = previewDraft ? 'TRUE' : 'is_published = TRUE';
+    const collectionFilter = previewDraft ? 'is_visible = TRUE' : 'is_published = TRUE AND is_visible = TRUE';
+    const sectionsFilter = previewDraft ? 'TRUE' : 'is_published = TRUE';
+
+    const [site, hero, about, cta, footer, stats, services, projects, skills, process, testimonials, sections, navigation] =
       await Promise.all([
-        query('SELECT * FROM site_settings WHERE is_published = TRUE ORDER BY updated_at DESC LIMIT 1'),
-        query('SELECT * FROM hero_content WHERE is_published = TRUE ORDER BY updated_at DESC LIMIT 1'),
-        query('SELECT * FROM about_content WHERE is_published = TRUE ORDER BY updated_at DESC LIMIT 1'),
-        query('SELECT * FROM cta_content WHERE is_published = TRUE ORDER BY updated_at DESC LIMIT 1'),
-        query('SELECT * FROM footer_content WHERE is_published = TRUE ORDER BY updated_at DESC LIMIT 1'),
-        query('SELECT * FROM statistics WHERE is_published = TRUE AND is_visible = TRUE ORDER BY display_order, id'),
-        query('SELECT * FROM services WHERE is_published = TRUE AND is_visible = TRUE ORDER BY display_order, id'),
-        query('SELECT * FROM projects WHERE is_published = TRUE AND is_visible = TRUE ORDER BY display_order, id'),
-        query('SELECT * FROM skills WHERE is_published = TRUE AND is_visible = TRUE ORDER BY display_order, id'),
-        query('SELECT * FROM process_steps WHERE is_published = TRUE AND is_visible = TRUE ORDER BY display_order, id'),
-        query('SELECT * FROM testimonials WHERE is_published = TRUE AND is_visible = TRUE ORDER BY display_order, id'),
-        query('SELECT * FROM page_sections WHERE is_published = TRUE ORDER BY display_order, id'),
+        query(`SELECT * FROM site_settings WHERE ${singletonFilter} ORDER BY ${singletonOrder} LIMIT 1`),
+        query(`SELECT * FROM hero_content WHERE ${singletonFilter} ORDER BY ${singletonOrder} LIMIT 1`),
+        query(`SELECT * FROM about_content WHERE ${singletonFilter} ORDER BY ${singletonOrder} LIMIT 1`),
+        query(`SELECT * FROM cta_content WHERE ${singletonFilter} ORDER BY ${singletonOrder} LIMIT 1`),
+        query(`SELECT * FROM footer_content WHERE ${singletonFilter} ORDER BY ${singletonOrder} LIMIT 1`),
+        query(`SELECT * FROM statistics WHERE ${collectionFilter} ORDER BY display_order, id`),
+        query(`SELECT * FROM services WHERE ${collectionFilter} ORDER BY display_order, id`),
+        query(`SELECT * FROM projects WHERE ${collectionFilter} ORDER BY display_order, id`),
+        query(`SELECT * FROM skills WHERE ${collectionFilter} ORDER BY display_order, id`),
+        query(`SELECT * FROM process_steps WHERE ${collectionFilter} ORDER BY display_order, id`),
+        query(`SELECT * FROM testimonials WHERE ${collectionFilter} ORDER BY display_order, id`),
+        query(`SELECT * FROM page_sections WHERE ${sectionsFilter} ORDER BY display_order, id`),
+        query(`SELECT * FROM navigation_items WHERE ${collectionFilter} ORDER BY display_order, id`).catch(() => ({ rows: [] })),
       ]);
 
     return {
@@ -404,6 +429,7 @@ async function buildPortfolio() {
       process: process.rows,
       testimonials: testimonials.rows,
       sections: sections.rows,
+      navigation: navigation.rows,
     };
   } catch (error) {
     console.error('portfolio query failed:', error);
@@ -430,8 +456,9 @@ app.get('/api/health', async (_req, res) => {
   });
 });
 
-app.get('/api/portfolio', async (_req, res) => {
-  res.json(await buildPortfolio());
+app.get('/api/portfolio', async (req, res) => {
+  const isPreview = req.query.preview === 'true';
+  res.json(await buildPortfolio(isPreview));
 });
 
 app.get('/api/dashboard', async (_req, res) => {
@@ -443,9 +470,13 @@ app.get('/api/dashboard', async (_req, res) => {
     unreadMessages: 0,
     publishedProjects: 0,
     hiddenSections: 0,
+    publishedSections: 0,
     totalSkills: 0,
     totalProcessSteps: 0,
     totalMedia: 0,
+    draftChanges: 0,
+    lastPublishedAt: null,
+    recentActivities: [],
   };
   if (!getPool()) {
     try {
@@ -463,20 +494,35 @@ app.get('/api/dashboard', async (_req, res) => {
     return;
   }
   try {
-    const result = await query(`
-      SELECT
-        (SELECT COUNT(*) FROM projects) AS total_projects,
-        (SELECT COUNT(*) FROM services) AS total_services,
-        (SELECT COUNT(*) FROM testimonials) AS total_testimonials,
-        (SELECT COUNT(*) FROM contact_messages) AS total_messages,
-        (SELECT COUNT(*) FROM contact_messages WHERE status <> 'read') AS unread_messages,
-        (SELECT COUNT(*) FROM projects WHERE is_published = TRUE AND is_visible = TRUE) AS published_projects,
-        (SELECT COUNT(*) FROM page_sections WHERE is_visible = FALSE) AS hidden_sections,
-        (SELECT COUNT(*) FROM skills) AS total_skills,
-        (SELECT COUNT(*) FROM process_steps) AS total_process_steps,
-        (SELECT COUNT(*) FROM media_items) AS total_media
-    `);
-    const row = result.rows[0] || {};
+    const [countsRes, historyRes] = await Promise.all([
+      query(`
+        SELECT
+          (SELECT COUNT(*) FROM projects) AS total_projects,
+          (SELECT COUNT(*) FROM services) AS total_services,
+          (SELECT COUNT(*) FROM testimonials) AS total_testimonials,
+          (SELECT COUNT(*) FROM contact_messages) AS total_messages,
+          (SELECT COUNT(*) FROM contact_messages WHERE status <> 'read') AS unread_messages,
+          (SELECT COUNT(*) FROM projects WHERE is_published = TRUE AND is_visible = TRUE) AS published_projects,
+          (SELECT COUNT(*) FROM page_sections WHERE is_visible = FALSE) AS hidden_sections,
+          (SELECT COUNT(*) FROM page_sections WHERE is_visible = TRUE AND is_published = TRUE) AS published_sections,
+          (SELECT COUNT(*) FROM skills) AS total_skills,
+          (SELECT COUNT(*) FROM process_steps) AS total_process_steps,
+          (SELECT COUNT(*) FROM media_items) AS total_media,
+          (
+            (SELECT COUNT(*) FROM hero_content WHERE is_published = FALSE) +
+            (SELECT COUNT(*) FROM about_content WHERE is_published = FALSE) +
+            (SELECT COUNT(*) FROM site_settings WHERE is_published = FALSE) +
+            (SELECT COUNT(*) FROM projects WHERE is_published = FALSE) +
+            (SELECT COUNT(*) FROM services WHERE is_published = FALSE) +
+            (SELECT COUNT(*) FROM testimonials WHERE is_published = FALSE) +
+            (SELECT COUNT(*) FROM navigation_items WHERE is_published = FALSE)
+          ) AS draft_changes,
+          (SELECT MAX(created_at) FROM publishing_history WHERE action = 'publish') AS last_published_at
+      `),
+      query('SELECT * FROM publishing_history ORDER BY created_at DESC LIMIT 5').catch(() => ({ rows: [] }))
+    ]);
+
+    const row = countsRes.rows[0] || {};
     res.json({
       totalProjects: Number(row.total_projects || 0),
       totalServices: Number(row.total_services || 0),
@@ -485,9 +531,13 @@ app.get('/api/dashboard', async (_req, res) => {
       unreadMessages: Number(row.unread_messages || 0),
       publishedProjects: Number(row.published_projects || 0),
       hiddenSections: Number(row.hidden_sections || 0),
+      publishedSections: Number(row.published_sections || 0),
       totalSkills: Number(row.total_skills || 0),
       totalProcessSteps: Number(row.total_process_steps || 0),
       totalMedia: Number(row.total_media || 0),
+      draftChanges: Number(row.draft_changes || 0),
+      lastPublishedAt: row.last_published_at || null,
+      recentActivities: historyRes.rows || [],
     });
   } catch (error) {
     console.error('dashboard query failed:', error);
@@ -567,6 +617,9 @@ app.get('/api/admin/me', requireAdmin, (req, res) => {
 
 function sanitizeSingletonPayload(table, payload) {
   const data = { ...payload };
+  if (data.is_visible === undefined || data.is_visible === null) data.is_visible = true;
+  if (data.display_order === undefined || data.display_order === null) data.display_order = 0;
+
   if (table === 'hero_content') {
     if (!data.greeting) data.greeting = "Hello, I'm";
     if (!data.full_name) data.full_name = 'Azmina Zahra';
@@ -577,11 +630,13 @@ function sanitizeSingletonPayload(table, payload) {
   } else if (table === 'about_content') {
     if (!data.title) data.title = 'About Me';
     if (!data.description) data.description = '';
+    if (data.experience_years === undefined || data.experience_years === null) data.experience_years = 5;
   } else if (table === 'site_settings') {
     if (!data.site_name) data.site_name = 'Azmina Zahra';
     if (!data.owner_name) data.owner_name = 'Azmina Zahra';
     if (!data.professional_title) data.professional_title = 'Social Media Marketing Specialist';
     if (!data.email) data.email = 'hello@azminazahra.com';
+    if (data.announcement_active === undefined || data.announcement_active === null) data.announcement_active = false;
   }
   return data;
 }
@@ -709,8 +764,21 @@ singletonRoutes('site_settings', [
   'tiktok_url',
   'linkedin_url',
   'whatsapp_url',
+  'facebook_url',
+  'booking_url',
+  'announcement_text',
+  'announcement_active',
+  'brand_primary_color',
+  'brand_accent_color',
+  'contact_heading',
+  'contact_description',
   'seo_title',
   'seo_description',
+  'keywords',
+  'og_title',
+  'og_description',
+  'og_image_url',
+  'canonical_url',
   'copyright_text',
 ]);
 
@@ -718,6 +786,7 @@ singletonRoutes('hero_content', [
   'greeting',
   'full_name',
   'professional_title',
+  'subtitle',
   'description',
   'profile_image_url',
   'profile_image_alt',
@@ -726,15 +795,21 @@ singletonRoutes('hero_content', [
   'primary_button_url',
   'secondary_button_text',
   'secondary_button_url',
+  'availability_status',
+  'is_visible',
+  'display_order',
 ]);
 
 singletonRoutes('about_content', [
   'title',
   'subtitle',
+  'intro_heading',
   'description',
   'profile_image_url',
   'profile_image_alt',
+  'experience_years',
   'additional_description',
+  'is_visible',
 ]);
 
 singletonRoutes('cta_content', [
@@ -952,6 +1027,8 @@ collectionRoutes('services', 'services', [
   'is_visible',
   'title',
   'description',
+  'category',
+  'price_starting_from',
   'icon',
   'image_url',
   'image_alt',
@@ -964,9 +1041,16 @@ collectionRoutes('projects', 'projects', [
   'is_featured',
   'title',
   'slug',
+  'client_name',
+  'industry',
   'description',
+  'marketing_objective',
+  'strategy',
+  'services_provided',
   'category',
   'cover_image_url',
+  'project_images',
+  'verified_results',
   'result_metric',
   'result_description',
   'case_study_url',
@@ -994,9 +1078,19 @@ collectionRoutes('testimonials', 'testimonials', [
   'is_published',
   'is_visible',
   'client_name',
+  'business_name',
   'client_designation',
   'client_image_url',
   'testimonial',
+  'display_order',
+]);
+
+collectionRoutes('navigation', 'navigation_items', [
+  'is_published',
+  'is_visible',
+  'label',
+  'url',
+  'is_cta',
   'display_order',
 ]);
 
@@ -1009,6 +1103,77 @@ collectionRoutes('sections', 'page_sections', [
   'is_visible',
   'display_order',
 ]);
+
+// Publishing history & global publish
+app.get('/api/admin/history', requireAdmin, async (_req, res) => {
+  try {
+    const result = await query('SELECT * FROM publishing_history ORDER BY created_at DESC LIMIT 50');
+    ok(res, result.rows);
+  } catch (error) {
+    console.error('Error fetching publishing history:', error);
+    fail(res, 500, error.message || 'Failed to load publishing history.');
+  }
+});
+
+app.post('/api/admin/history', requireAdmin, async (req, res) => {
+  try {
+    const { action, section, summary, details } = req.body || {};
+    const adminId = String(req.user?.id || 'admin');
+    const adminEmail = req.user?.email || 'admin@example.com';
+    const payloadDetails = details || (summary ? { summary } : null);
+    const result = await query(
+      'INSERT INTO publishing_history (admin_id, admin_email, action, section, details) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+      [adminId, adminEmail, action || 'publish', section || 'all', payloadDetails ? JSON.stringify(payloadDetails) : null]
+    );
+    ok(res, result.rows[0]);
+  } catch (error) {
+    console.error('Error recording publishing history:', error);
+    fail(res, 500, error.message || 'Failed to record history.');
+  }
+});
+
+app.post('/api/admin/publish-all-drafts', requireAdmin, async (req, res) => {
+  try {
+    const singletons = ['hero_content', 'about_content', 'site_settings', 'cta_content', 'footer_content'];
+    for (const table of singletons) {
+      const draft = await query(`SELECT * FROM ${table} WHERE is_published = FALSE ORDER BY updated_at DESC LIMIT 1`);
+      if (draft.rows[0]) {
+        const published = await query(`SELECT id FROM ${table} WHERE is_published = TRUE ORDER BY updated_at DESC LIMIT 1`);
+        const row = draft.rows[0];
+        const draftId = row.id;
+        delete row.id;
+        delete row.created_at;
+        delete row.updated_at;
+        row.is_published = true;
+        const keys = Object.keys(row);
+        const values = Object.values(row);
+        if (published.rows[0]) {
+          const setClause = keys.map((k, i) => `${k} = $${i + 2}`).join(', ');
+          await query(`UPDATE ${table} SET ${setClause}, updated_at = NOW() WHERE id = $1`, [published.rows[0].id, ...values]);
+        } else {
+          await query(`UPDATE ${table} SET is_published = TRUE, updated_at = NOW() WHERE id = $1`, [draftId]);
+        }
+      }
+    }
+
+    const collections = ['services', 'projects', 'skills', 'process_steps', 'testimonials', 'navigation_items', 'page_sections'];
+    for (const table of collections) {
+      await query(`UPDATE ${table} SET is_published = TRUE, updated_at = NOW() WHERE is_published = FALSE`);
+    }
+
+    const adminId = String(req.user?.id || 'admin');
+    const adminEmail = req.user?.email || 'admin@example.com';
+    await query(
+      `INSERT INTO publishing_history (admin_id, admin_email, action, section, details) VALUES ($1, $2, 'publish', 'all', $3)`,
+      [adminId, adminEmail, JSON.stringify({ summary: 'Published all draft changes to live website' })]
+    ).catch((err) => console.error('Error logging history:', err.message));
+
+    ok(res, { published: true, message: 'All drafts published successfully.' });
+  } catch (error) {
+    console.error('Error publishing all drafts:', error);
+    fail(res, 500, error.message || 'Failed to publish all drafts.');
+  }
+});
 
 // Media
 app.get('/api/media', requireAdmin, async (_req, res) => {

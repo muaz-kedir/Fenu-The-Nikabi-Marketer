@@ -219,3 +219,28 @@ CREATE TABLE IF NOT EXISTS admin_users (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 CREATE INDEX IF NOT EXISTS idx_admin_users_email ON admin_users (LOWER(email));
+
+-- 17. Navigation Items
+CREATE TABLE IF NOT EXISTS navigation_items (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  is_published BOOLEAN NOT NULL DEFAULT TRUE,
+  is_visible BOOLEAN NOT NULL DEFAULT TRUE,
+  label TEXT NOT NULL,
+  url TEXT NOT NULL,
+  is_cta BOOLEAN NOT NULL DEFAULT FALSE,
+  display_order INTEGER NOT NULL DEFAULT 0,
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_nav_order ON navigation_items (display_order);
+
+-- 18. Publishing History / Audit Log
+CREATE TABLE IF NOT EXISTS publishing_history (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  admin_id TEXT NOT NULL DEFAULT 'admin',
+  admin_email TEXT NOT NULL DEFAULT 'admin@example.com',
+  action TEXT NOT NULL,
+  section TEXT NOT NULL,
+  details JSONB,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_pub_history_created ON publishing_history(created_at DESC);

@@ -1,42 +1,67 @@
 import { useEffect, useState } from 'react';
-import { Loader2 } from 'lucide-react';
+import { useOutletContext, Link } from 'react-router-dom';
+import { ArrowRight, CheckCircle, Eye, Loader2, Plus, RotateCcw, Save, Send, Trash2, Users } from 'lucide-react';
 import { ImageUploadField } from '../../components/admin/ImageUploadField';
-import { getAdminSingleton, publishAdminSingleton, saveAdminSingleton } from '../../services/contentService';
-
-const emptyForm = {
-  title: '',
-  subtitle: 'About Me',
-  description: '',
-  profile_image_url: '',
-  profile_image_alt: '',
-  additional_description: '',
-};
+import {
+  adminCreate,
+  adminDelete,
+  adminList,
+  getAdminSingleton,
+  publishAdminSingleton,
+  saveAdminSingleton,
+} from '../../services/contentService';
+import type { AboutContent, SkillItem } from '../../types/database';
 
 export function AboutEditorPage() {
-  const [form, setForm] = useState(emptyForm);
-  const [published, setPublished] = useState<any>(null);
-  const [draft, setDraft] = useState<any>(null);
+  const { refreshOverview } = useOutletContext<{ refreshOverview?: () => void }>() || {};
+
+  const [form, setForm] = useState<Partial<AboutContent>>({
+    title: 'Transforming Brands Through Strategic Digital Marketing',
+    subtitle: 'About Me',
+    intro_heading: 'Meet Azmina Zahra – The Nikabi Marketer',
+    description: '',
+    profile_image_url: '',
+    profile_image_alt: 'Azmina Zahra',
+    experience_years: 5,
+    additional_description: '',
+    is_visible: true,
+  });
+
+  const [skills, setSkills] = useState<SkillItem[]>([]);
+  const [newSkillName, setNewSkillName] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [publishing, setPublishing] = useState(false);
+  const [hasDraftChanges, setHasDraftChanges] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  const load = async () => {
+  const loadData = async () => {
     setLoading(true);
     try {
-      const result = await getAdminSingleton('about_content');
-      setPublished(result.published);
-      setDraft(result.draft);
-      const source = result.draft || result.published;
+      const [res, skillsList] = await Promise.all([
+        getAdminSingleton('about_content'),
+        adminList<SkillItem>('skills').catch(() => []),
+      ]);
+
+      const draft = res.draft;
+      const published = res.published;
+      const source = draft || published;
       if (source) {
         setForm({
           title: source.title || '',
           subtitle: source.subtitle || 'About Me',
+          intro_heading: source.intro_heading || 'Meet Azmina Zahra – The Nikabi Marketer',
           description: source.description || '',
           profile_image_url: source.profile_image_url || '',
-          profile_image_alt: source.profile_image_alt || '',
+          profile_image_alt: source.profile_image_alt || 'Azmina Zahra',
+          experience_years: source.experience_years ?? 5,
           additional_description: source.additional_description || '',
+          is_visible: source.is_visible !== false,
         });
       }
+
+      setSkills(skillsList);
+      setHasDraftChanges(Boolean(draft));
     } catch (error) {
       setMessage({
         type: 'error',
@@ -48,17 +73,21 @@ export function AboutEditorPage() {
   };
 
   useEffect(() => {
-    void load();
+    void loadData();
   }, []);
 
-  const saveDraft = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleChange = (field: keyof AboutContent, value: unknown) => {
+    setForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleSaveDraft = async () => {
     setSaving(true);
     setMessage(null);
     try {
       await saveAdminSingleton('about_content', form, false);
-      await load();
-      setMessage({ type: 'success', text: 'About draft saved. Not yet live on public site.' });
+      setMessage({ type: 'success', text: 'About draft saved! Preview changes or publish to make live.' });
+      setHasDraftChanges(true);
+      if (refreshOverview) refreshOverview();
     } catch (error) {
       setMessage({
         type: 'error',
@@ -69,169 +98,264 @@ export function AboutEditorPage() {
     }
   };
 
-  const publish = async () => {
-    setSaving(true);
+  const handlePublish = async () => {
+    setPublishing(true);
     setMessage(null);
     try {
-      await saveAdminSingleton('about_content', form, false);
+      await saveAdminSingleton('about_content', form, true);
       await publishAdminSingleton('about_content');
-      await load();
-      setMessage({ type: 'success', text: 'About section published! Visible on public site.' });
+      setMessage({ type: 'success', text: 'About Me section published to the live website!' });
+      setHasDraftChanges(false);
+      if (refreshOverview) refreshOverview();
     } catch (error) {
       setMessage({
         type: 'error',
         text: error instanceof Error ? error.message : 'Failed to publish.',
       });
     } finally {
-      setSaving(false);
+      setPublishing(false);
     }
   };
 
+  const handleAddSkill = async () => {
+    if (!newSkillName.trim()) return;
+    try {
+      const created = await adminCreate<SkillItem>('skills', {
+        name: newSkillName.trim(),
+        display_order: skills.length + 1,
+        is_published: true,
+        is_visible: true,
+      });
+      setSkills((prev) => [...prev, created]);
+      setNewSkillName('');
+    } catch (err) {
+      alert('Failed to add skill.');
+    }
+  };
+
+  const handleDeleteSkill = async (id: string) => {
+    try {
+      await adminDelete('skills', id);
+      setSkills((prev) => prev.filter((s) => s.id !== id));
+    } catch (err) {
+      alert('Failed to delete skill.');
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex h-64 items-center justify-center text-xs text-[#8B806D]">
+        Loading About Me editor...
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-6 max-w-4xl">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="mx-auto max-w-4xl space-y-6">
+      {/* Header */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-xs uppercase tracking-[0.22em] text-[#f6b7d2]">About Me</p>
-          <h1 className="mt-1 text-3xl font-semibold text-white">Edit Profile Story & Biography</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-xl font-bold tracking-tight text-[#29251F]">About Me Editor</h1>
+            {hasDraftChanges ? (
+              <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-[11px] font-semibold text-amber-800">
+                Unpublished Draft
+              </span>
+            ) : (
+              <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-800">
+                Published Live
+              </span>
+            )}
+          </div>
+          <p className="mt-1 text-xs text-[#8B806D]">
+            Craft your biography, professional background story, and key marketing skill tags.
+          </p>
         </div>
-        <div className="flex items-center gap-2 text-xs">
-          {draft && (
-            <span className="rounded-full bg-amber-500/20 px-3 py-1 font-medium text-amber-300">
-              Draft Pending
-            </span>
-          )}
-          {published && (
-            <span className="rounded-full bg-emerald-500/20 px-3 py-1 font-medium text-emerald-300">
-              Live Published
-            </span>
-          )}
+
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            disabled={saving || publishing}
+            onClick={() => void handleSaveDraft()}
+            className="inline-flex items-center gap-1.5 rounded-xl border border-[#E7DCCB] bg-white px-4 py-2 text-xs font-semibold text-[#29251F] shadow-xs transition hover:bg-[#F8F4ED]"
+          >
+            <Save size={14} />
+            {saving ? 'Saving...' : 'Save Draft'}
+          </button>
+          <button
+            type="button"
+            disabled={saving || publishing}
+            onClick={() => void handlePublish()}
+            className="inline-flex items-center gap-1.5 rounded-xl bg-[#344238] px-4 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-[#29251F]"
+          >
+            <Send size={14} />
+            {publishing ? 'Publishing...' : 'Publish About'}
+          </button>
         </div>
       </div>
 
       {message && (
         <div
-          className={`flex items-center justify-between rounded-2xl border px-4 py-3 text-sm ${
+          className={`rounded-xl p-3 text-xs font-medium border ${
             message.type === 'success'
-              ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-200'
-              : 'border-red-500/30 bg-red-500/10 text-red-200'
+              ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
+              : 'border-rose-200 bg-rose-50 text-rose-800'
           }`}
         >
-          <span>{message.text}</span>
-          <button type="button" onClick={() => setMessage(null)} className="text-white/60 hover:text-white">
-            ✕
-          </button>
+          {message.text}
         </div>
       )}
 
-      {loading ? (
-        <div className="flex h-64 items-center justify-center text-white/60">
-          <Loader2 size={24} className="animate-spin mr-2 text-[#f04796]" />
-          Loading about content...
-        </div>
-      ) : (
-        <form onSubmit={saveDraft} className="rounded-[28px] border border-white/10 bg-[#141416] p-6 space-y-6">
-          <div className="grid gap-5 md:grid-cols-2">
+      {/* Main Content Form */}
+      <div className="space-y-6">
+        <div className="rounded-2xl border border-[#E7DCCB] bg-white p-6 shadow-xs space-y-4">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-[#8B806D] border-b border-[#E7DCCB]/60 pb-3">
+            Biography Headings
+          </h2>
+
+          <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label className="block text-xs font-medium text-white/70 mb-1.5">Subtitle / Badge</label>
+              <label className="block text-xs font-medium text-[#29251F]">Subtitle Tag</label>
               <input
                 type="text"
-                value={form.subtitle}
-                onChange={(e) => setForm({ ...form, subtitle: e.target.value })}
-                className="w-full rounded-2xl border border-white/10 bg-[#0d0d0f] px-3.5 py-2.5 text-sm text-white focus:border-[#f04796] focus:outline-none"
+                value={form.subtitle || ''}
+                onChange={(e) => handleChange('subtitle', e.target.value)}
                 placeholder="About Me"
+                className="mt-1 w-full rounded-xl border border-[#E7DCCB] bg-[#F8F4ED]/50 px-3 py-2 text-xs text-[#29251F] focus:border-[#344238] focus:bg-white focus:outline-hidden"
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-white/70 mb-1.5">Section Title</label>
+              <label className="block text-xs font-medium text-[#29251F]">Years of Experience</label>
               <input
-                type="text"
-                required
-                value={form.title}
-                onChange={(e) => setForm({ ...form, title: e.target.value })}
-                className="w-full rounded-2xl border border-white/10 bg-[#0d0d0f] px-3.5 py-2.5 text-sm text-white focus:border-[#f04796] focus:outline-none"
-                placeholder="A brand storyteller with strategy in her DNA."
-              />
-            </div>
-
-            <div className="md:col-span-2">
-              <label className="block text-xs font-medium text-white/70 mb-1.5">Main Biography</label>
-              <textarea
-                required
-                rows={4}
-                value={form.description}
-                onChange={(e) => setForm({ ...form, description: e.target.value })}
-                className="w-full rounded-2xl border border-white/10 bg-[#0d0d0f] px-3.5 py-2.5 text-sm text-white focus:border-[#f04796] focus:outline-none"
-                placeholder="Introduce yourself and your expertise..."
-              />
-            </div>
-
-            <div className="md:col-span-2">
-              <label className="block text-xs font-medium text-white/70 mb-1.5">Additional Description</label>
-              <textarea
-                rows={4}
-                value={form.additional_description}
-                onChange={(e) => setForm({ ...form, additional_description: e.target.value })}
-                className="w-full rounded-2xl border border-white/10 bg-[#0d0d0f] px-3.5 py-2.5 text-sm text-white focus:border-[#f04796] focus:outline-none"
-                placeholder="Supporting background or client methodology..."
-              />
-            </div>
-
-            <div className="md:col-span-2">
-              <ImageUploadField
-                label="Portrait Photograph"
-                value={form.profile_image_url}
-                onChange={(url) => setForm({ ...form, profile_image_url: url })}
-                altText={form.profile_image_alt}
-                onAltTextChange={(alt) => setForm({ ...form, profile_image_alt: alt })}
-                folder="about"
-                aspect="square"
-                helperText="Displayed in the large photo card on the About section"
+                type="number"
+                value={form.experience_years ?? 5}
+                onChange={(e) => handleChange('experience_years', Number(e.target.value))}
+                placeholder="5"
+                className="mt-1 w-full rounded-xl border border-[#E7DCCB] bg-[#F8F4ED]/50 px-3 py-2 text-xs text-[#29251F] focus:border-[#344238] focus:bg-white focus:outline-hidden"
               />
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center justify-between gap-4 border-t border-white/10 pt-5">
-            <button
-              type="button"
-              onClick={() => {
-                const fallback = published || draft;
-                if (fallback) {
-                  setForm({
-                    title: fallback.title || '',
-                    subtitle: fallback.subtitle || 'About Me',
-                    description: fallback.description || '',
-                    profile_image_url: fallback.profile_image_url || '',
-                    profile_image_alt: fallback.profile_image_alt || '',
-                    additional_description: fallback.additional_description || '',
-                  });
-                  setMessage({ type: 'success', text: 'Reverted to previous saved version.' });
+          <div>
+            <label className="block text-xs font-medium text-[#29251F]">Introductory Heading</label>
+            <input
+              type="text"
+              value={form.intro_heading || ''}
+              onChange={(e) => handleChange('intro_heading', e.target.value)}
+              placeholder="Meet Azmina Zahra – The Nikabi Marketer"
+              className="mt-1 w-full rounded-xl border border-[#E7DCCB] bg-[#F8F4ED]/50 px-3 py-2 text-xs text-[#29251F] focus:border-[#344238] focus:bg-white focus:outline-hidden"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-[#29251F]">Main Title</label>
+            <input
+              type="text"
+              value={form.title || ''}
+              onChange={(e) => handleChange('title', e.target.value)}
+              placeholder="Transforming Brands Through Strategic Digital Marketing"
+              className="mt-1 w-full rounded-xl border border-[#E7DCCB] bg-[#F8F4ED]/50 px-3 py-2 text-xs text-[#29251F] focus:border-[#344238] focus:bg-white focus:outline-hidden"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-[#29251F]">Primary Biography</label>
+            <textarea
+              rows={5}
+              value={form.description || ''}
+              onChange={(e) => handleChange('description', e.target.value)}
+              placeholder="Write your background, journey, and market specialization..."
+              className="mt-1 w-full rounded-xl border border-[#E7DCCB] bg-[#F8F4ED]/50 p-3 text-xs text-[#29251F] focus:border-[#344238] focus:bg-white focus:outline-hidden"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-[#29251F]">Additional Story / Philosophy</label>
+            <textarea
+              rows={3}
+              value={form.additional_description || ''}
+              onChange={(e) => handleChange('additional_description', e.target.value)}
+              placeholder="Additional paragraph explaining your core values, work ethic, or vision..."
+              className="mt-1 w-full rounded-xl border border-[#E7DCCB] bg-[#F8F4ED]/50 p-3 text-xs text-[#29251F] focus:border-[#344238] focus:bg-white focus:outline-hidden"
+            />
+          </div>
+        </div>
+
+        {/* Profile Image Upload */}
+        <div className="rounded-2xl border border-[#E7DCCB] bg-white p-6 shadow-xs space-y-4">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-[#8B806D] border-b border-[#E7DCCB]/60 pb-3">
+            About Section Portrait Photo
+          </h2>
+
+          <ImageUploadField
+            label="About Section Portrait"
+            value={form.profile_image_url || ''}
+            onChange={(url) => handleChange('profile_image_url', url)}
+            altText={form.profile_image_alt || undefined}
+            onAltTextChange={(alt) => handleChange('profile_image_alt', alt)}
+            folder="about"
+            helperText="High-quality photo for the About Me section"
+          />
+        </div>
+
+        {/* Skills & Competencies List */}
+        <div className="rounded-2xl border border-[#E7DCCB] bg-white p-6 shadow-xs space-y-4">
+          <div className="flex items-center justify-between border-b border-[#E7DCCB]/60 pb-3">
+            <div>
+              <h2 className="text-xs font-bold uppercase tracking-wider text-[#8B806D]">
+                Core Skills & Competencies
+              </h2>
+              <p className="text-[11px] text-[#8B806D]">Displayed as interactive badges on the landing page</p>
+            </div>
+            <Link to="/admin/skills" className="text-xs font-semibold text-[#344238] hover:underline flex items-center gap-1">
+              Full Manager <ArrowRight size={12} />
+            </Link>
+          </div>
+
+          {/* Add skill inline */}
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={newSkillName}
+              onChange={(e) => setNewSkillName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  void handleAddSkill();
                 }
               }}
-              className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-medium text-white/70 hover:bg-white/10"
+              placeholder="Add skill (e.g. Meta Ads, Growth Hacking, Video Editing)..."
+              className="flex-1 rounded-xl border border-[#E7DCCB] bg-[#F8F4ED]/50 px-3 py-2 text-xs text-[#29251F] focus:border-[#344238] focus:bg-white focus:outline-hidden"
+            />
+            <button
+              type="button"
+              onClick={() => void handleAddSkill()}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-[#344238] px-4 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-[#29251F]"
             >
-              Cancel / Revert Changes
+              <Plus size={14} /> Add Skill
             </button>
-
-            <div className="flex gap-3">
-              <button
-                type="submit"
-                disabled={saving}
-                className="rounded-full border border-white/15 bg-white/5 px-5 py-2.5 text-xs font-semibold text-white transition hover:bg-white/10 disabled:opacity-50"
-              >
-                {saving ? 'Saving...' : 'Save Draft'}
-              </button>
-              <button
-                type="button"
-                disabled={saving}
-                onClick={() => void publish()}
-                className="rounded-full border border-[#f04796] bg-[#f04796] px-6 py-2.5 text-xs font-semibold text-[#0d0d0f] shadow-[0_0_20px_rgba(240,71,150,0.35)] transition hover:bg-[#ff6ab3] disabled:opacity-50"
-              >
-                {saving ? 'Publishing...' : 'Publish About Changes'}
-              </button>
-            </div>
           </div>
-        </form>
-      )}
+
+          <div className="flex flex-wrap gap-2 pt-2">
+            {skills.map((skill) => (
+              <span
+                key={skill.id}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-[#E7DCCB] bg-[#F8F4ED] px-3 py-1.5 text-xs font-medium text-[#29251F]"
+              >
+                <span>{skill.name}</span>
+                <button
+                  type="button"
+                  onClick={() => void handleDeleteSkill(skill.id)}
+                  title="Remove skill"
+                  className="text-[#8B806D] hover:text-rose-600 transition"
+                >
+                  <Trash2 size={12} />
+                </button>
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

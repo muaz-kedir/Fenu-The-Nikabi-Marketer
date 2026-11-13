@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
-import { Globe, Loader2, Sparkles } from 'lucide-react';
+import { useOutletContext } from 'react-router-dom';
+import { AlertCircle, Bell, CheckCircle2, Globe, Palette, Save, Send, Sparkles } from 'lucide-react';
 import { ImageUploadField } from '../../components/admin/ImageUploadField';
 import {
   getAdminSingleton,
   publishAdminSingleton,
   saveAdminSingleton,
 } from '../../services/contentService';
+import type { SiteSettings } from '../../types/database';
 
 const defaultForm = {
   site_name: 'Azmina Zahra',
@@ -18,31 +20,30 @@ const defaultForm = {
   favicon_url: '',
   profile_image_url: '',
   profile_image_alt: '',
-  resume_url: '',
-  instagram_url: 'https://instagram.com',
-  tiktok_url: 'https://tiktok.com',
-  linkedin_url: 'https://linkedin.com',
-  whatsapp_url: 'https://wa.me/971521234567',
-  seo_title: 'Azmina Zahra | Social Media Marketing Specialist',
-  seo_description: 'Premium social media marketing strategy and creative services for brands ready to grow.',
-  copyright_text: '© 2025 Azmina Zahra. All rights reserved.',
+  announcement_active: false,
+  announcement_text: '✨ Currently taking on ambitious brand campaigns for Q2 – Inquire now!',
+  brand_primary_color: '#344238',
+  brand_accent_color: '#E7DCCB',
+  copyright_text: '© 2026 Azmina Zahra – The Nikabi Marketer. All rights reserved.',
 };
 
 export function WebsiteSettingsPage() {
+  const { refreshOverview } = useOutletContext<{ refreshOverview?: () => void }>() || {};
+
   const [form, setForm] = useState(defaultForm);
-  const [published, setPublished] = useState<any>(null);
-  const [draft, setDraft] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [publishing, setPublishing] = useState(false);
+  const [hasDraftChanges, setHasDraftChanges] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  const load = async () => {
+  const loadData = async () => {
     setLoading(true);
     try {
-      const result = await getAdminSingleton('site_settings');
-      setPublished(result.published);
-      setDraft(result.draft);
-      const source = result.draft || result.published;
+      const res = await getAdminSingleton('site_settings');
+      const draft = res.draft;
+      const published = res.published;
+      const source = draft || published;
       if (source) {
         setForm((prev) => ({
           ...prev,
@@ -50,9 +51,9 @@ export function WebsiteSettingsPage() {
           logo_url: source.logo_url || '',
           favicon_url: source.favicon_url || '',
           profile_image_url: source.profile_image_url || '',
-          resume_url: source.resume_url || '',
         }));
       }
+      setHasDraftChanges(Boolean(draft));
     } catch (error) {
       setMessage({
         type: 'error',
@@ -64,17 +65,21 @@ export function WebsiteSettingsPage() {
   };
 
   useEffect(() => {
-    void load();
+    void loadData();
   }, []);
 
-  const saveDraft = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleChange = (field: string, value: unknown) => {
+    setForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleSaveDraft = async () => {
     setSaving(true);
     setMessage(null);
     try {
       await saveAdminSingleton('site_settings', form, false);
-      await load();
-      setMessage({ type: 'success', text: 'Settings draft saved. Changes remain unreleased until published.' });
+      setMessage({ type: 'success', text: 'Settings draft saved! Preview or publish when ready.' });
+      setHasDraftChanges(true);
+      if (refreshOverview) refreshOverview();
     } catch (error) {
       setMessage({
         type: 'error',
@@ -85,274 +90,252 @@ export function WebsiteSettingsPage() {
     }
   };
 
-  const publish = async () => {
-    setSaving(true);
+  const handlePublish = async () => {
+    setPublishing(true);
     setMessage(null);
     try {
-      await saveAdminSingleton('site_settings', form, false);
+      await saveAdminSingleton('site_settings', form, true);
       await publishAdminSingleton('site_settings');
-      await load();
-      setMessage({ type: 'success', text: 'Settings published! Public website has been updated.' });
+      setMessage({ type: 'success', text: 'Website settings published live!' });
+      setHasDraftChanges(false);
+      if (refreshOverview) refreshOverview();
     } catch (error) {
       setMessage({
         type: 'error',
         text: error instanceof Error ? error.message : 'Failed to publish settings.',
       });
     } finally {
-      setSaving(false);
+      setPublishing(false);
     }
   };
 
+  if (loading) {
+    return (
+      <div className="flex h-64 items-center justify-center text-xs text-[#8B806D]">
+        Loading website settings...
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-6 max-w-5xl">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="mx-auto max-w-4xl space-y-6">
+      {/* Header */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-xs uppercase tracking-[0.22em] text-[#f6b7d2]">Configuration</p>
-          <h1 className="mt-1 text-3xl font-semibold text-white">Website & Brand Settings</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-xl font-bold tracking-tight text-[#29251F]">Website Global Settings</h1>
+            {hasDraftChanges ? (
+              <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-[11px] font-semibold text-amber-800">
+                Unpublished Draft
+              </span>
+            ) : (
+              <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-800">
+                Published Live
+              </span>
+            )}
+          </div>
+          <p className="mt-1 text-xs text-[#8B806D]">
+            Manage top announcement bar, brand logo, brand colors, and copyright footer.
+          </p>
         </div>
-        <div className="flex items-center gap-2 text-xs">
-          {draft && (
-            <span className="rounded-full bg-amber-500/20 px-3 py-1 font-medium text-amber-300">
-              Draft Pending
-            </span>
-          )}
-          {published && (
-            <span className="rounded-full bg-emerald-500/20 px-3 py-1 font-medium text-emerald-300">
-              Live Published
-            </span>
-          )}
+
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            disabled={saving || publishing}
+            onClick={() => void handleSaveDraft()}
+            className="inline-flex items-center gap-1.5 rounded-xl border border-[#E7DCCB] bg-white px-4 py-2 text-xs font-semibold text-[#29251F] shadow-xs transition hover:bg-[#F8F4ED]"
+          >
+            <Save size={14} />
+            {saving ? 'Saving...' : 'Save Draft'}
+          </button>
+          <button
+            type="button"
+            disabled={saving || publishing}
+            onClick={() => void handlePublish()}
+            className="inline-flex items-center gap-1.5 rounded-xl bg-[#344238] px-4 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-[#29251F]"
+          >
+            <Send size={14} />
+            {publishing ? 'Publishing...' : 'Publish Live'}
+          </button>
         </div>
       </div>
 
       {message && (
         <div
-          className={`flex items-center justify-between rounded-2xl border px-4 py-3 text-sm ${
+          className={`rounded-xl p-3 text-xs font-medium border ${
             message.type === 'success'
-              ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-200'
-              : 'border-red-500/30 bg-red-500/10 text-red-200'
+              ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
+              : 'border-rose-200 bg-rose-50 text-rose-800'
           }`}
         >
-          <span>{message.text}</span>
-          <button type="button" onClick={() => setMessage(null)} className="text-white/60 hover:text-white">
-            ✕
-          </button>
+          {message.text}
         </div>
       )}
 
-      {loading ? (
-        <div className="flex h-64 items-center justify-center text-white/50">
-          <Loader2 size={24} className="animate-spin mr-2 text-[#f04796]" />
-          Loading settings...
+      <div className="space-y-6">
+        {/* Announcement Bar */}
+        <div className="rounded-2xl border border-[#E7DCCB] bg-white p-6 shadow-xs space-y-4">
+          <div className="flex items-center justify-between border-b border-[#E7DCCB]/60 pb-3">
+            <div className="flex items-center gap-2">
+              <Bell size={16} className="text-[#344238]" />
+              <h2 className="text-xs font-bold uppercase tracking-wider text-[#8B806D]">
+                Top Announcement Bar
+              </h2>
+            </div>
+            <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-[#29251F]">
+              <input
+                type="checkbox"
+                checked={form.announcement_active}
+                onChange={(e) => handleChange('announcement_active', e.target.checked)}
+                className="h-4 w-4 rounded-sm border-[#E7DCCB] text-[#344238]"
+              />
+              <span>Enable Announcement Bar</span>
+            </label>
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-[#29251F]">Announcement Message Text</label>
+            <input
+              type="text"
+              value={form.announcement_text || ''}
+              onChange={(e) => handleChange('announcement_text', e.target.value)}
+              placeholder="e.g. ✨ Now booking Q2 marketing campaigns – Inquire today!"
+              className="mt-1 w-full rounded-xl border border-[#E7DCCB] bg-[#F8F4ED]/50 px-3 py-2 text-xs text-[#29251F] focus:border-[#344238] focus:bg-white focus:outline-hidden"
+            />
+          </div>
+
+          {form.announcement_active && (
+            <div className="rounded-xl border border-amber-200 bg-amber-50/70 p-3 text-xs text-amber-900 flex items-center gap-2">
+              <Sparkles size={14} className="text-amber-600 shrink-0" />
+              <span>Preview: {form.announcement_text || 'Announcement text preview'}</span>
+            </div>
+          )}
         </div>
-      ) : (
-        <form onSubmit={saveDraft} className="space-y-8">
-          {/* Section 1: Brand Identity */}
-          <div className="rounded-[28px] border border-white/10 bg-[#141416] p-6 space-y-5">
-            <div className="flex items-center gap-2 text-base font-semibold text-white border-b border-white/10 pb-3">
-              <Sparkles size={18} className="text-[#f6b7d2]" />
-              Brand & Owner Identity
+
+        {/* Brand Identity */}
+        <div className="rounded-2xl border border-[#E7DCCB] bg-white p-6 shadow-xs space-y-4">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-[#8B806D] border-b border-[#E7DCCB]/60 pb-3">
+            Brand Identity
+          </h2>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label className="block text-xs font-medium text-[#29251F]">Site / Brand Name</label>
+              <input
+                type="text"
+                value={form.site_name}
+                onChange={(e) => handleChange('site_name', e.target.value)}
+                className="mt-1 w-full rounded-xl border border-[#E7DCCB] bg-[#F8F4ED]/50 px-3 py-2 text-xs text-[#29251F] focus:border-[#344238] focus:bg-white focus:outline-hidden"
+              />
             </div>
-            <div className="grid gap-5 md:grid-cols-2">
-              <div>
-                <label className="block text-xs font-medium text-white/70 mb-1.5">Site Name</label>
+
+            <div>
+              <label className="block text-xs font-medium text-[#29251F]">Owner Name</label>
+              <input
+                type="text"
+                value={form.owner_name}
+                onChange={(e) => handleChange('owner_name', e.target.value)}
+                className="mt-1 w-full rounded-xl border border-[#E7DCCB] bg-[#F8F4ED]/50 px-3 py-2 text-xs text-[#29251F] focus:border-[#344238] focus:bg-white focus:outline-hidden"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-[#29251F]">Professional Title / Role</label>
+            <input
+              type="text"
+              value={form.professional_title}
+              onChange={(e) => handleChange('professional_title', e.target.value)}
+              className="mt-1 w-full rounded-xl border border-[#E7DCCB] bg-[#F8F4ED]/50 px-3 py-2 text-xs text-[#29251F] focus:border-[#344238] focus:bg-white focus:outline-hidden"
+            />
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <ImageUploadField
+              label="Site Logo (Header)"
+              value={form.logo_url}
+              onChange={(url) => handleChange('logo_url', url)}
+              folder="branding"
+              helperText="Small brand mark or avatar for navigation bar"
+            />
+
+            <ImageUploadField
+              label="Favicon (Browser Tab)"
+              value={form.favicon_url}
+              onChange={(url) => handleChange('favicon_url', url)}
+              folder="branding"
+              helperText="Small square icon (32x32 or 64x64 PNG)"
+            />
+          </div>
+        </div>
+
+        {/* Brand Theme Colors */}
+        <div className="rounded-2xl border border-[#E7DCCB] bg-white p-6 shadow-xs space-y-4">
+          <div className="flex items-center gap-2 border-b border-[#E7DCCB]/60 pb-3">
+            <Palette size={16} className="text-[#344238]" />
+            <h2 className="text-xs font-bold uppercase tracking-wider text-[#8B806D]">
+              Brand Color Palette
+            </h2>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label className="block text-xs font-medium text-[#29251F]">Primary Olive Accent Color</label>
+              <div className="mt-1 flex items-center gap-2">
+                <input
+                  type="color"
+                  value={form.brand_primary_color || '#344238'}
+                  onChange={(e) => handleChange('brand_primary_color', e.target.value)}
+                  className="h-9 w-9 rounded-lg border border-[#E7DCCB] p-0.5 cursor-pointer"
+                />
                 <input
                   type="text"
-                  required
-                  value={form.site_name}
-                  onChange={(e) => setForm({ ...form, site_name: e.target.value })}
-                  className="w-full rounded-2xl border border-white/10 bg-[#0d0d0f] px-3.5 py-2.5 text-sm text-white focus:border-[#f04796] focus:outline-none"
+                  value={form.brand_primary_color || '#344238'}
+                  onChange={(e) => handleChange('brand_primary_color', e.target.value)}
+                  className="flex-1 rounded-xl border border-[#E7DCCB] bg-[#F8F4ED]/50 px-3 py-2 text-xs text-[#29251F] font-mono"
                 />
               </div>
-              <div>
-                <label className="block text-xs font-medium text-white/70 mb-1.5">Owner Full Name</label>
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-[#29251F]">Secondary Beige / Accent Color</label>
+              <div className="mt-1 flex items-center gap-2">
+                <input
+                  type="color"
+                  value={form.brand_accent_color || '#E7DCCB'}
+                  onChange={(e) => handleChange('brand_accent_color', e.target.value)}
+                  className="h-9 w-9 rounded-lg border border-[#E7DCCB] p-0.5 cursor-pointer"
+                />
                 <input
                   type="text"
-                  required
-                  value={form.owner_name}
-                  onChange={(e) => setForm({ ...form, owner_name: e.target.value })}
-                  className="w-full rounded-2xl border border-white/10 bg-[#0d0d0f] px-3.5 py-2.5 text-sm text-white focus:border-[#f04796] focus:outline-none"
-                />
-              </div>
-              <div className="md:col-span-2">
-                <label className="block text-xs font-medium text-white/70 mb-1.5">Professional Title</label>
-                <input
-                  type="text"
-                  required
-                  value={form.professional_title}
-                  onChange={(e) => setForm({ ...form, professional_title: e.target.value })}
-                  className="w-full rounded-2xl border border-white/10 bg-[#0d0d0f] px-3.5 py-2.5 text-sm text-white focus:border-[#f04796] focus:outline-none"
-                />
-              </div>
-              <div className="md:col-span-2">
-                <ImageUploadField
-                  label="Brand Avatar / Profile Picture"
-                  value={form.profile_image_url}
-                  onChange={(url) => setForm({ ...form, profile_image_url: url })}
-                  altText={form.profile_image_alt}
-                  onAltTextChange={(alt) => setForm({ ...form, profile_image_alt: alt })}
-                  folder="branding"
-                  aspect="circle"
+                  value={form.brand_accent_color || '#E7DCCB'}
+                  onChange={(e) => handleChange('brand_accent_color', e.target.value)}
+                  className="flex-1 rounded-xl border border-[#E7DCCB] bg-[#F8F4ED]/50 px-3 py-2 text-xs text-[#29251F] font-mono"
                 />
               </div>
             </div>
           </div>
+        </div>
 
-          {/* Section 2: Contact Details */}
-          <div className="rounded-[28px] border border-white/10 bg-[#141416] p-6 space-y-5">
-            <div className="flex items-center gap-2 text-base font-semibold text-white border-b border-white/10 pb-3">
-              <Globe size={18} className="text-[#f6b7d2]" />
-              Contact Information
-            </div>
-            <div className="grid gap-5 md:grid-cols-3">
-              <div>
-                <label className="block text-xs font-medium text-white/70 mb-1.5">Email Address</label>
-                <input
-                  type="email"
-                  required
-                  value={form.email}
-                  onChange={(e) => setForm({ ...form, email: e.target.value })}
-                  className="w-full rounded-2xl border border-white/10 bg-[#0d0d0f] px-3.5 py-2.5 text-sm text-white focus:border-[#f04796] focus:outline-none"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-white/70 mb-1.5">Phone Number</label>
-                <input
-                  type="text"
-                  value={form.phone}
-                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                  className="w-full rounded-2xl border border-white/10 bg-[#0d0d0f] px-3.5 py-2.5 text-sm text-white focus:border-[#f04796] focus:outline-none"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-white/70 mb-1.5">Location</label>
-                <input
-                  type="text"
-                  value={form.location}
-                  onChange={(e) => setForm({ ...form, location: e.target.value })}
-                  className="w-full rounded-2xl border border-white/10 bg-[#0d0d0f] px-3.5 py-2.5 text-sm text-white focus:border-[#f04796] focus:outline-none"
-                />
-              </div>
-            </div>
+        {/* Footer & Copyright */}
+        <div className="rounded-2xl border border-[#E7DCCB] bg-white p-6 shadow-xs space-y-4">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-[#8B806D] border-b border-[#E7DCCB]/60 pb-3">
+            Footer Copyright Text
+          </h2>
+
+          <div>
+            <label className="block text-xs font-medium text-[#29251F]">Copyright Notice</label>
+            <input
+              type="text"
+              value={form.copyright_text}
+              onChange={(e) => handleChange('copyright_text', e.target.value)}
+              placeholder="© 2026 Azmina Zahra. All rights reserved."
+              className="mt-1 w-full rounded-xl border border-[#E7DCCB] bg-[#F8F4ED]/50 px-3 py-2 text-xs text-[#29251F] focus:border-[#344238] focus:bg-white focus:outline-hidden"
+            />
           </div>
-
-          {/* Section 3: Social & WhatsApp */}
-          <div className="rounded-[28px] border border-white/10 bg-[#141416] p-6 space-y-5">
-            <div className="text-base font-semibold text-white border-b border-white/10 pb-3">
-              Social Media Links
-            </div>
-            <div className="grid gap-5 md:grid-cols-2">
-              <div>
-                <label className="block text-xs font-medium text-white/70 mb-1.5">WhatsApp Link</label>
-                <input
-                  type="text"
-                  value={form.whatsapp_url}
-                  onChange={(e) => setForm({ ...form, whatsapp_url: e.target.value })}
-                  className="w-full rounded-2xl border border-white/10 bg-[#0d0d0f] px-3.5 py-2.5 text-sm text-white focus:border-[#f04796] focus:outline-none"
-                  placeholder="https://wa.me/..."
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-white/70 mb-1.5">Instagram URL</label>
-                <input
-                  type="text"
-                  value={form.instagram_url}
-                  onChange={(e) => setForm({ ...form, instagram_url: e.target.value })}
-                  className="w-full rounded-2xl border border-white/10 bg-[#0d0d0f] px-3.5 py-2.5 text-sm text-white focus:border-[#f04796] focus:outline-none"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-white/70 mb-1.5">TikTok URL</label>
-                <input
-                  type="text"
-                  value={form.tiktok_url}
-                  onChange={(e) => setForm({ ...form, tiktok_url: e.target.value })}
-                  className="w-full rounded-2xl border border-white/10 bg-[#0d0d0f] px-3.5 py-2.5 text-sm text-white focus:border-[#f04796] focus:outline-none"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-white/70 mb-1.5">LinkedIn URL</label>
-                <input
-                  type="text"
-                  value={form.linkedin_url}
-                  onChange={(e) => setForm({ ...form, linkedin_url: e.target.value })}
-                  className="w-full rounded-2xl border border-white/10 bg-[#0d0d0f] px-3.5 py-2.5 text-sm text-white focus:border-[#f04796] focus:outline-none"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Section 4: SEO Metadata */}
-          <div className="rounded-[28px] border border-white/10 bg-[#141416] p-6 space-y-5">
-            <div className="text-base font-semibold text-white border-b border-white/10 pb-3">
-              SEO & Footer Defaults
-            </div>
-            <div className="grid gap-5 md:grid-cols-2">
-              <div className="md:col-span-2">
-                <label className="block text-xs font-medium text-white/70 mb-1.5">SEO Title Tag</label>
-                <input
-                  type="text"
-                  value={form.seo_title}
-                  onChange={(e) => setForm({ ...form, seo_title: e.target.value })}
-                  className="w-full rounded-2xl border border-white/10 bg-[#0d0d0f] px-3.5 py-2.5 text-sm text-white focus:border-[#f04796] focus:outline-none"
-                />
-              </div>
-              <div className="md:col-span-2">
-                <label className="block text-xs font-medium text-white/70 mb-1.5">SEO Meta Description</label>
-                <textarea
-                  rows={2}
-                  value={form.seo_description}
-                  onChange={(e) => setForm({ ...form, seo_description: e.target.value })}
-                  className="w-full rounded-2xl border border-white/10 bg-[#0d0d0f] px-3.5 py-2.5 text-sm text-white focus:border-[#f04796] focus:outline-none"
-                />
-              </div>
-              <div className="md:col-span-2">
-                <label className="block text-xs font-medium text-white/70 mb-1.5">Default Copyright Text</label>
-                <input
-                  type="text"
-                  value={form.copyright_text}
-                  onChange={(e) => setForm({ ...form, copyright_text: e.target.value })}
-                  className="w-full rounded-2xl border border-white/10 bg-[#0d0d0f] px-3.5 py-2.5 text-sm text-white focus:border-[#f04796] focus:outline-none"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Form Actions */}
-          <div className="flex flex-wrap items-center justify-between gap-4 border-t border-white/10 pt-5">
-            <button
-              type="button"
-              onClick={() => {
-                const fallback = published || draft;
-                if (fallback) {
-                  setForm((prev) => ({ ...prev, ...fallback }));
-                  setMessage({ type: 'success', text: 'Reverted settings to previous saved state.' });
-                }
-              }}
-              className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-medium text-white/70 hover:bg-white/10"
-            >
-              Cancel / Revert Changes
-            </button>
-
-            <div className="flex gap-3">
-              <button
-                type="submit"
-                disabled={saving}
-                className="rounded-full border border-white/15 bg-white/5 px-5 py-2.5 text-xs font-semibold text-white transition hover:bg-white/10 disabled:opacity-50"
-              >
-                {saving ? 'Saving...' : 'Save Draft'}
-              </button>
-              <button
-                type="button"
-                disabled={saving}
-                onClick={() => void publish()}
-                className="rounded-full border border-[#f04796] bg-[#f04796] px-6 py-2.5 text-xs font-semibold text-[#0d0d0f] shadow-[0_0_20px_rgba(240,71,150,0.35)] transition hover:bg-[#ff6ab3] disabled:opacity-50"
-              >
-                {saving ? 'Publishing...' : 'Publish Settings'}
-              </button>
-            </div>
-          </div>
-        </form>
-      )}
+        </div>
+      </div>
     </div>
   );
 }

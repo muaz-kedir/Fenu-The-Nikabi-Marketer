@@ -18,8 +18,21 @@ export type SiteSettings = {
   tiktok_url: string;
   linkedin_url: string;
   whatsapp_url: string;
+  facebook_url?: string | null;
+  booking_url?: string | null;
+  announcement_text?: string | null;
+  announcement_active?: boolean;
+  brand_primary_color?: string | null;
+  brand_accent_color?: string | null;
+  contact_heading?: string | null;
+  contact_description?: string | null;
   seo_title: string;
   seo_description: string;
+  keywords?: string | null;
+  og_title?: string | null;
+  og_description?: string | null;
+  og_image_url?: string | null;
+  canonical_url?: string | null;
   copyright_text: string;
   updated_at: string;
 };
@@ -42,7 +55,9 @@ export type HeroContent = {
   greeting: string;
   full_name: string;
   professional_title: string;
+  subtitle?: string | null;
   description: string;
+  availability_status?: string | null;
   profile_image_url: string | null;
   profile_image_alt?: string | null;
   background_image_url: string | null;
@@ -50,6 +65,8 @@ export type HeroContent = {
   primary_button_url: string;
   secondary_button_text: string;
   secondary_button_url: string;
+  is_visible?: boolean;
+  display_order?: number;
   updated_at: string;
 };
 
@@ -58,10 +75,13 @@ export type AboutContent = {
   is_published?: boolean;
   title: string;
   subtitle: string | null;
+  intro_heading?: string | null;
   description: string;
+  experience_years?: number | string | null;
   profile_image_url: string | null;
   profile_image_alt?: string | null;
   additional_description: string | null;
+  is_visible?: boolean;
   updated_at: string;
 };
 
@@ -107,6 +127,8 @@ export type ServiceItem = {
   id: string;
   title: string;
   description: string;
+  category?: string | null;
+  price_starting_from?: string | null;
   icon: string;
   image_url: string | null;
   image_alt?: string | null;
@@ -121,12 +143,19 @@ export type ProjectItem = {
   id: string;
   title: string;
   slug: string;
-  description: string;
+  client_name?: string | null;
+  industry?: string | null;
   category: string;
+  description: string;
+  marketing_objective?: string | null;
+  strategy?: string | null;
+  services_provided?: string | null;
+  project_images?: string[];
   cover_image_url: string | null;
   result_metric: string;
   result_description: string | null;
   case_study_url: string;
+  verified_results?: string | null;
   is_featured: boolean;
   is_published: boolean;
   is_visible: boolean;
@@ -159,6 +188,7 @@ export type ProcessStep = {
 export type TestimonialItem = {
   id: string;
   client_name: string;
+  business_name?: string | null;
   client_designation: string;
   client_image_url: string | null;
   testimonial: string;
@@ -167,6 +197,31 @@ export type TestimonialItem = {
   is_published: boolean;
   created_at: string;
   updated_at?: string;
+};
+
+export type NavigationItem = {
+  id: string;
+  label: string;
+  url: string;
+  is_cta: boolean;
+  display_order: number;
+  is_visible: boolean;
+  is_published?: boolean;
+  updated_at?: string;
+};
+
+export type PublishingHistoryItem = {
+  id: string;
+  user_id?: string | null;
+  user_email?: string | null;
+  admin_id?: string;
+  admin_email?: string;
+  action: string;
+  section_name?: string;
+  section?: string;
+  summary?: string | null;
+  details?: Record<string, unknown> | null;
+  created_at: string;
 };
 
 export type ContactMessage = {
@@ -203,4 +258,5 @@ export type PortfolioData = {
   process: ProcessStep[];
   testimonials: TestimonialItem[];
   sections: PageSection[];
+  navigation?: NavigationItem[];
 };

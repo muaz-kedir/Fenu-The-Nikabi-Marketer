@@ -1,45 +1,61 @@
 import { useEffect, useState } from 'react';
-import { adminCreate, adminDelete, adminList, adminPublish, adminUnpublish, adminUpdate } from '../../services/contentService';
+import { useOutletContext } from 'react-router-dom';
+import { CheckCircle, Pencil, Plus, Trash2, X } from 'lucide-react';
+import {
+  adminCreate,
+  adminDelete,
+  adminList,
+  adminUpdate,
+} from '../../services/contentService';
 import type { SkillItem } from '../../types/database';
 
 const emptyForm = { name: '', icon: '', display_order: 1, is_visible: true, is_published: true };
 
 export function SkillsPage() {
+  const { refreshOverview } = useOutletContext<{ refreshOverview?: () => void }>() || {};
+
   const [items, setItems] = useState<SkillItem[]>([]);
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  const load = async () => {
+  const loadData = async () => {
     setLoading(true);
     try {
-      setItems(await adminList<SkillItem>('skills'));
+      const data = await adminList<SkillItem>('skills');
+      setItems(data.sort((a, b) => a.display_order - b.display_order));
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'Failed to load skills.');
+      setMessage({ type: 'error', text: error instanceof Error ? error.message : 'Failed to load skills.' });
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => { void load(); }, []);
+  useEffect(() => {
+    void loadData();
+  }, []);
 
-  const reset = () => { setForm(emptyForm); setEditingId(null); };
+  const resetForm = () => {
+    setForm(emptyForm);
+    setEditingId(null);
+  };
 
   const save = async (event: React.FormEvent) => {
     event.preventDefault();
     setSaving(true);
-    setMessage('');
+    setMessage(null);
     try {
       const payload = { ...form, display_order: Number(form.display_order) || 1 };
       if (editingId) await adminUpdate('skills', editingId, payload);
       else await adminCreate('skills', payload);
-      await load();
-      reset();
-      setMessage('Skill saved successfully.');
+      await loadData();
+      resetForm();
+      setMessage({ type: 'success', text: `Skill ${editingId ? 'updated' : 'added'} successfully.` });
+      if (refreshOverview) refreshOverview();
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'Failed to save skill.');
+      setMessage({ type: 'error', text: error instanceof Error ? error.message : 'Failed to save skill.' });
     } finally {
       setSaving(false);
     }
@@ -49,60 +65,125 @@ export function SkillsPage() {
     if (!window.confirm('Delete this skill?')) return;
     try {
       await adminDelete('skills', id);
-      await load();
-      setMessage('Skill deleted.');
+      await loadData();
+      setMessage({ type: 'success', text: 'Skill deleted.' });
+      if (refreshOverview) refreshOverview();
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'Failed to delete skill.');
+      setMessage({ type: 'error', text: error instanceof Error ? error.message : 'Failed to delete skill.' });
     }
   };
 
   return (
-    <div className="space-y-6">
+    <div className="mx-auto max-w-4xl space-y-6">
       <div>
-        <p className="text-xs uppercase tracking-[0.22em] text-[#f6b7d2]">Skills & Tools</p>
-        <h1 className="mt-2 text-3xl font-semibold text-white">Manage skills</h1>
+        <h1 className="text-xl font-bold tracking-tight text-[#29251F]">Skills & Marketing Tools</h1>
+        <p className="mt-1 text-xs text-[#8B806D]">
+          Manage skill tags, advertising platforms, and strategy competencies.
+        </p>
       </div>
-      {message && <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/80">{message}</div>}
-      <form onSubmit={save} className="rounded-[28px] border border-white/10 bg-[#141414] p-6">
-        <div className="grid gap-4 md:grid-cols-3">
-          <label className="block text-sm text-white/70">
-            Name
-            <input required value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} className="mt-2 w-full rounded-2xl border border-white/10 bg-[#0f1011] px-3 py-2.5 text-white" />
-          </label>
-          <label className="block text-sm text-white/70">
-            Icon
-            <input value={form.icon} onChange={(event) => setForm({ ...form, icon: event.target.value })} className="mt-2 w-full rounded-2xl border border-white/10 bg-[#0f1011] px-3 py-2.5 text-white" />
-          </label>
-          <label className="block text-sm text-white/70">
-            Display order
-            <input type="number" value={form.display_order} onChange={(event) => setForm({ ...form, display_order: Number(event.target.value) })} className="mt-2 w-full rounded-2xl border border-white/10 bg-[#0f1011] px-3 py-2.5 text-white" />
-          </label>
-          <label className="flex items-center gap-2 text-sm text-white/70">
-            <input type="checkbox" checked={form.is_visible} onChange={(event) => setForm({ ...form, is_visible: event.target.checked })} /> Visible
-          </label>
-          <label className="flex items-center gap-2 text-sm text-white/70">
-            <input type="checkbox" checked={form.is_published} onChange={(event) => setForm({ ...form, is_published: event.target.checked })} /> Published
-          </label>
+
+      {message && (
+        <div
+          className={`rounded-xl p-3 text-xs font-medium border ${
+            message.type === 'success'
+              ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
+              : 'border-rose-200 bg-rose-50 text-rose-800'
+          }`}
+        >
+          {message.text}
         </div>
-        <div className="mt-5 flex justify-end gap-3">
-          <button type="button" onClick={reset} className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/80">Cancel</button>
-          <button type="submit" disabled={saving} className="rounded-full border border-[#f04796] bg-[#f04796] px-5 py-2.5 text-sm font-medium text-[#0d0d0f] disabled:opacity-70">{saving ? 'Saving...' : editingId ? 'Update skill' : 'Add skill'}</button>
+      )}
+
+      {/* Form Card */}
+      <form onSubmit={save} className="rounded-2xl border border-[#E7DCCB] bg-white p-6 shadow-xs space-y-4">
+        <h2 className="text-xs font-bold uppercase tracking-wider text-[#8B806D] border-b border-[#E7DCCB]/60 pb-3">
+          {editingId ? 'Edit Skill Tag' : 'Add New Skill'}
+        </h2>
+
+        <div className="grid gap-4 sm:grid-cols-3">
+          <div className="sm:col-span-2">
+            <label className="block text-xs font-medium text-[#29251F]">Skill Name *</label>
+            <input
+              required
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              placeholder="e.g. Meta Ads Manager, TikTok Growth, Adobe Premiere"
+              className="mt-1 w-full rounded-xl border border-[#E7DCCB] bg-[#F8F4ED]/50 px-3 py-2 text-xs text-[#29251F] focus:border-[#344238] focus:bg-white focus:outline-hidden"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-[#29251F]">Display Order</label>
+            <input
+              type="number"
+              value={form.display_order}
+              onChange={(e) => setForm({ ...form, display_order: Number(e.target.value) })}
+              className="mt-1 w-full rounded-xl border border-[#E7DCCB] bg-[#F8F4ED]/50 px-3 py-2 text-xs text-[#29251F] focus:border-[#344238] focus:bg-white focus:outline-hidden"
+            />
+          </div>
+        </div>
+
+        <div className="flex items-center justify-end gap-2 pt-2">
+          {editingId && (
+            <button
+              type="button"
+              onClick={resetForm}
+              className="rounded-xl border border-[#E7DCCB] bg-[#F8F4ED] px-4 py-2 text-xs font-semibold text-[#29251F]"
+            >
+              Cancel
+            </button>
+          )}
+          <button
+            type="submit"
+            disabled={saving}
+            className="inline-flex items-center gap-1.5 rounded-xl bg-[#344238] px-5 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-[#29251F] disabled:opacity-50"
+          >
+            <Plus size={14} />
+            {saving ? 'Saving...' : editingId ? 'Update Skill' : 'Add Skill'}
+          </button>
         </div>
       </form>
 
-      {loading ? <div className="text-white/60">Loading skills...</div> : (
-        <div className="flex flex-wrap gap-3">
+      {/* Skills Grid */}
+      <div className="overflow-hidden rounded-2xl border border-[#E7DCCB] bg-white shadow-xs p-6">
+        <h2 className="text-xs font-bold uppercase tracking-wider text-[#8B806D] mb-4">
+          Active Skills List ({items.length})
+        </h2>
+
+        <div className="flex flex-wrap gap-2.5">
           {items.map((skill) => (
-            <div key={skill.id} className="rounded-full border border-[#f04796]/40 bg-[#f04796]/8 px-4 py-2.5 text-sm font-medium text-white/80">
-              {skill.name}
-              <span className="ml-2 text-xs text-white/40">{skill.is_published ? 'Published' : 'Draft'}</span>
-              <button type="button" onClick={() => { setEditingId(skill.id); setForm({ name: skill.name, icon: skill.icon || '', display_order: skill.display_order, is_visible: skill.is_visible, is_published: skill.is_published ?? true }); }} className="ml-3 text-xs text-[#f6b7d2]">Edit</button>
-              <button type="button" onClick={() => void adminPublish('skills', skill.id).then(load)} className="ml-2 text-xs text-[#f6b7d2]">Publish</button>
-              <button type="button" onClick={() => void adminDelete('skills', skill.id).then(load)} className="ml-2 text-xs text-red-200">Delete</button>
+            <div
+              key={skill.id}
+              className="flex items-center gap-2 rounded-xl border border-[#E7DCCB] bg-[#F8F4ED] px-3.5 py-2 text-xs font-medium text-[#29251F] shadow-2xs"
+            >
+              <span>{skill.name}</span>
+              <button
+                type="button"
+                onClick={() => {
+                  setEditingId(skill.id);
+                  setForm({
+                    name: skill.name,
+                    icon: skill.icon || '',
+                    display_order: skill.display_order,
+                    is_visible: skill.is_visible,
+                    is_published: skill.is_published !== false,
+                  });
+                }}
+                className="text-[#8B806D] hover:text-[#29251F]"
+              >
+                <Pencil size={12} />
+              </button>
+              <button
+                type="button"
+                onClick={() => void remove(skill.id)}
+                className="text-[#8B806D] hover:text-rose-600"
+              >
+                <Trash2 size={12} />
+              </button>
             </div>
           ))}
         </div>
-      )}
+      </div>
     </div>
   );
 }

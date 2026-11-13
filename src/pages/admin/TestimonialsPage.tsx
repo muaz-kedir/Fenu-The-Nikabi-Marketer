@@ -1,5 +1,19 @@
 import { useEffect, useState } from 'react';
-import { ArrowDown, ArrowUp, Eye, EyeOff, Loader2, MessageSquareQuote, Pencil, Plus, Trash2 } from 'lucide-react';
+import { useOutletContext } from 'react-router-dom';
+import {
+  ArrowDown,
+  ArrowUp,
+  Building,
+  CheckCircle,
+  Eye,
+  EyeOff,
+  MessageSquareQuote,
+  Pencil,
+  Plus,
+  Send,
+  Trash2,
+  X,
+} from 'lucide-react';
 import { ImageUploadField } from '../../components/admin/ImageUploadField';
 import {
   adminCreate,
@@ -14,7 +28,8 @@ import type { TestimonialItem } from '../../types/database';
 
 const emptyForm = {
   client_name: '',
-  client_designation: '',
+  business_name: '',
+  client_designation: 'Founder & CEO',
   client_image_url: '',
   testimonial: '',
   display_order: 1,
@@ -23,17 +38,21 @@ const emptyForm = {
 };
 
 export function TestimonialsPage() {
+  const { refreshOverview } = useOutletContext<{ refreshOverview?: () => void }>() || {};
+
   const [items, setItems] = useState<TestimonialItem[]>([]);
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [isFormOpen, setIsFormOpen] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  const load = async () => {
+  const loadData = async () => {
     setLoading(true);
     try {
-      setItems(await adminList<TestimonialItem>('testimonials'));
+      const data = await adminList<TestimonialItem>('testimonials');
+      setItems(data.sort((a, b) => a.display_order - b.display_order));
     } catch (error) {
       setMessage({
         type: 'error',
@@ -45,18 +64,20 @@ export function TestimonialsPage() {
   };
 
   useEffect(() => {
-    void load();
+    void loadData();
   }, []);
 
-  const reset = () => {
+  const resetForm = () => {
     setForm(emptyForm);
     setEditingId(null);
+    setIsFormOpen(false);
   };
 
   const startEdit = (item: TestimonialItem) => {
     setEditingId(item.id);
     setForm({
       client_name: item.client_name,
+      business_name: item.business_name || '',
       client_designation: item.client_designation,
       client_image_url: item.client_image_url || '',
       testimonial: item.testimonial,
@@ -64,10 +85,11 @@ export function TestimonialsPage() {
       is_published: item.is_published,
       is_visible: item.is_visible !== false,
     });
+    setIsFormOpen(true);
   };
 
-  const save = async (event: React.FormEvent) => {
-    event.preventDefault();
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
     setSaving(true);
     setMessage(null);
     try {
@@ -77,9 +99,10 @@ export function TestimonialsPage() {
       } else {
         await adminCreate('testimonials', payload);
       }
-      await load();
-      reset();
+      await loadData();
+      resetForm();
       setMessage({ type: 'success', text: `Testimonial ${editingId ? 'updated' : 'added'} successfully.` });
+      if (refreshOverview) refreshOverview();
     } catch (error) {
       setMessage({
         type: 'error',
@@ -90,13 +113,13 @@ export function TestimonialsPage() {
     }
   };
 
-  const remove = async (id: string, name: string) => {
-    if (!window.confirm(`Are you sure you want to delete testimonial from "${name}"?`)) return;
+  const handleDelete = async (id: string, name: string) => {
+    if (!confirm(`Delete testimonial from "${name}"?`)) return;
     try {
       await adminDelete('testimonials', id);
-      await load();
-      if (editingId === id) reset();
+      await loadData();
       setMessage({ type: 'success', text: 'Testimonial deleted.' });
+      if (refreshOverview) refreshOverview();
     } catch (error) {
       setMessage({
         type: 'error',
@@ -105,251 +128,286 @@ export function TestimonialsPage() {
     }
   };
 
-  const handleReorder = async (fromIndex: number, toIndex: number) => {
-    if (toIndex < 0 || toIndex >= items.length) return;
-    const reordered = [...items];
-    const [moved] = reordered.splice(fromIndex, 1);
-    reordered.splice(toIndex, 0, moved);
-    const ids = reordered.map((item) => item.id);
+  const togglePublish = async (item: TestimonialItem) => {
     try {
-      await adminReorder('testimonials', ids);
-      await load();
-    } catch {
-      setMessage({ type: 'error', text: 'Failed to reorder testimonials.' });
+      if (item.is_published) {
+        await adminUnpublish('testimonials', item.id);
+      } else {
+        await adminPublish('testimonials', item.id);
+      }
+      await loadData();
+      if (refreshOverview) refreshOverview();
+    } catch (err) {
+      alert('Failed to toggle testimonial state.');
+    }
+  };
+
+  const moveOrder = async (index: number, direction: 'up' | 'down') => {
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= items.length) return;
+    const reordered = [...items];
+    const temp = reordered[index];
+    reordered[index] = reordered[targetIndex];
+    reordered[targetIndex] = temp;
+    setItems(reordered);
+
+    try {
+      await adminReorder('testimonials', reordered.map((t) => t.id));
+      await loadData();
+    } catch (err) {
+      await loadData();
     }
   };
 
   return (
-    <div className="space-y-6 max-w-5xl">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="mx-auto max-w-5xl space-y-6">
+      {/* Header */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-xs uppercase tracking-[0.22em] text-[#f6b7d2]">Testimonials</p>
-          <h1 className="mt-1 text-3xl font-semibold text-white">Client Reviews & Testimonials</h1>
+          <h1 className="text-xl font-bold tracking-tight text-[#29251F]">Client Testimonials & Reviews</h1>
+          <p className="mt-1 text-xs text-[#8B806D]">
+            Curate social proof, client reviews, designations, and business names shown on the landing page.
+          </p>
         </div>
+
         <button
           type="button"
           onClick={() => {
-            reset();
-            setForm({ ...emptyForm, display_order: items.length + 1 });
+            resetForm();
+            setForm((prev) => ({ ...prev, display_order: items.length + 1 }));
+            setIsFormOpen(true);
           }}
-          className="inline-flex items-center gap-2 rounded-full border border-[#f04796] bg-[#f04796] px-4 py-2 text-xs font-semibold text-[#0d0d0f] hover:bg-[#ff6ab3]"
+          className="inline-flex items-center gap-1.5 rounded-xl bg-[#344238] px-4 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-[#29251F]"
         >
-          <Plus size={14} /> New Testimonial
+          <Plus size={15} /> Add Testimonial
         </button>
       </div>
 
       {message && (
         <div
-          className={`flex items-center justify-between rounded-2xl border px-4 py-3 text-sm ${
+          className={`rounded-xl p-3 text-xs font-medium border ${
             message.type === 'success'
-              ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-200'
-              : 'border-red-500/30 bg-red-500/10 text-red-200'
+              ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
+              : 'border-rose-200 bg-rose-50 text-rose-800'
           }`}
         >
-          <span>{message.text}</span>
-          <button type="button" onClick={() => setMessage(null)} className="text-white/60 hover:text-white">
-            ✕
-          </button>
+          {message.text}
         </div>
       )}
 
-      {/* Form */}
-      <form onSubmit={save} className="rounded-[28px] border border-white/10 bg-[#141416] p-6 space-y-5">
-        <h3 className="text-base font-semibold text-white">
-          {editingId ? 'Edit Testimonial' : 'Add New Client Review'}
-        </h3>
-        <div className="grid gap-4 md:grid-cols-2">
-          <div>
-            <label className="block text-xs font-medium text-white/70 mb-1.5">Client Full Name</label>
-            <input
-              required
-              value={form.client_name}
-              onChange={(e) => setForm({ ...form, client_name: e.target.value })}
-              className="w-full rounded-2xl border border-white/10 bg-[#0d0d0f] px-3.5 py-2.5 text-sm text-white focus:border-[#f04796] focus:outline-none"
-              placeholder="e.g. Nadia Rahman"
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-white/70 mb-1.5">Client Title / Company</label>
-            <input
-              required
-              value={form.client_designation}
-              onChange={(e) => setForm({ ...form, client_designation: e.target.value })}
-              className="w-full rounded-2xl border border-white/10 bg-[#0d0d0f] px-3.5 py-2.5 text-sm text-white focus:border-[#f04796] focus:outline-none"
-              placeholder="e.g. Founder, Noor Atelier"
-            />
-          </div>
-          <div className="md:col-span-2">
-            <label className="block text-xs font-medium text-white/70 mb-1.5">Testimonial Quote</label>
-            <textarea
-              required
-              rows={4}
-              value={form.testimonial}
-              onChange={(e) => setForm({ ...form, testimonial: e.target.value })}
-              className="w-full rounded-2xl border border-white/10 bg-[#0d0d0f] px-3.5 py-2.5 text-sm text-white focus:border-[#f04796] focus:outline-none"
-              placeholder="Client words describing results, strategy, and experience..."
-            />
-          </div>
-          <div className="md:col-span-2">
-            <ImageUploadField
-              label="Client Photograph (Optional Avatar)"
-              value={form.client_image_url}
-              onChange={(url) => setForm({ ...form, client_image_url: url })}
-              folder="testimonials"
-              aspect="circle"
-            />
-          </div>
-        </div>
-
-        <div className="flex flex-wrap items-center justify-between gap-4 border-t border-white/10 pt-4">
-          <div className="flex items-center gap-4">
-            <label className="flex items-center gap-2 text-xs text-white/80 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={form.is_visible}
-                onChange={(e) => setForm({ ...form, is_visible: e.target.checked })}
-                className="rounded border-white/20 bg-black/40 text-[#f04796] focus:ring-0"
-              />
-              Visible on Website
-            </label>
-            <label className="flex items-center gap-2 text-xs text-white/80 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={form.is_published}
-                onChange={(e) => setForm({ ...form, is_published: e.target.checked })}
-                className="rounded border-white/20 bg-black/40 text-[#f04796] focus:ring-0"
-              />
-              Published
-            </label>
-          </div>
-
-          <div className="flex gap-2">
-            {editingId && (
-              <button
-                type="button"
-                onClick={reset}
-                className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs text-white/70 hover:bg-white/10"
-              >
-                Cancel Edit
-              </button>
-            )}
-            <button
-              type="submit"
-              disabled={saving}
-              className="rounded-full bg-[#f04796] px-5 py-2.5 text-xs font-semibold text-[#0d0d0f] shadow-[0_0_20px_rgba(240,71,150,0.3)] hover:bg-[#ff6ab3] disabled:opacity-50"
-            >
-              {saving ? 'Saving...' : editingId ? 'Update Testimonial' : 'Add Testimonial'}
+      {/* Editor Modal / Form */}
+      {isFormOpen && (
+        <div className="rounded-2xl border border-[#344238]/30 bg-white p-6 shadow-md space-y-4">
+          <div className="flex items-center justify-between border-b border-[#E7DCCB] pb-3">
+            <h2 className="text-sm font-bold text-[#29251F]">
+              {editingId ? 'Edit Testimonial' : 'Create New Testimonial'}
+            </h2>
+            <button type="button" onClick={resetForm} className="text-[#8B806D] hover:text-[#29251F]">
+              <X size={18} />
             </button>
           </div>
-        </div>
-      </form>
 
-      {/* Grid */}
-      <div className="space-y-3">
-        <h3 className="text-sm font-semibold text-white/70">Reviews ({items.length})</h3>
-        {loading ? (
-          <div className="flex h-32 items-center justify-center text-white/50">
-            <Loader2 size={20} className="animate-spin mr-2 text-[#f04796]" /> Loading testimonials...
-          </div>
-        ) : items.length === 0 ? (
-          <div className="rounded-2xl border border-white/10 bg-[#141416] p-8 text-center text-white/40 text-sm">
-            No testimonials added yet.
+          <form onSubmit={handleSave} className="space-y-4">
+            <div className="grid gap-4 sm:grid-cols-3">
+              <div>
+                <label className="block text-xs font-medium text-[#29251F]">Client Name *</label>
+                <input
+                  type="text"
+                  required
+                  value={form.client_name}
+                  onChange={(e) => setForm({ ...form, client_name: e.target.value })}
+                  placeholder="e.g. Fatima Al-Zahra"
+                  className="mt-1 w-full rounded-xl border border-[#E7DCCB] bg-[#F8F4ED]/50 px-3 py-2 text-xs text-[#29251F] focus:border-[#344238] focus:bg-white focus:outline-hidden"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-[#29251F]">Business / Brand Name</label>
+                <input
+                  type="text"
+                  value={form.business_name}
+                  onChange={(e) => setForm({ ...form, business_name: e.target.value })}
+                  placeholder="e.g. Modest Silhouette Dubai"
+                  className="mt-1 w-full rounded-xl border border-[#E7DCCB] bg-[#F8F4ED]/50 px-3 py-2 text-xs text-[#29251F] focus:border-[#344238] focus:bg-white focus:outline-hidden"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-[#29251F]">Title / Designation</label>
+                <input
+                  type="text"
+                  value={form.client_designation}
+                  onChange={(e) => setForm({ ...form, client_designation: e.target.value })}
+                  placeholder="e.g. Creative Director"
+                  className="mt-1 w-full rounded-xl border border-[#E7DCCB] bg-[#F8F4ED]/50 px-3 py-2 text-xs text-[#29251F] focus:border-[#344238] focus:bg-white focus:outline-hidden"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-[#29251F]">Client Quote / Review *</label>
+              <textarea
+                rows={4}
+                required
+                value={form.testimonial}
+                onChange={(e) => setForm({ ...form, testimonial: e.target.value })}
+                placeholder="Azmina transformed our marketing completely. We achieved 4.2x ROAS in just 60 days..."
+                className="mt-1 w-full rounded-xl border border-[#E7DCCB] bg-[#F8F4ED]/50 p-3 text-xs text-[#29251F] focus:border-[#344238] focus:bg-white focus:outline-hidden"
+              />
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <ImageUploadField
+                label="Client Photo / Avatar"
+                value={form.client_image_url}
+                onChange={(url) => setForm({ ...form, client_image_url: url })}
+                folder="testimonials"
+                helperText="Square photo of client or company logo"
+              />
+
+              <div className="space-y-3 pt-6">
+                <label className="flex items-center gap-2 cursor-pointer text-xs font-medium text-[#29251F]">
+                  <input
+                    type="checkbox"
+                    checked={form.is_visible}
+                    onChange={(e) => setForm({ ...form, is_visible: e.target.checked })}
+                    className="h-4 w-4 rounded-sm border-[#E7DCCB] text-[#344238]"
+                  />
+                  <span>Visible on public site</span>
+                </label>
+
+                <label className="flex items-center gap-2 cursor-pointer text-xs font-medium text-[#29251F]">
+                  <input
+                    type="checkbox"
+                    checked={form.is_published}
+                    onChange={(e) => setForm({ ...form, is_published: e.target.checked })}
+                    className="h-4 w-4 rounded-sm border-[#E7DCCB] text-[#344238]"
+                  />
+                  <span>Published (Approved for visitors)</span>
+                </label>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 border-t border-[#E7DCCB] pt-4">
+              <button
+                type="button"
+                onClick={resetForm}
+                className="rounded-xl border border-[#E7DCCB] bg-[#F8F4ED] px-4 py-2 text-xs font-semibold text-[#29251F] transition hover:bg-[#E7DCCB]/60"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={saving}
+                className="inline-flex items-center gap-1.5 rounded-xl bg-[#344238] px-5 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-[#29251F] disabled:opacity-50"
+              >
+                {saving ? 'Saving...' : editingId ? 'Update Testimonial' : 'Create Testimonial'}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* List */}
+      <div className="overflow-hidden rounded-2xl border border-[#E7DCCB] bg-white shadow-xs">
+        <div className="p-4 border-b border-[#E7DCCB] flex items-center justify-between">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-[#8B806D]">
+            All Testimonials ({items.length})
+          </h2>
+          <span className="text-[11px] text-[#8B806D]">Reorder using arrows</span>
+        </div>
+
+        {items.length === 0 ? (
+          <div className="p-12 text-center text-xs text-[#8B806D]">
+            No testimonials added yet. Click &quot;Add Testimonial&quot; to create one.
           </div>
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {items.map((item, idx) => (
+          <div className="divide-y divide-[#E7DCCB]/60">
+            {items.map((item, index) => (
               <div
                 key={item.id}
-                className="flex flex-col justify-between rounded-[24px] border border-white/10 bg-[#141416] p-5 transition hover:border-[#f04796]/40"
+                className="flex flex-col gap-4 p-4 transition hover:bg-[#F8F4ED]/40 sm:flex-row sm:items-center sm:justify-between"
               >
-                <div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      {item.client_image_url ? (
-                        <img src={item.client_image_url} alt={item.client_name} className="h-10 w-10 rounded-full object-cover" />
-                      ) : (
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#f04796]/20 font-bold text-[#f6b7d2]">
-                          {item.client_name.charAt(0)}
-                        </div>
-                      )}
-                      <div>
-                        <h4 className="text-sm font-semibold text-white">{item.client_name}</h4>
-                        <p className="text-[11px] text-white/50">{item.client_designation}</p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-1">
-                      <button
-                        type="button"
-                        onClick={() => void handleReorder(idx, idx - 1)}
-                        disabled={idx === 0}
-                        className="p-1 text-white/40 hover:text-white disabled:opacity-20"
-                        title="Move Up"
-                      >
-                        <ArrowUp size={13} />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => void handleReorder(idx, idx + 1)}
-                        disabled={idx === items.length - 1}
-                        className="p-1 text-white/40 hover:text-white disabled:opacity-20"
-                        title="Move Down"
-                      >
-                        <ArrowDown size={13} />
-                      </button>
-                    </div>
+                <div className="flex items-center gap-3">
+                  <div className="flex flex-col gap-1 text-[#8B806D]">
+                    <button
+                      type="button"
+                      disabled={index === 0}
+                      onClick={() => void moveOrder(index, 'up')}
+                      className="hover:text-[#29251F] disabled:opacity-20"
+                    >
+                      <ArrowUp size={14} />
+                    </button>
+                    <button
+                      type="button"
+                      disabled={index === items.length - 1}
+                      onClick={() => void moveOrder(index, 'down')}
+                      className="hover:text-[#29251F] disabled:opacity-20"
+                    >
+                      <ArrowDown size={14} />
+                    </button>
                   </div>
 
-                  <p className="mt-3 text-xs italic leading-6 text-white/70 line-clamp-4">“{item.testimonial}”</p>
+                  <div className="h-11 w-11 shrink-0 overflow-hidden rounded-full border border-[#E7DCCB] bg-[#F8F4ED]">
+                    {item.client_image_url ? (
+                      <img
+                        src={item.client_image_url}
+                        alt={item.client_name}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center font-bold text-xs text-[#344238]">
+                        {item.client_name.charAt(0)}
+                      </div>
+                    )}
+                  </div>
+
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-xs font-bold text-[#29251F]">{item.client_name}</h3>
+                      {item.business_name && (
+                        <span className="flex items-center gap-1 rounded-md bg-[#F8F4ED] px-2 py-0.5 text-[10px] font-medium text-[#344238] border border-[#E7DCCB]">
+                          <Building size={10} /> {item.business_name}
+                        </span>
+                      )}
+                      <span className="text-[11px] text-[#8B806D]">• {item.client_designation}</span>
+                    </div>
+                    <p className="mt-0.5 line-clamp-1 text-[11px] text-[#8B806D] max-w-lg italic">
+                      &quot;{item.testimonial}&quot;
+                    </p>
+                  </div>
                 </div>
 
-                <div className="mt-4 flex items-center justify-between border-t border-white/5 pt-3">
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={async () => {
-                        await adminUpdate('testimonials', item.id, { is_visible: !item.is_visible });
-                        await load();
-                      }}
-                      className={`text-xs inline-flex items-center gap-1 ${
-                        item.is_visible ? 'text-emerald-400' : 'text-white/40'
-                      }`}
-                    >
-                      {item.is_visible ? <Eye size={12} /> : <EyeOff size={12} />}
-                      {item.is_visible ? 'Visible' : 'Hidden'}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={async () => {
-                        if (item.is_published) {
-                          await adminUnpublish('testimonials', item.id);
-                        } else {
-                          await adminPublish('testimonials', item.id);
-                        }
-                        await load();
-                      }}
-                      className={`text-[11px] ${item.is_published ? 'text-[#f6b7d2]' : 'text-white/40'}`}
-                    >
-                      {item.is_published ? 'Published' : 'Draft'}
-                    </button>
-                  </div>
+                <div className="flex items-center gap-2 self-end sm:self-center">
+                  <button
+                    type="button"
+                    onClick={() => void togglePublish(item)}
+                    className={`rounded-lg px-2.5 py-1 text-[11px] font-semibold transition ${
+                      item.is_published
+                        ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                        : 'bg-amber-50 text-amber-800 border border-amber-200'
+                    }`}
+                  >
+                    {item.is_published ? 'Published' : 'Draft'}
+                  </button>
 
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => startEdit(item)}
-                      className="text-xs text-white/60 hover:text-white"
-                    >
-                      <Pencil size={13} />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => void remove(item.id, item.client_name)}
-                      className="text-xs text-red-400/80 hover:text-red-300"
-                    >
-                      <Trash2 size={13} />
-                    </button>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => startEdit(item)}
+                    title="Edit Testimonial"
+                    className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#E7DCCB] bg-white text-[#29251F] transition hover:bg-[#F8F4ED]"
+                  >
+                    <Pencil size={14} />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => void handleDelete(item.id, item.client_name)}
+                    title="Delete Testimonial"
+                    className="flex h-8 w-8 items-center justify-center rounded-lg border border-rose-200 bg-rose-50 text-rose-600 transition hover:bg-rose-100"
+                  >
+                    <Trash2 size={14} />
+                  </button>
                 </div>
               </div>
             ))}

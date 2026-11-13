@@ -9,11 +9,15 @@ type HeroProps = {
 
 export function Hero({ hero, site }: HeroProps) {
   const greeting = hero?.greeting ?? "Hello, I'm";
-  const name = hero?.full_name ?? site?.owner_name ?? 'Fenu|The Nikabi Marketer';
+  const name = hero?.full_name ?? site?.owner_name ?? 'Azmina Zahra';
   const title = hero?.professional_title ?? site?.professional_title ?? 'Social Media Marketing Specialist';
-  const description = hero?.description ?? 'I help brands turn attention into action with strategic content, story-led campaigns, and performance-driven growth systems.';
-  const image = '/fenu-brand.png';
-  const altText = 'Fenu|The Nikabi Marketer';
+  const subtitle = hero?.subtitle;
+  const availability = hero?.availability_status;
+  const description =
+    hero?.description ??
+    'I help brands turn attention into action with strategic content, story-led campaigns, and performance-driven growth systems.';
+  const image = hero?.profile_image_url || site?.profile_image_url || '/fenu-brand.png';
+  const altText = hero?.profile_image_alt || name;
   const bgImage = hero?.background_image_url;
 
   return (
@@ -34,9 +38,18 @@ export function Hero({ hero, site }: HeroProps) {
           transition={{ duration: 0.6 }}
           className="flex flex-col justify-center"
         >
-          <div className="mb-5 inline-flex w-fit items-center gap-2 rounded-full border border-[#f04796]/40 bg-[#f04796]/10 px-3 py-1.5 text-xs font-medium uppercase tracking-[0.2em] text-[#f6b7d2]">
-            <Sparkles size={14} />
-            {greeting}
+          <div className="mb-5 flex flex-wrap items-center gap-3">
+            <div className="inline-flex w-fit items-center gap-2 rounded-full border border-[#f04796]/40 bg-[#f04796]/10 px-3 py-1.5 text-xs font-medium uppercase tracking-[0.2em] text-[#f6b7d2]">
+              <Sparkles size={14} />
+              {greeting}
+            </div>
+
+            {availability && (
+              <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-300">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                {availability}
+              </div>
+            )}
           </div>
 
           <h1 className="font-display text-5xl leading-none text-white sm:text-6xl lg:text-[5rem]">
@@ -47,26 +60,31 @@ export function Hero({ hero, site }: HeroProps) {
             {title}
           </p>
 
-          <p className="mt-5 max-w-xl text-base leading-7 text-white/70 sm:text-lg">
+          {subtitle && (
+            <p className="mt-2 max-w-xl text-base font-medium text-white/90">
+              {subtitle}
+            </p>
+          )}
+
+          <p className="mt-4 max-w-xl text-base leading-7 text-white/70 sm:text-lg">
             {description}
           </p>
 
           <div className="mt-8 flex flex-col gap-4 sm:flex-row">
             <a
-              href={hero?.primary_button_url ?? '#work'}
+              href={hero?.primary_button_url ?? '#contact'}
               className="inline-flex items-center justify-center gap-2 rounded-full border border-[#f04796] bg-[#f04796] px-6 py-3.5 text-sm font-semibold text-[#0d0d0f] shadow-[0_0_30px_rgba(240,71,150,0.45)] transition hover:-translate-y-0.5 hover:bg-[#ff6ab3]"
             >
-              {hero?.primary_button_text ?? 'View My Work'}
+              {hero?.primary_button_text ?? 'Book a Strategy Call'}
               <ArrowRight size={18} />
             </a>
             <a
-              href={hero?.secondary_button_url ?? '#contact'}
+              href={hero?.secondary_button_url ?? '#work'}
               className="inline-flex items-center justify-center rounded-full border border-white/15 bg-white/5 px-6 py-3.5 text-sm font-semibold text-white transition hover:border-[#f6b7d2] hover:text-[#f6b7d2]"
             >
-              {hero?.secondary_button_text ?? "Let's Work Together"}
+              {hero?.secondary_button_text ?? 'View Featured Work'}
             </a>
           </div>
-
         </motion.div>
 
         <motion.div
@@ -88,7 +106,11 @@ export function Hero({ hero, site }: HeroProps) {
 
           <div className="relative flex h-[430px] w-[430px] items-center justify-center rounded-full border border-[#f04796]/60 bg-[linear-gradient(135deg,rgba(240,71,150,0.15),rgba(255,255,255,0.02),rgba(240,71,150,0.05))] p-6 shadow-[0_0_60px_rgba(240,71,150,0.15)]">
             <div className="absolute inset-3 rounded-full border border-[#f6b7d2]/35" />
-            <img src={image} alt={altText} className="h-full w-full rounded-full object-cover object-center" />
+            <img
+              src={image}
+              alt={altText}
+              className="h-full w-full rounded-full object-cover object-center"
+            />
           </div>
         </motion.div>
       </div>
