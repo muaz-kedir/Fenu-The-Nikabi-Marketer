@@ -1195,9 +1195,9 @@ if (!isViteDev && fs.existsSync(distDir)) {
     index: false,
   }));
 
-  // Client-side SPA routing fallback for all non-API GET requests
+  // Client-side SPA routing fallback for all non-API GET / HEAD requests
   app.use((req, res, next) => {
-    if (req.method === 'GET' && !req.path.startsWith('/api')) {
+    if ((req.method === 'GET' || req.method === 'HEAD') && !req.path.startsWith('/api')) {
       return res.sendFile(path.join(distDir, 'index.html'));
     }
     next();

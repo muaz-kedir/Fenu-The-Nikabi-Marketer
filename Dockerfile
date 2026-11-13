@@ -26,14 +26,15 @@ RUN npm ci --only=production
 # Copy built static frontend
 COPY --from=builder /app/dist ./dist
 
-# Copy server, database scripts, public assets, and local data
+# Copy server and database scripts
 COPY server ./server
 COPY database ./database
-COPY public ./public
-COPY uploads ./uploads
-COPY .local-data ./.local-data
 
-# Ensure uploads and local-data directories exist
+# Copy public assets and uploads (if present)
+COPY public ./public
+COPY uploads* ./uploads/
+
+# Ensure writable directories exist
 RUN mkdir -p /app/uploads /app/.local-data
 
 # AletCloud Port Contract: Dynamic PORT environment variable, defaults to 3000
