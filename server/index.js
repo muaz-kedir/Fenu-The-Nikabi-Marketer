@@ -178,12 +178,44 @@ function writeLocalTestimonials(testimonials) {
   fs.renameSync(temporaryPath, localTestimonialsPath);
 }
 
-let adminTableChecked = false;
-async function ensureAdminUsersTable() {
-  if (adminTableChecked) return;
+let schemaInitialized = false;
+async function ensureDatabaseSchema() {
+  if (schemaInitialized) return;
   const activePool = getPool();
   if (!activePool) return;
+
   try {
+    // 1. Check if core tables exist (e.g. hero_content)
+    const checkRes = await activePool.query(`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_schema = 'public' 
+        AND table_name = 'hero_content'
+      );
+    `);
+
+    const tablesExist = checkRes.rows[0]?.exists;
+    if (!tablesExist) {
+      console.log('[db] Core tables missing. Applying database/schema.sql...');
+      const schemaPath = path.join(process.cwd(), 'database', 'schema.sql');
+      if (fs.existsSync(schemaPath)) {
+        const schemaSql = fs.readFileSync(schemaPath, 'utf8');
+        await activePool.query(schemaSql);
+        console.log('[db] Schema applied successfully.');
+      } else {
+        console.error('[db] schema.sql not found at:', schemaPath);
+      }
+
+      const seedPath = path.join(process.cwd(), 'database', 'seed.sql');
+      if (fs.existsSync(seedPath)) {
+        console.log('[db] Applying database/seed.sql...');
+        const seedSql = fs.readFileSync(seedPath, 'utf8');
+        await activePool.query(seedSql);
+        console.log('[db] Seed data applied successfully.');
+      }
+    }
+
+    // 2. Ensure admin_users exists and is seeded
     await activePool.query(`
       CREATE TABLE IF NOT EXISTS admin_users (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -207,15 +239,19 @@ async function ensureAdminUsersTable() {
       );
       console.log(`[auth] Initialized admin user (${defaultEmail}) in database.`);
     }
-    adminTableChecked = true;
+
+    schemaInitialized = true;
   } catch (err) {
-    console.error('Failed to ensure admin_users table:', err.message);
+    console.error('[db] Error initializing database schema:', err.message);
   }
 }
 
 async function query(text, params = []) {
   const activePool = getPool();
   if (!activePool) throw new Error('Database is not configured. Please ensure DATABASE_URL is set in .env');
+  if (!schemaInitialized) {
+    await ensureDatabaseSchema();
+  }
   return activePool.query(text, params);
 }
 
@@ -473,7 +509,7 @@ app.post('/api/admin/login', async (req, res) => {
   // 1. Try database admin user if DB is connected
   if (getPool()) {
     try {
-      await ensureAdminUsersTable();
+      await ensureDatabaseSchema();
       const result = await query(
         'SELECT id, email, password_hash, role FROM admin_users WHERE LOWER(email) = $1',
         [normalizedEmail]

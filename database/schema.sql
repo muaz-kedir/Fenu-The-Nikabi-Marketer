@@ -1,5 +1,8 @@
 -- Core portfolio schema for local PostgreSQL / Supabase-compatible deployments
 
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+
 CREATE TABLE IF NOT EXISTS site_settings (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   is_published BOOLEAN NOT NULL DEFAULT TRUE,
