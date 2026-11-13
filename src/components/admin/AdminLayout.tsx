@@ -161,47 +161,63 @@ export function AdminLayout() {
     }
   }
 
+  const topQuickNav = [
+    { label: 'Overview', to: '/admin', icon: LayoutDashboard },
+    { label: 'Hero', to: '/admin/hero', icon: Home },
+    { label: 'About', to: '/admin/about', icon: Users },
+    { label: 'Services', to: '/admin/services', icon: Layers },
+    { label: 'Projects', to: '/admin/projects', icon: FileImage },
+    { label: 'Media', to: '/admin/media', icon: UploadCloud },
+    { label: 'Messages', to: '/admin/messages', icon: Mail },
+    { label: 'Settings', to: '/admin/settings', icon: Settings },
+  ];
+
   return (
-    <div className="flex h-screen overflow-hidden bg-[#F8F4ED] text-[#1C1917] font-sans antialiased">
+    <div className="flex h-screen overflow-hidden bg-[#0a0a0a] text-white font-sans antialiased">
       {/* Mobile Backdrop */}
       {mobileOpen && (
         <button
           type="button"
           aria-label="Close sidebar backdrop"
-          className="fixed inset-0 z-40 bg-[#29251F]/60 backdrop-blur-sm lg:hidden"
+          className="fixed inset-0 z-40 bg-black/80 backdrop-blur-sm lg:hidden"
           onClick={() => setMobileOpen(false)}
         />
       )}
 
       {/* Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex h-screen w-72 shrink-0 flex-col border-r border-[#E7DCCB]/20 bg-[#29251F] text-white transition-all duration-300 lg:static ${
+        className={`fixed inset-y-0 left-0 z-50 flex h-screen w-72 shrink-0 flex-col border-r border-white/10 bg-[#0d0d10] text-white transition-all duration-300 lg:static ${
           collapsed ? 'lg:w-20' : 'lg:w-72'
         } ${mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}
       >
         {/* Header / Brand */}
-        <div className={`flex items-center gap-3 border-b border-[#E7DCCB]/15 p-5 ${showLabels ? 'justify-between' : 'justify-center'}`}>
+        <div className={`flex items-center gap-3 border-b border-white/10 p-4 sm:p-5 ${showLabels ? 'justify-between' : 'justify-center'}`}>
           {showLabels ? (
             <div className="flex items-center gap-3 min-w-0">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#344238] border border-[#E7DCCB]/30 text-base font-bold text-[#F8F4ED] shadow-sm">
-                F
-              </div>
+              <img
+                src="/fenu-brand.png"
+                alt="Fenu"
+                className="h-10 w-10 shrink-0 rounded-xl object-cover border border-[#f04796]/40 shadow-[0_0_15px_rgba(240,71,150,0.3)]"
+              />
               <div className="min-w-0">
-                <div className="truncate text-sm font-semibold tracking-wide text-white">Fenu Admin CMS</div>
-                <div className="truncate text-[11px] font-medium tracking-wider text-[#8B806D] uppercase">The Nikabi Marketer</div>
+                <div className="truncate text-sm font-bold tracking-wide text-white">Fenu Admin CMS</div>
+                <div className="truncate text-[11px] font-medium tracking-wider text-[#f6b7d2]/80 uppercase">The Naqabi Marketer</div>
               </div>
             </div>
           ) : (
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#344238] border border-[#E7DCCB]/30 text-base font-bold text-[#F8F4ED]">
-              F
-            </div>
+            <img
+              src="/fenu-brand.png"
+              alt="Fenu"
+              className="h-10 w-10 shrink-0 rounded-xl object-cover border border-[#f04796]/40 shadow-[0_0_15px_rgba(240,71,150,0.3)]"
+            />
           )}
 
           <button
             type="button"
             onClick={() => setCollapsed((v) => !v)}
             aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-            className="hidden h-8 w-8 items-center justify-center rounded-lg border border-[#E7DCCB]/10 bg-white/5 text-[#E7DCCB]/70 transition hover:bg-white/10 hover:text-white lg:inline-flex"
+            title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            className="hidden h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-white/70 transition hover:border-[#f04796]/40 hover:bg-white/10 hover:text-white lg:inline-flex"
           >
             {collapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
           </button>
@@ -210,18 +226,40 @@ export function AdminLayout() {
             type="button"
             onClick={() => setMobileOpen(false)}
             aria-label="Close sidebar"
-            className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[#E7DCCB]/10 bg-white/5 text-[#E7DCCB]/70 transition hover:bg-white/10 hover:text-white lg:hidden"
+            className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-white/70 transition hover:bg-white/10 hover:text-white lg:hidden"
           >
             <X size={16} />
           </button>
         </div>
+
+        {/* Quick Sidebar Actions */}
+        {showLabels && (
+          <div className="p-3 border-b border-white/10 flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setIsPreviewOpen(true)}
+              className="flex-1 flex items-center justify-center gap-1.5 rounded-xl border border-white/10 bg-white/5 py-2 text-xs font-medium text-white/80 transition hover:border-[#f04796]/40 hover:text-white hover:bg-white/10"
+            >
+              <Eye size={13} className="text-[#f6b7d2]" />
+              <span>Preview</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsPublishModalOpen(true)}
+              className="flex-1 flex items-center justify-center gap-1.5 rounded-xl border border-[#f04796]/50 bg-[#f04796]/20 py-2 text-xs font-semibold text-[#f6b7d2] transition hover:bg-[#f04796] hover:text-[#0d0d0f]"
+            >
+              <Send size={13} />
+              <span>Publish</span>
+            </button>
+          </div>
+        )}
 
         {/* Navigation items */}
         <nav className="flex-1 space-y-6 overflow-y-auto px-3 py-4 text-xs">
           {navGroups.map((group) => (
             <div key={group.title} className="space-y-1">
               {showLabels && (
-                <div className="px-3 pb-1 font-mono text-[10px] font-semibold tracking-widest text-[#8B806D]">
+                <div className="px-3 pb-1 font-mono text-[10px] font-semibold tracking-widest text-white/40 uppercase">
                   {group.title}
                 </div>
               )}
@@ -237,8 +275,8 @@ export function AdminLayout() {
                       showLabels ? '' : 'justify-center px-0'
                     } ${
                       isActive
-                        ? 'bg-[#344238] text-white shadow-sm ring-1 ring-[#E7DCCB]/20'
-                        : 'text-[#E7DCCB]/80 hover:bg-white/5 hover:text-white'
+                        ? 'bg-[#f04796]/15 text-[#f6b7d2] border border-[#f04796]/40 shadow-[0_0_15px_rgba(240,71,150,0.2)] font-semibold'
+                        : 'text-white/70 hover:bg-white/5 hover:text-white'
                     }`
                   }
                 >
@@ -251,16 +289,16 @@ export function AdminLayout() {
         </nav>
 
         {/* User & Logout Footer */}
-        <div className="border-t border-[#E7DCCB]/15 p-3">
+        <div className="border-t border-white/10 p-3">
           {showLabels ? (
-            <div className="mb-2 flex items-center justify-between rounded-xl bg-white/5 px-3 py-2 border border-[#E7DCCB]/10">
+            <div className="mb-2 flex items-center justify-between rounded-xl bg-white/[0.03] px-3 py-2 border border-white/10">
               <div className="flex items-center gap-2.5 min-w-0">
-                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#344238] text-xs font-semibold text-white">
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-[#f04796]/40 bg-[#f04796]/20 text-xs font-semibold text-[#f6b7d2]">
                   {user?.email?.charAt(0).toUpperCase() || 'A'}
                 </div>
                 <div className="min-w-0">
                   <div className="truncate text-xs font-medium text-white">{user?.email || 'admin@example.com'}</div>
-                  <div className="text-[10px] text-[#8B806D]">Administrator</div>
+                  <div className="text-[10px] text-[#f6b7d2]/70">Administrator</div>
                 </div>
               </div>
             </div>
@@ -270,7 +308,7 @@ export function AdminLayout() {
             type="button"
             onClick={() => void signOut()}
             title={!showLabels ? 'Logout' : undefined}
-            className={`flex w-full items-center gap-2.5 rounded-xl border border-rose-500/20 bg-rose-500/10 px-3 py-2 text-xs font-medium text-rose-300 transition hover:bg-rose-500/20 hover:text-rose-200 ${
+            className={`flex w-full items-center gap-2.5 rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-xs font-medium text-rose-300 transition hover:bg-rose-500/20 hover:text-rose-200 ${
               showLabels ? '' : 'justify-center px-0'
             }`}
           >
@@ -281,38 +319,67 @@ export function AdminLayout() {
       </aside>
 
       {/* Main Content Area */}
-      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden bg-[#0a0a0a]">
         {/* Top Header Bar */}
-        <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center justify-between border-b border-[#E7DCCB] bg-[#FFFFFF] px-4 sm:px-6 shadow-sm">
-          {/* Left: Mobile Toggle + Breadcrumbs */}
-          <div className="flex items-center gap-3">
+        <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center justify-between border-b border-white/10 bg-[#0a0a0a]/90 px-4 sm:px-6 backdrop-blur-xl">
+          {/* Left: Sidebar Toggle + Breadcrumbs */}
+          <div className="flex items-center gap-3 min-w-0">
             <button
               type="button"
-              onClick={() => setMobileOpen(true)}
-              aria-label="Open sidebar"
-              className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-[#E7DCCB] bg-[#F8F4ED] text-[#29251F] transition hover:bg-[#E7DCCB]/60 lg:hidden"
+              onClick={() => {
+                if (typeof window !== 'undefined' && window.innerWidth >= 1024) {
+                  setCollapsed((v) => !v);
+                } else {
+                  setMobileOpen((v) => !v);
+                }
+              }}
+              aria-label="Toggle sidebar"
+              title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+              className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white/80 transition hover:border-[#f04796]/40 hover:bg-white/10 hover:text-white"
             >
-              <Menu size={18} />
+              {collapsed ? <PanelLeftOpen size={17} /> : <PanelLeftClose size={17} />}
             </button>
-            <div className="flex items-center gap-2 text-xs">
-              <span className="font-semibold text-[#8B806D]">CMS</span>
-              <span className="text-[#8B806D]">/</span>
-              <h1 className="text-sm font-bold text-[#29251F] tracking-tight">{pageTitle}</h1>
+
+            <div className="flex items-center gap-2 text-xs min-w-0">
+              <span className="font-semibold text-white/40">CMS</span>
+              <span className="text-white/30">/</span>
+              <h1 className="truncate text-sm font-bold text-white tracking-tight">{pageTitle}</h1>
             </div>
+
+            {/* Top Navbar Synchronized Quick Nav (visible on desktop) */}
+            <nav className="hidden xl:flex items-center gap-1 ml-4 pl-4 border-l border-white/10">
+              {topQuickNav.map((tab) => (
+                <NavLink
+                  key={tab.to}
+                  to={tab.to}
+                  end={tab.to === '/admin'}
+                  className={({ isActive }) =>
+                    `inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition ${
+                      isActive
+                        ? 'bg-[#f04796]/15 text-[#f6b7d2] border border-[#f04796]/40 shadow-[0_0_10px_rgba(240,71,150,0.2)] font-semibold'
+                        : 'text-white/60 hover:text-white hover:bg-white/5'
+                    }`
+                  }
+                >
+                  <tab.icon size={13} />
+                  <span>{tab.label}</span>
+                </NavLink>
+              ))}
+            </nav>
           </div>
 
           {/* Right: Actions */}
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             {/* Draft Status Pill */}
             {draftChangesCount > 0 ? (
-              <div className="hidden sm:inline-flex items-center gap-2 rounded-full border border-amber-300 bg-amber-50 px-3 py-1 text-xs font-medium text-amber-800 shadow-xs">
-                <span className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
+              <div className="hidden sm:inline-flex items-center gap-2 rounded-full border border-amber-500/40 bg-amber-500/10 px-3 py-1 text-xs font-medium text-amber-300">
+                <span className="h-2 w-2 rounded-full bg-amber-400 animate-pulse" />
                 <span>{draftChangesCount} unpublished {draftChangesCount === 1 ? 'change' : 'changes'}</span>
               </div>
             ) : (
-              <div className="hidden sm:inline-flex items-center gap-2 rounded-full border border-[#E7DCCB] bg-[#F8F4ED] px-3 py-1 text-xs font-medium text-[#344238] shadow-xs">
-                <CheckCircle size={13} className="text-[#344238]" />
-                <span>All changes published</span>
+              <div className="hidden sm:inline-flex items-center gap-2 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-300">
+                <CheckCircle size={13} className="text-emerald-400" />
+                <span>All published</span>
               </div>
             )}
 
@@ -320,9 +387,9 @@ export function AdminLayout() {
             <button
               type="button"
               onClick={() => setIsPreviewOpen(true)}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-[#E7DCCB] bg-[#F8F4ED] px-3.5 py-2 text-xs font-semibold text-[#29251F] shadow-xs transition hover:bg-[#E7DCCB]/50"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-white/15 bg-white/5 px-3.5 py-2 text-xs font-semibold text-white transition hover:border-[#f04796]/50 hover:bg-white/10 hover:text-[#f6b7d2]"
             >
-              <Eye size={15} className="text-[#344238]" />
+              <Eye size={15} className="text-[#f6b7d2]" />
               <span className="hidden md:inline">Live Preview</span>
             </button>
 
@@ -330,7 +397,7 @@ export function AdminLayout() {
             <button
               type="button"
               onClick={() => setIsPublishModalOpen(true)}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-[#344238] bg-[#344238] px-4 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-[#29251F]"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-[#f04796] bg-[#f04796] px-4 py-2 text-xs font-semibold text-[#0d0d0f] shadow-[0_0_20px_rgba(240,71,150,0.35)] transition hover:bg-[#ff6ab3] hover:shadow-[0_0_25px_rgba(240,71,150,0.5)]"
             >
               <Send size={14} />
               <span>Publish Changes</span>
@@ -342,7 +409,7 @@ export function AdminLayout() {
               target="_blank"
               rel="noopener noreferrer"
               title="View live website"
-              className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-[#E7DCCB] bg-[#F8F4ED] text-[#29251F] transition hover:bg-[#E7DCCB]/60"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white/80 transition hover:border-[#f04796]/40 hover:bg-white/10 hover:text-white"
             >
               <ExternalLink size={16} />
             </a>
@@ -350,7 +417,7 @@ export function AdminLayout() {
         </header>
 
         {/* Content Body */}
-        <main className="flex-1 overflow-y-auto bg-[#F8F4ED] p-4 sm:p-6 lg:p-8">
+        <main className="flex-1 overflow-y-auto bg-[#0a0a0a] p-4 sm:p-6 lg:p-8 text-white">
           <Outlet context={{ refreshOverview: fetchOverview }} />
         </main>
       </div>
@@ -360,35 +427,35 @@ export function AdminLayout() {
 
       {/* Publish Changes Confirmation Modal */}
       {isPublishModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#29251F]/70 p-4 backdrop-blur-xs">
-          <div className="w-full max-w-md rounded-2xl border border-[#E7DCCB] bg-white p-6 shadow-2xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-2xl border border-white/15 bg-[#131117] p-6 text-white shadow-2xl">
             <div className="mb-4 flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#344238]/10 text-[#344238]">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#f04796]/40 bg-[#f04796]/15 text-[#f6b7d2]">
                 <Send size={20} />
               </div>
               <div>
-                <h3 className="text-base font-bold text-[#29251F]">Publish Changes to Live Site?</h3>
-                <p className="text-xs text-[#8B806D]">This will update the live public website immediately.</p>
+                <h3 className="text-base font-bold text-white">Publish Changes to Live Site?</h3>
+                <p className="text-xs text-white/60">This will update the live public website immediately.</p>
               </div>
             </div>
 
             {publishSuccessMsg ? (
-              <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-xs font-medium text-emerald-800">
+              <div className="mb-4 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-xs font-medium text-emerald-300">
                 {publishSuccessMsg}
               </div>
             ) : (
-              <div className="mb-6 space-y-3 rounded-xl border border-[#E7DCCB]/60 bg-[#F8F4ED] p-4 text-xs text-[#29251F]">
+              <div className="mb-6 space-y-3 rounded-xl border border-white/10 bg-white/[0.03] p-4 text-xs text-white/80">
                 <div className="flex justify-between">
-                  <span className="text-[#8B806D]">Pending Draft Changes:</span>
-                  <span className="font-bold text-[#29251F]">{draftChangesCount}</span>
+                  <span className="text-white/60">Pending Draft Changes:</span>
+                  <span className="font-bold text-[#f6b7d2]">{draftChangesCount}</span>
                 </div>
                 {lastPublishedAt && (
                   <div className="flex justify-between">
-                    <span className="text-[#8B806D]">Last Published:</span>
-                    <span className="font-medium text-[#29251F]">{new Date(lastPublishedAt).toLocaleString()}</span>
+                    <span className="text-white/60">Last Published:</span>
+                    <span className="font-medium text-white">{new Date(lastPublishedAt).toLocaleString()}</span>
                   </div>
                 )}
-                <p className="border-t border-[#E7DCCB] pt-2 text-[11px] text-[#8B806D]">
+                <p className="border-t border-white/10 pt-2 text-[11px] text-white/50">
                   All drafted edits across Hero, About Me, Services, Projects, Testimonials, Navigation, and Settings will be published simultaneously to visitors.
                 </p>
               </div>
@@ -399,7 +466,7 @@ export function AdminLayout() {
                 type="button"
                 disabled={isPublishing}
                 onClick={() => setIsPublishModalOpen(false)}
-                className="rounded-xl border border-[#E7DCCB] bg-[#F8F4ED] px-4 py-2 text-xs font-semibold text-[#29251F] transition hover:bg-[#E7DCCB]/50"
+                className="rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-xs font-semibold text-white transition hover:bg-white/10"
               >
                 Cancel
               </button>
@@ -407,7 +474,7 @@ export function AdminLayout() {
                 type="button"
                 disabled={isPublishing}
                 onClick={() => void handlePublishAll()}
-                className="inline-flex items-center gap-2 rounded-xl bg-[#344238] px-5 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-[#29251F] disabled:opacity-50"
+                className="inline-flex items-center gap-2 rounded-xl border border-[#f04796] bg-[#f04796] px-5 py-2 text-xs font-bold text-[#0d0d0f] shadow-[0_0_20px_rgba(240,71,150,0.35)] transition hover:bg-[#ff6ab3] hover:shadow-[0_0_25px_rgba(240,71,150,0.5)] disabled:opacity-50"
               >
                 {isPublishing ? 'Publishing...' : 'Confirm & Publish'}
               </button>

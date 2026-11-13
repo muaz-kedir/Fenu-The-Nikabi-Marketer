@@ -81,7 +81,7 @@ export function SeoSettingsPage() {
 
   if (loading) {
     return (
-      <div className="flex h-64 items-center justify-center text-xs text-[#8B806D]">
+      <div className="flex h-64 items-center justify-center text-xs text-white/60">
         Loading SEO settings...
       </div>
     );
@@ -97,8 +97,8 @@ export function SeoSettingsPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-[#29251F]">Search Engine Optimization & Social Sharing</h1>
-          <p className="mt-1 text-xs text-[#8B806D]">
+          <h1 className="text-xl font-bold tracking-tight text-white">Search Engine Optimization & Social Sharing</h1>
+          <p className="mt-1 text-xs text-white/60">
             Manage search engine rankings, Google snippet preview, keywords, and OpenGraph social share cards.
           </p>
         </div>
@@ -108,7 +108,7 @@ export function SeoSettingsPage() {
             type="button"
             disabled={saving || publishing}
             onClick={() => void handleSaveDraft()}
-            className="inline-flex items-center gap-1.5 rounded-xl border border-[#E7DCCB] bg-white px-4 py-2 text-xs font-semibold text-[#29251F] shadow-xs transition hover:bg-[#F8F4ED]"
+            className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 bg-[#16141c] px-4 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-[#0a0a0a]"
           >
             <Save size={14} />
             {saving ? 'Saving...' : 'Save Draft'}
@@ -117,7 +117,7 @@ export function SeoSettingsPage() {
             type="button"
             disabled={saving || publishing}
             onClick={() => void handlePublish()}
-            className="inline-flex items-center gap-1.5 rounded-xl bg-[#344238] px-4 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-[#29251F]"
+            className="inline-flex items-center gap-1.5 rounded-xl bg-[#f04796] text-[#0d0d0f] font-bold shadow-[0_0_20px_rgba(240,71,150,0.35)] px-4 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-[#ff6ab3]"
           >
             <Send size={14} />
             {publishing ? 'Publishing...' : 'Publish SEO'}
@@ -140,12 +140,12 @@ export function SeoSettingsPage() {
       {/* Visual Live Previews */}
       <div className="grid gap-6 md:grid-cols-2">
         {/* Google SERP Preview */}
-        <div className="rounded-2xl border border-[#E7DCCB] bg-white p-5 shadow-xs space-y-3">
-          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#8B806D] border-b border-[#E7DCCB]/60 pb-2">
-            <Search size={14} className="text-[#344238]" /> Google Search Result Preview
+        <div className="rounded-2xl border border-white/10 bg-[#131117] p-5 shadow-xs space-y-3">
+          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-white/60 border-b border-white/10 pb-2">
+            <Search size={14} className="text-[#f6b7d2]" /> Google Search Result Preview
           </div>
 
-          <div className="rounded-xl border border-slate-200 bg-white p-4 font-sans text-left shadow-xs">
+          <div className="rounded-xl border border-slate-200 bg-[#131117] p-4 font-sans text-left shadow-xs">
             <div className="flex items-center gap-2 text-[11px] text-slate-700">
               <span className="flex h-4 w-4 items-center justify-center rounded-full bg-slate-100 font-bold text-[9px]">F</span>
               <span className="truncate">{form.canonical_url || 'https://fenu-portfolio.com'}</span>
@@ -160,9 +160,9 @@ export function SeoSettingsPage() {
         </div>
 
         {/* Social Card Preview */}
-        <div className="rounded-2xl border border-[#E7DCCB] bg-white p-5 shadow-xs space-y-3">
-          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#8B806D] border-b border-[#E7DCCB]/60 pb-2">
-            <Share2 size={14} className="text-[#344238]" /> Social Share Card (OG Preview)
+        <div className="rounded-2xl border border-white/10 bg-[#131117] p-5 shadow-xs space-y-3">
+          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-white/60 border-b border-white/10 pb-2">
+            <Share2 size={14} className="text-[#f6b7d2]" /> Social Share Card (OG Preview)
           </div>
 
           <div className="overflow-hidden rounded-xl border border-slate-200 bg-slate-50 shadow-xs">
@@ -184,89 +184,89 @@ export function SeoSettingsPage() {
 
       {/* Editable Fields Form */}
       <div className="space-y-6">
-        <div className="rounded-2xl border border-[#E7DCCB] bg-white p-6 shadow-xs space-y-4">
-          <h2 className="text-xs font-bold uppercase tracking-wider text-[#8B806D] border-b border-[#E7DCCB]/60 pb-3">
+        <div className="rounded-2xl border border-white/10 bg-[#131117] p-6 shadow-xs space-y-4">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-white/60 border-b border-white/10 pb-3">
             Primary Meta Tags
           </h2>
 
           <div>
-            <label className="block text-xs font-medium text-[#29251F]">Page Meta Title (50-60 characters)</label>
+            <label className="block text-xs font-medium text-white">Page Meta Title (50-60 characters)</label>
             <input
               type="text"
               value={form.seo_title || ''}
               onChange={(e) => handleChange('seo_title', e.target.value)}
               placeholder="Azmina Zahra – Social Media Marketing Specialist"
-              className="mt-1 w-full rounded-xl border border-[#E7DCCB] bg-[#F8F4ED]/50 px-3 py-2 text-xs text-[#29251F] focus:border-[#344238] focus:bg-white focus:outline-hidden"
+              className="mt-1 w-full rounded-xl border border-white/10 bg-[#16141c] px-3 py-2 text-xs text-white focus:border-[#f04796] focus:ring-1 focus:ring-[#f04796] focus:bg-[#16141c] focus:outline-hidden"
             />
-            <span className="text-[10px] text-[#8B806D] mt-1 block">
+            <span className="text-[10px] text-white/60 mt-1 block">
               Character count: {(form.seo_title || '').length} (Optimal: 40 - 60)
             </span>
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-[#29251F]">Meta Description (140-160 characters)</label>
+            <label className="block text-xs font-medium text-white">Meta Description (140-160 characters)</label>
             <textarea
               rows={3}
               value={form.seo_description || ''}
               onChange={(e) => handleChange('seo_description', e.target.value)}
               placeholder="Transforming ambitious brands through high-converting paid social campaigns..."
-              className="mt-1 w-full rounded-xl border border-[#E7DCCB] bg-[#F8F4ED]/50 p-3 text-xs text-[#29251F] focus:border-[#344238] focus:bg-white focus:outline-hidden"
+              className="mt-1 w-full rounded-xl border border-white/10 bg-[#16141c] p-3 text-xs text-white focus:border-[#f04796] focus:ring-1 focus:ring-[#f04796] focus:bg-[#16141c] focus:outline-hidden"
             />
-            <span className="text-[10px] text-[#8B806D] mt-1 block">
+            <span className="text-[10px] text-white/60 mt-1 block">
               Character count: {(form.seo_description || '').length} (Optimal: 120 - 160)
             </span>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label className="block text-xs font-medium text-[#29251F]">Keywords (Comma-separated)</label>
+              <label className="block text-xs font-medium text-white">Keywords (Comma-separated)</label>
               <input
                 type="text"
                 value={form.keywords || ''}
                 onChange={(e) => handleChange('keywords', e.target.value)}
                 placeholder="social media marketing, viral campaigns, branding"
-                className="mt-1 w-full rounded-xl border border-[#E7DCCB] bg-[#F8F4ED]/50 px-3 py-2 text-xs text-[#29251F] focus:border-[#344238] focus:bg-white focus:outline-hidden"
+                className="mt-1 w-full rounded-xl border border-white/10 bg-[#16141c] px-3 py-2 text-xs text-white focus:border-[#f04796] focus:ring-1 focus:ring-[#f04796] focus:bg-[#16141c] focus:outline-hidden"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-[#29251F]">Canonical URL</label>
+              <label className="block text-xs font-medium text-white">Canonical URL</label>
               <input
                 type="text"
                 value={form.canonical_url || ''}
                 onChange={(e) => handleChange('canonical_url', e.target.value)}
                 placeholder="https://fenu-the-niqabi-marketer.app.aletcloud.com"
-                className="mt-1 w-full rounded-xl border border-[#E7DCCB] bg-[#F8F4ED]/50 px-3 py-2 text-xs text-[#29251F] focus:border-[#344238] focus:bg-white focus:outline-hidden"
+                className="mt-1 w-full rounded-xl border border-white/10 bg-[#16141c] px-3 py-2 text-xs text-white focus:border-[#f04796] focus:ring-1 focus:ring-[#f04796] focus:bg-[#16141c] focus:outline-hidden"
               />
             </div>
           </div>
         </div>
 
-        <div className="rounded-2xl border border-[#E7DCCB] bg-white p-6 shadow-xs space-y-4">
-          <h2 className="text-xs font-bold uppercase tracking-wider text-[#8B806D] border-b border-[#E7DCCB]/60 pb-3">
+        <div className="rounded-2xl border border-white/10 bg-[#131117] p-6 shadow-xs space-y-4">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-white/60 border-b border-white/10 pb-3">
             OpenGraph & Social Sharing Meta
           </h2>
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label className="block text-xs font-medium text-[#29251F]">OG Title</label>
+              <label className="block text-xs font-medium text-white">OG Title</label>
               <input
                 type="text"
                 value={form.og_title || ''}
                 onChange={(e) => handleChange('og_title', e.target.value)}
                 placeholder="Azmina Zahra – The Nikabi Marketer"
-                className="mt-1 w-full rounded-xl border border-[#E7DCCB] bg-[#F8F4ED]/50 px-3 py-2 text-xs text-[#29251F] focus:border-[#344238] focus:bg-white focus:outline-hidden"
+                className="mt-1 w-full rounded-xl border border-white/10 bg-[#16141c] px-3 py-2 text-xs text-white focus:border-[#f04796] focus:ring-1 focus:ring-[#f04796] focus:bg-[#16141c] focus:outline-hidden"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-[#29251F]">OG Description</label>
+              <label className="block text-xs font-medium text-white">OG Description</label>
               <input
                 type="text"
                 value={form.og_description || ''}
                 onChange={(e) => handleChange('og_description', e.target.value)}
                 placeholder="Bespoke social media marketing and brand scaling..."
-                className="mt-1 w-full rounded-xl border border-[#E7DCCB] bg-[#F8F4ED]/50 px-3 py-2 text-xs text-[#29251F] focus:border-[#344238] focus:bg-white focus:outline-hidden"
+                className="mt-1 w-full rounded-xl border border-white/10 bg-[#16141c] px-3 py-2 text-xs text-white focus:border-[#f04796] focus:ring-1 focus:ring-[#f04796] focus:bg-[#16141c] focus:outline-hidden"
               />
             </div>
           </div>

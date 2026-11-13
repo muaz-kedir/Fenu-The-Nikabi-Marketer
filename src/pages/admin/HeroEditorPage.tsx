@@ -102,31 +102,31 @@ export function HeroEditorPage() {
 
   if (loading) {
     return (
-      <div className="flex h-64 items-center justify-center text-xs text-[#8B806D]">
+      <div className="flex h-64 items-center justify-center text-xs text-white/50">
         Loading Hero settings...
       </div>
     );
   }
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6">
+    <div className="mx-auto max-w-4xl space-y-6 text-white">
       {/* Header Bar */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold tracking-tight text-[#29251F]">Hero Section Editor</h1>
+            <h1 className="text-xl font-bold tracking-tight text-white">Hero Section Editor</h1>
             {hasDraftChanges ? (
-              <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-[11px] font-semibold text-amber-800">
+              <span className="rounded-full border border-amber-500/40 bg-amber-500/10 px-2.5 py-0.5 text-[11px] font-semibold text-amber-300">
                 Unpublished Draft
               </span>
             ) : (
-              <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-800">
+              <span className="rounded-full border border-emerald-500/40 bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-300">
                 Published Live
               </span>
             )}
           </div>
-          <p className="mt-1 text-xs text-[#8B806D]">
-            The main visual hero area introducing Azmina Zahra on the landing page.
+          <p className="mt-1 text-xs text-white/60">
+            The main visual hero area introducing Fenu on the landing page.
           </p>
         </div>
 
@@ -135,7 +135,7 @@ export function HeroEditorPage() {
             type="button"
             disabled={saving || publishing}
             onClick={() => void handleSaveDraft()}
-            className="inline-flex items-center gap-1.5 rounded-xl border border-[#E7DCCB] bg-white px-4 py-2 text-xs font-semibold text-[#29251F] shadow-xs transition hover:bg-[#F8F4ED]"
+            className="inline-flex items-center gap-1.5 rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-xs font-semibold text-white transition hover:border-[#f04796]/50 hover:bg-white/10 hover:text-[#f6b7d2]"
           >
             <Save size={14} />
             {saving ? 'Saving...' : 'Save Draft'}
@@ -144,7 +144,7 @@ export function HeroEditorPage() {
             type="button"
             disabled={saving || publishing}
             onClick={() => void handlePublishNow()}
-            className="inline-flex items-center gap-1.5 rounded-xl bg-[#344238] px-4 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-[#29251F]"
+            className="inline-flex items-center gap-1.5 rounded-xl border border-[#f04796] bg-[#f04796] px-4 py-2 text-xs font-bold text-[#0d0d0f] shadow-[0_0_20px_rgba(240,71,150,0.35)] transition hover:bg-[#ff6ab3] hover:shadow-[0_0_25px_rgba(240,71,150,0.5)]"
           >
             <Send size={14} />
             {publishing ? 'Publishing...' : 'Publish Hero'}
@@ -156,8 +156,8 @@ export function HeroEditorPage() {
         <div
           className={`rounded-xl p-3 text-xs font-medium border ${
             feedback.type === 'success'
-              ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
-              : 'border-rose-200 bg-rose-50 text-rose-800'
+              ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300'
+              : 'border-rose-500/30 bg-rose-500/10 text-rose-300'
           }`}
         >
           {feedback.text}
@@ -167,83 +167,83 @@ export function HeroEditorPage() {
       {/* Main Form Cards */}
       <div className="space-y-6">
         {/* Core Identity */}
-        <div className="rounded-2xl border border-[#E7DCCB] bg-white p-6 shadow-xs space-y-4">
-          <h2 className="text-xs font-bold uppercase tracking-wider text-[#8B806D] border-b border-[#E7DCCB]/60 pb-3">
+        <div className="rounded-2xl border border-white/10 bg-[#131117] p-6 shadow-xl space-y-4">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-white/50 border-b border-white/10 pb-3">
             Core Introduction & Headings
           </h2>
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label className="block text-xs font-medium text-[#29251F]">Greeting Prefix</label>
+              <label className="block text-xs font-medium text-white/80">Greeting Prefix</label>
               <input
                 type="text"
                 value={form.greeting || ''}
                 onChange={(e) => handleChange('greeting', e.target.value)}
                 placeholder="Hello, I am"
-                className="mt-1 w-full rounded-xl border border-[#E7DCCB] bg-[#F8F4ED]/50 px-3 py-2 text-xs text-[#29251F] focus:border-[#344238] focus:bg-white focus:outline-hidden"
+                className="mt-1 w-full rounded-xl border border-white/10 bg-[#16141c] px-3 py-2 text-xs text-white placeholder:text-white/30 focus:border-[#f04796] focus:ring-1 focus:ring-[#f04796] focus:outline-hidden"
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-[#29251F]">Full Name</label>
+              <label className="block text-xs font-medium text-white/80">Full Name</label>
               <input
                 type="text"
                 value={form.full_name || ''}
                 onChange={(e) => handleChange('full_name', e.target.value)}
-                placeholder="Azmina Zahra"
-                className="mt-1 w-full rounded-xl border border-[#E7DCCB] bg-[#F8F4ED]/50 px-3 py-2 text-xs text-[#29251F] focus:border-[#344238] focus:bg-white focus:outline-hidden"
+                placeholder="Fenu | The Naqabi Marketer"
+                className="mt-1 w-full rounded-xl border border-white/10 bg-[#16141c] px-3 py-2 text-xs text-white placeholder:text-white/30 focus:border-[#f04796] focus:ring-1 focus:ring-[#f04796] focus:outline-hidden"
               />
             </div>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label className="block text-xs font-medium text-[#29251F]">Professional Title</label>
+              <label className="block text-xs font-medium text-white/80">Professional Title</label>
               <input
                 type="text"
                 value={form.professional_title || ''}
                 onChange={(e) => handleChange('professional_title', e.target.value)}
                 placeholder="Social Media Marketing Specialist"
-                className="mt-1 w-full rounded-xl border border-[#E7DCCB] bg-[#F8F4ED]/50 px-3 py-2 text-xs text-[#29251F] focus:border-[#344238] focus:bg-white focus:outline-hidden"
+                className="mt-1 w-full rounded-xl border border-white/10 bg-[#16141c] px-3 py-2 text-xs text-white placeholder:text-white/30 focus:border-[#f04796] focus:ring-1 focus:ring-[#f04796] focus:outline-hidden"
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-[#29251F]">Availability Status Badge</label>
+              <label className="block text-xs font-medium text-white/80">Availability Status Badge</label>
               <input
                 type="text"
                 value={form.availability_status || ''}
                 onChange={(e) => handleChange('availability_status', e.target.value)}
                 placeholder="Available for Q2 Projects"
-                className="mt-1 w-full rounded-xl border border-[#E7DCCB] bg-[#F8F4ED]/50 px-3 py-2 text-xs text-[#29251F] focus:border-[#344238] focus:bg-white focus:outline-hidden"
+                className="mt-1 w-full rounded-xl border border-white/10 bg-[#16141c] px-3 py-2 text-xs text-white placeholder:text-white/30 focus:border-[#f04796] focus:ring-1 focus:ring-[#f04796] focus:outline-hidden"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-[#29251F]">Catchy Subtitle</label>
+            <label className="block text-xs font-medium text-white/80">Catchy Subtitle</label>
             <input
               type="text"
               value={form.subtitle || ''}
               onChange={(e) => handleChange('subtitle', e.target.value)}
               placeholder="Helping ambitious brands scale with bespoke digital strategies"
-              className="mt-1 w-full rounded-xl border border-[#E7DCCB] bg-[#F8F4ED]/50 px-3 py-2 text-xs text-[#29251F] focus:border-[#344238] focus:bg-white focus:outline-hidden"
+              className="mt-1 w-full rounded-xl border border-white/10 bg-[#16141c] px-3 py-2 text-xs text-white placeholder:text-white/30 focus:border-[#f04796] focus:ring-1 focus:ring-[#f04796] focus:outline-hidden"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-[#29251F]">Hero Bio & Mission Statement</label>
+            <label className="block text-xs font-medium text-white/80">Hero Bio & Mission Statement</label>
             <textarea
               rows={4}
               value={form.description || ''}
               onChange={(e) => handleChange('description', e.target.value)}
               placeholder="Transforming businesses into industry leaders..."
-              className="mt-1 w-full rounded-xl border border-[#E7DCCB] bg-[#F8F4ED]/50 p-3 text-xs text-[#29251F] focus:border-[#344238] focus:bg-white focus:outline-hidden"
+              className="mt-1 w-full rounded-xl border border-white/10 bg-[#16141c] p-3 text-xs text-white placeholder:text-white/30 focus:border-[#f04796] focus:ring-1 focus:ring-[#f04796] focus:outline-hidden"
             />
           </div>
         </div>
 
         {/* Media & Profile Image */}
-        <div className="rounded-2xl border border-[#E7DCCB] bg-white p-6 shadow-xs space-y-4">
-          <h2 className="text-xs font-bold uppercase tracking-wider text-[#8B806D] border-b border-[#E7DCCB]/60 pb-3">
+        <div className="rounded-2xl border border-white/10 bg-[#131117] p-6 shadow-xl space-y-4">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-white/50 border-b border-white/10 pb-3">
             Hero Imagery
           </h2>
 
@@ -256,7 +256,7 @@ export function HeroEditorPage() {
                 altText={form.profile_image_alt || undefined}
                 onAltTextChange={(alt) => handleChange('profile_image_alt', alt)}
                 folder="hero"
-                helperText="Square or portrait photo of Azmina (PNG or JPG recommended)"
+                helperText="Square or portrait photo of Fenu (PNG or JPG recommended)"
               />
             </div>
             <div>
@@ -272,56 +272,56 @@ export function HeroEditorPage() {
         </div>
 
         {/* Action Buttons */}
-        <div className="rounded-2xl border border-[#E7DCCB] bg-white p-6 shadow-xs space-y-4">
-          <h2 className="text-xs font-bold uppercase tracking-wider text-[#8B806D] border-b border-[#E7DCCB]/60 pb-3">
+        <div className="rounded-2xl border border-white/10 bg-[#131117] p-6 shadow-xl space-y-4">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-white/50 border-b border-white/10 pb-3">
             Call to Action Buttons
           </h2>
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-3 rounded-xl border border-[#E7DCCB]/50 bg-[#F8F4ED]/30 p-4">
-              <span className="text-[11px] font-bold text-[#344238] uppercase">Primary CTA</span>
+            <div className="space-y-3 rounded-xl border border-white/10 bg-white/[0.02] p-4">
+              <span className="text-[11px] font-bold text-[#f6b7d2] uppercase">Primary CTA</span>
               <div>
-                <label className="block text-[11px] font-medium text-[#29251F]">Button Text</label>
+                <label className="block text-[11px] font-medium text-white/80">Button Text</label>
                 <input
                   type="text"
                   value={form.primary_button_text || ''}
                   onChange={(e) => handleChange('primary_button_text', e.target.value)}
                   placeholder="Book a Strategy Call"
-                  className="mt-1 w-full rounded-lg border border-[#E7DCCB] bg-white px-3 py-1.5 text-xs text-[#29251F]"
+                  className="mt-1 w-full rounded-lg border border-white/10 bg-[#16141c] px-3 py-1.5 text-xs text-white"
                 />
               </div>
               <div>
-                <label className="block text-[11px] font-medium text-[#29251F]">Button URL / Anchor</label>
+                <label className="block text-[11px] font-medium text-white/80">Button URL / Anchor</label>
                 <input
                   type="text"
                   value={form.primary_button_url || ''}
                   onChange={(e) => handleChange('primary_button_url', e.target.value)}
                   placeholder="#contact"
-                  className="mt-1 w-full rounded-lg border border-[#E7DCCB] bg-white px-3 py-1.5 text-xs text-[#29251F]"
+                  className="mt-1 w-full rounded-lg border border-white/10 bg-[#16141c] px-3 py-1.5 text-xs text-white"
                 />
               </div>
             </div>
 
-            <div className="space-y-3 rounded-xl border border-[#E7DCCB]/50 bg-[#F8F4ED]/30 p-4">
-              <span className="text-[11px] font-bold text-[#8B806D] uppercase">Secondary CTA</span>
+            <div className="space-y-3 rounded-xl border border-white/10 bg-white/[0.02] p-4">
+              <span className="text-[11px] font-bold text-white/50 uppercase">Secondary CTA</span>
               <div>
-                <label className="block text-[11px] font-medium text-[#29251F]">Button Text</label>
+                <label className="block text-[11px] font-medium text-white/80">Button Text</label>
                 <input
                   type="text"
                   value={form.secondary_button_text || ''}
                   onChange={(e) => handleChange('secondary_button_text', e.target.value)}
                   placeholder="View Featured Work"
-                  className="mt-1 w-full rounded-lg border border-[#E7DCCB] bg-white px-3 py-1.5 text-xs text-[#29251F]"
+                  className="mt-1 w-full rounded-lg border border-white/10 bg-[#16141c] px-3 py-1.5 text-xs text-white"
                 />
               </div>
               <div>
-                <label className="block text-[11px] font-medium text-[#29251F]">Button URL / Anchor</label>
+                <label className="block text-[11px] font-medium text-white/80">Button URL / Anchor</label>
                 <input
                   type="text"
                   value={form.secondary_button_url || ''}
                   onChange={(e) => handleChange('secondary_button_url', e.target.value)}
                   placeholder="#work"
-                  className="mt-1 w-full rounded-lg border border-[#E7DCCB] bg-white px-3 py-1.5 text-xs text-[#29251F]"
+                  className="mt-1 w-full rounded-lg border border-white/10 bg-[#16141c] px-3 py-1.5 text-xs text-white"
                 />
               </div>
             </div>

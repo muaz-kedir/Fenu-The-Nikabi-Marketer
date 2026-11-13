@@ -76,8 +76,8 @@ export function StatisticsPage() {
   return (
     <div className="mx-auto max-w-4xl space-y-6">
       <div>
-        <h1 className="text-xl font-bold tracking-tight text-[#29251F]">Performance Metrics & Numbers</h1>
-        <p className="mt-1 text-xs text-[#8B806D]">
+        <h1 className="text-xl font-bold tracking-tight text-white">Performance Metrics & Numbers</h1>
+        <p className="mt-1 text-xs text-white/60">
           Highlight key achievement numbers (e.g. 100+ Projects Scaled, 5+ Years Experience, $1.8M Generated).
         </p>
       </div>
@@ -95,62 +95,62 @@ export function StatisticsPage() {
       )}
 
       {/* Form */}
-      <form onSubmit={save} className="rounded-2xl border border-[#E7DCCB] bg-white p-6 shadow-xs space-y-4">
-        <h2 className="text-xs font-bold uppercase tracking-wider text-[#8B806D] border-b border-[#E7DCCB]/60 pb-3">
+      <form onSubmit={save} className="rounded-2xl border border-white/10 bg-[#131117] p-6 shadow-xs space-y-4">
+        <h2 className="text-xs font-bold uppercase tracking-wider text-white/60 border-b border-white/10 pb-3">
           {editingId ? 'Edit Performance Metric' : 'Add Metric'}
         </h2>
 
         <div className="grid gap-4 sm:grid-cols-3">
           <div>
-            <label className="block text-xs font-medium text-[#29251F]">Metric Label *</label>
+            <label className="block text-xs font-medium text-white">Metric Label *</label>
             <input
               required
               value={form.label}
               onChange={(e) => setForm({ ...form, label: e.target.value })}
               placeholder="e.g. Brands Scaled"
-              className="mt-1 w-full rounded-xl border border-[#E7DCCB] bg-[#F8F4ED]/50 px-3 py-2 text-xs text-[#29251F] focus:border-[#344238] focus:bg-white focus:outline-hidden"
+              className="mt-1 w-full rounded-xl border border-white/10 bg-[#16141c] px-3 py-2 text-xs text-white focus:border-[#f04796] focus:ring-1 focus:ring-[#f04796] focus:bg-[#16141c] focus:outline-hidden"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-[#29251F]">Value *</label>
+            <label className="block text-xs font-medium text-white">Value *</label>
             <input
               required
               value={form.value}
               onChange={(e) => setForm({ ...form, value: e.target.value })}
               placeholder="e.g. 120"
-              className="mt-1 w-full rounded-xl border border-[#E7DCCB] bg-[#F8F4ED]/50 px-3 py-2 text-xs text-[#29251F] focus:border-[#344238] focus:bg-white focus:outline-hidden"
+              className="mt-1 w-full rounded-xl border border-white/10 bg-[#16141c] px-3 py-2 text-xs text-white focus:border-[#f04796] focus:ring-1 focus:ring-[#f04796] focus:bg-[#16141c] focus:outline-hidden"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-[#29251F]">Suffix (e.g. +, %, M)</label>
+            <label className="block text-xs font-medium text-white">Suffix (e.g. +, %, M)</label>
             <input
               value={form.suffix}
               onChange={(e) => setForm({ ...form, suffix: e.target.value })}
               placeholder="e.g. +"
-              className="mt-1 w-full rounded-xl border border-[#E7DCCB] bg-[#F8F4ED]/50 px-3 py-2 text-xs text-[#29251F] focus:border-[#344238] focus:bg-white focus:outline-hidden"
+              className="mt-1 w-full rounded-xl border border-white/10 bg-[#16141c] px-3 py-2 text-xs text-white focus:border-[#f04796] focus:ring-1 focus:ring-[#f04796] focus:bg-[#16141c] focus:outline-hidden"
             />
           </div>
         </div>
 
         <div className="flex items-center justify-between pt-2">
           <div className="flex gap-4">
-            <label className="flex items-center gap-2 cursor-pointer text-xs font-medium text-[#29251F]">
+            <label className="flex items-center gap-2 cursor-pointer text-xs font-medium text-white">
               <input
                 type="checkbox"
                 checked={form.is_visible}
                 onChange={(e) => setForm({ ...form, is_visible: e.target.checked })}
-                className="h-4 w-4 rounded-sm border-[#E7DCCB] text-[#344238]"
+                className="h-4 w-4 rounded-sm border-white/10 text-[#f6b7d2]"
               />
               <span>Visible</span>
             </label>
-            <label className="flex items-center gap-2 cursor-pointer text-xs font-medium text-[#29251F]">
+            <label className="flex items-center gap-2 cursor-pointer text-xs font-medium text-white">
               <input
                 type="checkbox"
                 checked={form.is_published}
                 onChange={(e) => setForm({ ...form, is_published: e.target.checked })}
-                className="h-4 w-4 rounded-sm border-[#E7DCCB] text-[#344238]"
+                className="h-4 w-4 rounded-sm border-white/10 text-[#f6b7d2]"
               />
               <span>Published</span>
             </label>
@@ -161,7 +161,7 @@ export function StatisticsPage() {
               <button
                 type="button"
                 onClick={resetForm}
-                className="rounded-xl border border-[#E7DCCB] bg-[#F8F4ED] px-4 py-2 text-xs font-semibold text-[#29251F]"
+                className="rounded-xl border border-white/10 bg-[#0a0a0a] px-4 py-2 text-xs font-semibold text-white"
               >
                 Cancel
               </button>
@@ -169,7 +169,7 @@ export function StatisticsPage() {
             <button
               type="submit"
               disabled={saving}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-[#344238] px-5 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-[#29251F] disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-[#f04796] text-[#0d0d0f] font-bold shadow-[0_0_20px_rgba(240,71,150,0.35)] px-5 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-[#ff6ab3] disabled:opacity-50"
             >
               <Plus size={14} />
               {saving ? 'Saving...' : editingId ? 'Update Metric' : 'Add Metric'}
@@ -183,19 +183,19 @@ export function StatisticsPage() {
         {items.map((stat) => (
           <div
             key={stat.id}
-            className="flex flex-col justify-between rounded-2xl border border-[#E7DCCB] bg-white p-5 shadow-xs"
+            className="flex flex-col justify-between rounded-2xl border border-white/10 bg-[#131117] p-5 shadow-xs"
           >
             <div>
-              <div className="text-3xl font-bold tracking-tight text-[#29251F]">
+              <div className="text-3xl font-bold tracking-tight text-white">
                 {stat.value}
-                <span className="text-[#344238]">{stat.suffix}</span>
+                <span className="text-[#f6b7d2]">{stat.suffix}</span>
               </div>
-              <h3 className="mt-1 text-xs font-semibold uppercase tracking-wider text-[#8B806D]">
+              <h3 className="mt-1 text-xs font-semibold uppercase tracking-wider text-white/60">
                 {stat.label}
               </h3>
             </div>
 
-            <div className="mt-4 flex items-center justify-end gap-1.5 border-t border-[#E7DCCB]/60 pt-3">
+            <div className="mt-4 flex items-center justify-end gap-1.5 border-t border-white/10 pt-3">
               <button
                 type="button"
                 onClick={() => {
@@ -210,7 +210,7 @@ export function StatisticsPage() {
                     is_published: stat.is_published !== false,
                   });
                 }}
-                className="flex h-7 w-7 items-center justify-center rounded-lg border border-[#E7DCCB] text-[#29251F] hover:bg-[#F8F4ED]"
+                className="flex h-7 w-7 items-center justify-center rounded-lg border border-white/10 text-white hover:bg-[#0a0a0a]"
               >
                 <Pencil size={12} />
               </button>

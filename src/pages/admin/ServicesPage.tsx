@@ -179,8 +179,8 @@ export function ServicesPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-[#29251F]">Services & Offerings</h1>
-          <p className="mt-1 text-xs text-[#8B806D]">
+          <h1 className="text-xl font-bold tracking-tight text-white">Services & Offerings</h1>
+          <p className="mt-1 text-xs text-white/60">
             Manage the client marketing services Azmina provides, along with pricing, categories, and icons.
           </p>
         </div>
@@ -192,7 +192,7 @@ export function ServicesPage() {
             setForm((prev) => ({ ...prev, display_order: items.length + 1 }));
             setIsFormOpen(true);
           }}
-          className="inline-flex items-center gap-1.5 rounded-xl bg-[#344238] px-4 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-[#29251F]"
+          className="inline-flex items-center gap-1.5 rounded-xl bg-[#f04796] text-[#0d0d0f] font-bold shadow-[0_0_20px_rgba(240,71,150,0.35)] px-4 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-[#ff6ab3]"
         >
           <Plus size={15} /> Add Service
         </button>
@@ -212,15 +212,15 @@ export function ServicesPage() {
 
       {/* Editor Modal / Card */}
       {isFormOpen && (
-        <div className="rounded-2xl border border-[#344238]/30 bg-white p-6 shadow-md space-y-4">
-          <div className="flex items-center justify-between border-b border-[#E7DCCB] pb-3">
-            <h2 className="text-sm font-bold text-[#29251F]">
+        <div className="rounded-2xl border border-[#344238]/30 bg-[#131117] p-6 shadow-md space-y-4">
+          <div className="flex items-center justify-between border-b border-white/10 pb-3">
+            <h2 className="text-sm font-bold text-white">
               {editingId ? 'Edit Service' : 'Create New Service'}
             </h2>
             <button
               type="button"
               onClick={resetForm}
-              className="text-[#8B806D] hover:text-[#29251F]"
+              className="text-white/60 hover:text-white"
             >
               <X size={18} />
             </button>
@@ -229,23 +229,23 @@ export function ServicesPage() {
           <form onSubmit={handleSave} className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <label className="block text-xs font-medium text-[#29251F]">Service Title *</label>
+                <label className="block text-xs font-medium text-white">Service Title *</label>
                 <input
                   type="text"
                   required
                   value={form.title}
                   onChange={(e) => setForm({ ...form, title: e.target.value })}
                   placeholder="e.g. Social Media Management"
-                  className="mt-1 w-full rounded-xl border border-[#E7DCCB] bg-[#F8F4ED]/50 px-3 py-2 text-xs text-[#29251F] focus:border-[#344238] focus:bg-white focus:outline-hidden"
+                  className="mt-1 w-full rounded-xl border border-white/10 bg-[#16141c] px-3 py-2 text-xs text-white focus:border-[#f04796] focus:ring-1 focus:ring-[#f04796] focus:bg-[#16141c] focus:outline-hidden"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-[#29251F]">Category</label>
+                <label className="block text-xs font-medium text-white">Category</label>
                 <select
                   value={form.category}
                   onChange={(e) => setForm({ ...form, category: e.target.value })}
-                  className="mt-1 w-full rounded-xl border border-[#E7DCCB] bg-[#F8F4ED]/50 px-3 py-2 text-xs text-[#29251F] focus:border-[#344238] focus:bg-white focus:outline-hidden"
+                  className="mt-1 w-full rounded-xl border border-white/10 bg-[#16141c] px-3 py-2 text-xs text-white focus:border-[#f04796] focus:ring-1 focus:ring-[#f04796] focus:bg-[#16141c] focus:outline-hidden"
                 >
                   <option value="Social Media Management">Social Media Management</option>
                   <option value="Content Creation">Content Creation</option>
@@ -258,36 +258,36 @@ export function ServicesPage() {
 
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <label className="block text-xs font-medium text-[#29251F]">Starting Price (Optional)</label>
+                <label className="block text-xs font-medium text-white">Starting Price (Optional)</label>
                 <input
                   type="text"
                   value={form.price_starting_from}
                   onChange={(e) => setForm({ ...form, price_starting_from: e.target.value })}
                   placeholder="e.g. Starting from $650 / month"
-                  className="mt-1 w-full rounded-xl border border-[#E7DCCB] bg-[#F8F4ED]/50 px-3 py-2 text-xs text-[#29251F] focus:border-[#344238] focus:bg-white focus:outline-hidden"
+                  className="mt-1 w-full rounded-xl border border-white/10 bg-[#16141c] px-3 py-2 text-xs text-white focus:border-[#f04796] focus:ring-1 focus:ring-[#f04796] focus:bg-[#16141c] focus:outline-hidden"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-[#29251F]">Display Order</label>
+                <label className="block text-xs font-medium text-white">Display Order</label>
                 <input
                   type="number"
                   value={form.display_order}
                   onChange={(e) => setForm({ ...form, display_order: Number(e.target.value) })}
-                  className="mt-1 w-full rounded-xl border border-[#E7DCCB] bg-[#F8F4ED]/50 px-3 py-2 text-xs text-[#29251F] focus:border-[#344238] focus:bg-white focus:outline-hidden"
+                  className="mt-1 w-full rounded-xl border border-white/10 bg-[#16141c] px-3 py-2 text-xs text-white focus:border-[#f04796] focus:ring-1 focus:ring-[#f04796] focus:bg-[#16141c] focus:outline-hidden"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-[#29251F]">Service Description</label>
+              <label className="block text-xs font-medium text-white">Service Description</label>
               <textarea
                 rows={3}
                 required
                 value={form.description}
                 onChange={(e) => setForm({ ...form, description: e.target.value })}
                 placeholder="Describe deliverables, scope, and strategic value for the client..."
-                className="mt-1 w-full rounded-xl border border-[#E7DCCB] bg-[#F8F4ED]/50 p-3 text-xs text-[#29251F] focus:border-[#344238] focus:bg-white focus:outline-hidden"
+                className="mt-1 w-full rounded-xl border border-white/10 bg-[#16141c] p-3 text-xs text-white focus:border-[#f04796] focus:ring-1 focus:ring-[#f04796] focus:bg-[#16141c] focus:outline-hidden"
               />
             </div>
 
@@ -301,40 +301,40 @@ export function ServicesPage() {
               />
 
               <div className="flex flex-col justify-end space-y-3 pb-2">
-                <label className="flex items-center gap-2 cursor-pointer text-xs font-medium text-[#29251F]">
+                <label className="flex items-center gap-2 cursor-pointer text-xs font-medium text-white">
                   <input
                     type="checkbox"
                     checked={form.is_visible}
                     onChange={(e) => setForm({ ...form, is_visible: e.target.checked })}
-                    className="h-4 w-4 rounded-sm border-[#E7DCCB] text-[#344238]"
+                    className="h-4 w-4 rounded-sm border-white/10 text-[#f6b7d2]"
                   />
                   <span>Visible on public site</span>
                 </label>
 
-                <label className="flex items-center gap-2 cursor-pointer text-xs font-medium text-[#29251F]">
+                <label className="flex items-center gap-2 cursor-pointer text-xs font-medium text-white">
                   <input
                     type="checkbox"
                     checked={form.is_published}
                     onChange={(e) => setForm({ ...form, is_published: e.target.checked })}
-                    className="h-4 w-4 rounded-sm border-[#E7DCCB] text-[#344238]"
+                    className="h-4 w-4 rounded-sm border-white/10 text-[#f6b7d2]"
                   />
                   <span>Published (Live)</span>
                 </label>
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-2 border-t border-[#E7DCCB] pt-4">
+            <div className="flex items-center justify-end gap-2 border-t border-white/10 pt-4">
               <button
                 type="button"
                 onClick={resetForm}
-                className="rounded-xl border border-[#E7DCCB] bg-[#F8F4ED] px-4 py-2 text-xs font-semibold text-[#29251F] transition hover:bg-[#E7DCCB]/60"
+                className="rounded-xl border border-white/10 bg-[#0a0a0a] px-4 py-2 text-xs font-semibold text-white transition hover:bg-white/10"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={saving}
-                className="inline-flex items-center gap-1.5 rounded-xl bg-[#344238] px-5 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-[#29251F] disabled:opacity-50"
+                className="inline-flex items-center gap-1.5 rounded-xl bg-[#f04796] text-[#0d0d0f] font-bold shadow-[0_0_20px_rgba(240,71,150,0.35)] px-5 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-[#ff6ab3] disabled:opacity-50"
               >
                 {saving ? 'Saving...' : editingId ? 'Update Service' : 'Create Service'}
               </button>
@@ -344,32 +344,32 @@ export function ServicesPage() {
       )}
 
       {/* Services List Table */}
-      <div className="overflow-hidden rounded-2xl border border-[#E7DCCB] bg-white shadow-xs">
-        <div className="p-4 border-b border-[#E7DCCB] flex items-center justify-between">
-          <h2 className="text-xs font-bold uppercase tracking-wider text-[#8B806D]">
+      <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#131117] shadow-xs">
+        <div className="p-4 border-b border-white/10 flex items-center justify-between">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-white/60">
             All Services ({items.length})
           </h2>
-          <span className="text-[11px] text-[#8B806D]">Drag or use arrows to reorder items</span>
+          <span className="text-[11px] text-white/60">Drag or use arrows to reorder items</span>
         </div>
 
         {items.length === 0 ? (
-          <div className="p-12 text-center text-xs text-[#8B806D]">
+          <div className="p-12 text-center text-xs text-white/60">
             No services added yet. Click &quot;Add Service&quot; to create one.
           </div>
         ) : (
-          <div className="divide-y divide-[#E7DCCB]/60">
+          <div className="divide-y divide-white/10">
             {items.map((service, index) => (
               <div
                 key={service.id}
-                className="flex flex-col gap-4 p-4 transition hover:bg-[#F8F4ED]/40 sm:flex-row sm:items-center sm:justify-between"
+                className="flex flex-col gap-4 p-4 transition hover:bg-[#16141c] sm:flex-row sm:items-center sm:justify-between"
               >
                 <div className="flex items-center gap-3">
-                  <div className="flex flex-col gap-1 text-[#8B806D]">
+                  <div className="flex flex-col gap-1 text-white/60">
                     <button
                       type="button"
                       disabled={index === 0}
                       onClick={() => void moveOrder(index, 'up')}
-                      className="hover:text-[#29251F] disabled:opacity-20"
+                      className="hover:text-white disabled:opacity-20"
                     >
                       <ArrowUp size={14} />
                     </button>
@@ -377,21 +377,21 @@ export function ServicesPage() {
                       type="button"
                       disabled={index === items.length - 1}
                       onClick={() => void moveOrder(index, 'down')}
-                      className="hover:text-[#29251F] disabled:opacity-20"
+                      className="hover:text-white disabled:opacity-20"
                     >
                       <ArrowDown size={14} />
                     </button>
                   </div>
 
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#F8F4ED] text-[#344238] border border-[#E7DCCB]">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#0a0a0a] text-[#f6b7d2] border border-white/10">
                     <Layers size={18} />
                   </div>
 
                   <div>
                     <div className="flex items-center gap-2">
-                      <h3 className="text-xs font-bold text-[#29251F]">{service.title}</h3>
+                      <h3 className="text-xs font-bold text-white">{service.title}</h3>
                       {service.category && (
-                        <span className="rounded-md bg-[#F8F4ED] px-2 py-0.5 text-[10px] font-medium text-[#344238] border border-[#E7DCCB]">
+                        <span className="rounded-md bg-[#0a0a0a] px-2 py-0.5 text-[10px] font-medium text-[#f6b7d2] border border-white/10">
                           {service.category}
                         </span>
                       )}
@@ -401,7 +401,7 @@ export function ServicesPage() {
                         </span>
                       )}
                     </div>
-                    <p className="mt-0.5 line-clamp-1 text-[11px] text-[#8B806D] max-w-md">
+                    <p className="mt-0.5 line-clamp-1 text-[11px] text-white/60 max-w-md">
                       {service.description}
                     </p>
                   </div>
@@ -413,7 +413,7 @@ export function ServicesPage() {
                     onClick={() => void togglePublish(service)}
                     className={`rounded-lg px-2.5 py-1 text-[11px] font-semibold transition ${
                       service.is_published
-                        ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                        ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/30'
                         : 'bg-amber-50 text-amber-800 border border-amber-200'
                     }`}
                   >
@@ -426,8 +426,8 @@ export function ServicesPage() {
                     title={service.is_visible ? 'Visible' : 'Hidden'}
                     className={`h-8 w-8 flex items-center justify-center rounded-lg border transition ${
                       service.is_visible
-                        ? 'border-[#E7DCCB] bg-white text-[#344238]'
-                        : 'border-[#E7DCCB] bg-[#F8F4ED] text-[#8B806D]'
+                        ? 'border-white/10 bg-[#131117] text-[#f6b7d2]'
+                        : 'border-white/10 bg-[#0a0a0a] text-white/60'
                     }`}
                   >
                     {service.is_visible ? <Eye size={14} /> : <EyeOff size={14} />}
@@ -437,7 +437,7 @@ export function ServicesPage() {
                     type="button"
                     onClick={() => startEdit(service)}
                     title="Edit Service"
-                    className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#E7DCCB] bg-white text-[#29251F] transition hover:bg-[#F8F4ED]"
+                    className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-[#131117] text-white transition hover:bg-[#0a0a0a]"
                   >
                     <Pencil size={14} />
                   </button>

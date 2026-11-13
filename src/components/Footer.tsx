@@ -14,17 +14,12 @@ type FooterProps = {
 };
 
 export function Footer({ site, footer }: FooterProps) {
-  const name = site?.owner_name ?? 'Azmina Zahra';
+  const brandName = 'Fenu|The Naqabi Marketer';
+  const logoUrl = site?.logo_url || '/fenu-brand.png';
   const email = footer?.email || site?.email || 'hello@azminazahra.com';
   const phone = footer?.phone || site?.phone;
-  const copyright = footer?.copyright_text || site?.copyright_text || `© ${new Date().getFullYear()} ${name}. All rights reserved.`;
+  const copyright = footer?.copyright_text || site?.copyright_text || `© ${new Date().getFullYear()} ${brandName}. All rights reserved.`;
   const footerDesc = footer?.footer_description;
-  const brandInitials = (name || 'AZ')
-    .split(' ')
-    .map((part) => part[0])
-    .slice(0, 2)
-    .join('')
-    .toUpperCase();
 
   const getSocialLink = (key: string) => {
     return (
@@ -40,10 +35,12 @@ export function Footer({ site, footer }: FooterProps) {
         <div className="flex flex-col items-center justify-between gap-6 border-b border-white/10 pb-8 md:flex-row">
           <div>
             <div className="flex items-center gap-3">
-              <span className="flex h-10 w-10 items-center justify-center rounded-full border border-[#f04796]/60 bg-[#f04796]/10 text-sm font-semibold text-[#f6b7d2]">
-                {brandInitials}
-              </span>
-              <span className="text-lg font-semibold text-white">{name}</span>
+              <img
+                src={logoUrl}
+                alt={brandName}
+                className="h-10 w-10 shrink-0 rounded-full object-cover border border-[#f04796]/40 shadow-[0_0_15px_rgba(240,71,150,0.3)]"
+              />
+              <span className="text-lg font-semibold tracking-wide text-white">{brandName}</span>
             </div>
             {footerDesc && (
               <p className="mt-2 text-xs text-white/50 max-w-md">{footerDesc}</p>

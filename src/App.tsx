@@ -29,8 +29,11 @@ function ProtectedRoute({ children }: { children: ReactNode }) {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#F8F4ED] text-[#29251F]">
-        Loading session...
+      <div className="flex min-h-screen items-center justify-center bg-[#0a0a0a] text-[#f6b7d2]">
+        <div className="flex items-center gap-3">
+          <span className="h-3 w-3 rounded-full bg-[#f04796] animate-ping" />
+          <span className="text-sm font-medium tracking-wide">Loading session...</span>
+        </div>
       </div>
     );
   }

@@ -1,8 +1,8 @@
 export const seedPortfolio = {
   siteSettings: {
     id: 'seed-site',
-    site_name: 'Fenu|The Nikabi Marketer',
-    owner_name: 'Fenu|The Nikabi Marketer',
+    site_name: 'Fenu|The Naqabi Marketer',
+    owner_name: 'Fenu|The Naqabi Marketer',
     professional_title: 'Social Media Marketing Specialist',
     email: 'hello@azminazahra.com',
     phone: '+971 52 123 4567',

@@ -222,8 +222,8 @@ export function ProjectsPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-[#29251F]">Portfolio Projects & Case Studies</h1>
-          <p className="mt-1 text-xs text-[#8B806D]">
+          <h1 className="text-xl font-bold tracking-tight text-white">Portfolio Projects & Case Studies</h1>
+          <p className="mt-1 text-xs text-white/60">
             Manage client case studies, verified marketing metrics, imagery, objectives, and strategies.
           </p>
         </div>
@@ -235,7 +235,7 @@ export function ProjectsPage() {
             setForm((prev) => ({ ...prev, display_order: items.length + 1 }));
             setIsFormOpen(true);
           }}
-          className="inline-flex items-center gap-1.5 rounded-xl bg-[#344238] px-4 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-[#29251F]"
+          className="inline-flex items-center gap-1.5 rounded-xl bg-[#f04796] text-[#0d0d0f] font-bold shadow-[0_0_20px_rgba(240,71,150,0.35)] px-4 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-[#ff6ab3]"
         >
           <Plus size={15} /> Add Case Study
         </button>
@@ -262,8 +262,8 @@ export function ProjectsPage() {
             onClick={() => setActiveCategory(cat)}
             className={`whitespace-nowrap rounded-xl px-3.5 py-1.5 text-xs font-medium transition ${
               activeCategory === cat
-                ? 'bg-[#344238] text-white shadow-xs'
-                : 'border border-[#E7DCCB] bg-white text-[#29251F] hover:bg-[#F8F4ED]'
+                ? 'bg-[#f04796] text-[#0d0d0f] font-bold shadow-[0_0_20px_rgba(240,71,150,0.35)] text-white shadow-xs'
+                : 'border border-white/10 bg-[#131117] text-white hover:bg-[#0a0a0a]'
             }`}
           >
             {cat}
@@ -273,15 +273,15 @@ export function ProjectsPage() {
 
       {/* Editor Modal / Form */}
       {isFormOpen && (
-        <div className="rounded-2xl border border-[#344238]/30 bg-white p-6 shadow-md space-y-4">
-          <div className="flex items-center justify-between border-b border-[#E7DCCB] pb-3">
-            <h2 className="text-sm font-bold text-[#29251F]">
+        <div className="rounded-2xl border border-[#344238]/30 bg-[#131117] p-6 shadow-md space-y-4">
+          <div className="flex items-center justify-between border-b border-white/10 pb-3">
+            <h2 className="text-sm font-bold text-white">
               {editingId ? 'Edit Project / Case Study' : 'Create New Project'}
             </h2>
             <button
               type="button"
               onClick={resetForm}
-              className="text-[#8B806D] hover:text-[#29251F]"
+              className="text-white/60 hover:text-white"
             >
               <X size={18} />
             </button>
@@ -290,23 +290,23 @@ export function ProjectsPage() {
           <form onSubmit={handleSave} className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <label className="block text-xs font-medium text-[#29251F]">Project Title *</label>
+                <label className="block text-xs font-medium text-white">Project Title *</label>
                 <input
                   type="text"
                   required
                   value={form.title}
                   onChange={(e) => setForm({ ...form, title: e.target.value })}
                   placeholder="e.g. Modest Elegance Brand Launch"
-                  className="mt-1 w-full rounded-xl border border-[#E7DCCB] bg-[#F8F4ED]/50 px-3 py-2 text-xs text-[#29251F] focus:border-[#344238] focus:bg-white focus:outline-hidden"
+                  className="mt-1 w-full rounded-xl border border-white/10 bg-[#16141c] px-3 py-2 text-xs text-white focus:border-[#f04796] focus:ring-1 focus:ring-[#f04796] focus:bg-[#16141c] focus:outline-hidden"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-[#29251F]">Category</label>
+                <label className="block text-xs font-medium text-white">Category</label>
                 <select
                   value={form.category}
                   onChange={(e) => setForm({ ...form, category: e.target.value })}
-                  className="mt-1 w-full rounded-xl border border-[#E7DCCB] bg-[#F8F4ED]/50 px-3 py-2 text-xs text-[#29251F] focus:border-[#344238] focus:bg-white focus:outline-hidden"
+                  className="mt-1 w-full rounded-xl border border-white/10 bg-[#16141c] px-3 py-2 text-xs text-white focus:border-[#f04796] focus:ring-1 focus:ring-[#f04796] focus:bg-[#16141c] focus:outline-hidden"
                 >
                   <option value="Social Media Designs">Social Media Designs</option>
                   <option value="Branding">Branding</option>
@@ -318,99 +318,99 @@ export function ProjectsPage() {
 
             <div className="grid gap-4 sm:grid-cols-3">
               <div>
-                <label className="block text-xs font-medium text-[#29251F]">Client / Brand Name</label>
+                <label className="block text-xs font-medium text-white">Client / Brand Name</label>
                 <input
                   type="text"
                   value={form.client_name}
                   onChange={(e) => setForm({ ...form, client_name: e.target.value })}
                   placeholder="e.g. Al-Noor Couture"
-                  className="mt-1 w-full rounded-xl border border-[#E7DCCB] bg-[#F8F4ED]/50 px-3 py-2 text-xs text-[#29251F] focus:border-[#344238] focus:bg-white focus:outline-hidden"
+                  className="mt-1 w-full rounded-xl border border-white/10 bg-[#16141c] px-3 py-2 text-xs text-white focus:border-[#f04796] focus:ring-1 focus:ring-[#f04796] focus:bg-[#16141c] focus:outline-hidden"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-[#29251F]">Industry</label>
+                <label className="block text-xs font-medium text-white">Industry</label>
                 <input
                   type="text"
                   value={form.industry}
                   onChange={(e) => setForm({ ...form, industry: e.target.value })}
                   placeholder="e.g. Modest Fashion, Halal Skincare"
-                  className="mt-1 w-full rounded-xl border border-[#E7DCCB] bg-[#F8F4ED]/50 px-3 py-2 text-xs text-[#29251F] focus:border-[#344238] focus:bg-white focus:outline-hidden"
+                  className="mt-1 w-full rounded-xl border border-white/10 bg-[#16141c] px-3 py-2 text-xs text-white focus:border-[#f04796] focus:ring-1 focus:ring-[#f04796] focus:bg-[#16141c] focus:outline-hidden"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-[#29251F]">URL Slug (Optional)</label>
+                <label className="block text-xs font-medium text-white">URL Slug (Optional)</label>
                 <input
                   type="text"
                   value={form.slug}
                   onChange={(e) => setForm({ ...form, slug: e.target.value })}
                   placeholder="e.g. al-noor-couture"
-                  className="mt-1 w-full rounded-xl border border-[#E7DCCB] bg-[#F8F4ED]/50 px-3 py-2 text-xs text-[#29251F] focus:border-[#344238] focus:bg-white focus:outline-hidden"
+                  className="mt-1 w-full rounded-xl border border-white/10 bg-[#16141c] px-3 py-2 text-xs text-white focus:border-[#f04796] focus:ring-1 focus:ring-[#f04796] focus:bg-[#16141c] focus:outline-hidden"
                 />
               </div>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <label className="block text-xs font-medium text-[#29251F]">Marketing Objective</label>
+                <label className="block text-xs font-medium text-white">Marketing Objective</label>
                 <textarea
                   rows={2}
                   value={form.marketing_objective}
                   onChange={(e) => setForm({ ...form, marketing_objective: e.target.value })}
                   placeholder="Goal: Establish dominant brand voice and generate 1,000+ orders in 30 days..."
-                  className="mt-1 w-full rounded-xl border border-[#E7DCCB] bg-[#F8F4ED]/50 p-2.5 text-xs text-[#29251F] focus:border-[#344238] focus:bg-white focus:outline-hidden"
+                  className="mt-1 w-full rounded-xl border border-white/10 bg-[#16141c] p-2.5 text-xs text-white focus:border-[#f04796] focus:ring-1 focus:ring-[#f04796] focus:bg-[#16141c] focus:outline-hidden"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-[#29251F]">Strategic Execution</label>
+                <label className="block text-xs font-medium text-white">Strategic Execution</label>
                 <textarea
                   rows={2}
                   value={form.strategy}
                   onChange={(e) => setForm({ ...form, strategy: e.target.value })}
                   placeholder="Bespoke Reels storytelling, micro-influencer outreach, and targeted Meta Ads..."
-                  className="mt-1 w-full rounded-xl border border-[#E7DCCB] bg-[#F8F4ED]/50 p-2.5 text-xs text-[#29251F] focus:border-[#344238] focus:bg-white focus:outline-hidden"
+                  className="mt-1 w-full rounded-xl border border-white/10 bg-[#16141c] p-2.5 text-xs text-white focus:border-[#f04796] focus:ring-1 focus:ring-[#f04796] focus:bg-[#16141c] focus:outline-hidden"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-[#29251F]">Summary Description</label>
+              <label className="block text-xs font-medium text-white">Summary Description</label>
               <textarea
                 rows={3}
                 required
                 value={form.description}
                 onChange={(e) => setForm({ ...form, description: e.target.value })}
                 placeholder="High-level project summary displayed on the card..."
-                className="mt-1 w-full rounded-xl border border-[#E7DCCB] bg-[#F8F4ED]/50 p-3 text-xs text-[#29251F] focus:border-[#344238] focus:bg-white focus:outline-hidden"
+                className="mt-1 w-full rounded-xl border border-white/10 bg-[#16141c] p-3 text-xs text-white focus:border-[#f04796] focus:ring-1 focus:ring-[#f04796] focus:bg-[#16141c] focus:outline-hidden"
               />
             </div>
 
             {/* Metrics */}
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <label className="block text-xs font-medium text-[#29251F]">Primary Metric Highlight</label>
+                <label className="block text-xs font-medium text-white">Primary Metric Highlight</label>
                 <input
                   type="text"
                   value={form.result_metric}
                   onChange={(e) => setForm({ ...form, result_metric: e.target.value })}
                   placeholder="e.g. +310% Revenue Growth"
-                  className="mt-1 w-full rounded-xl border border-[#E7DCCB] bg-[#F8F4ED]/50 px-3 py-2 text-xs text-[#29251F] focus:border-[#344238] focus:bg-white focus:outline-hidden"
+                  className="mt-1 w-full rounded-xl border border-white/10 bg-[#16141c] px-3 py-2 text-xs text-white focus:border-[#f04796] focus:ring-1 focus:ring-[#f04796] focus:bg-[#16141c] focus:outline-hidden"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-[#29251F]">Metric Subtitle</label>
+                <label className="block text-xs font-medium text-white">Metric Subtitle</label>
                 <input
                   type="text"
                   value={form.result_description}
                   onChange={(e) => setForm({ ...form, result_description: e.target.value })}
                   placeholder="e.g. over 90 days of organic campaign"
-                  className="mt-1 w-full rounded-xl border border-[#E7DCCB] bg-[#F8F4ED]/50 px-3 py-2 text-xs text-[#29251F] focus:border-[#344238] focus:bg-white focus:outline-hidden"
+                  className="mt-1 w-full rounded-xl border border-white/10 bg-[#16141c] px-3 py-2 text-xs text-white focus:border-[#f04796] focus:ring-1 focus:ring-[#f04796] focus:bg-[#16141c] focus:outline-hidden"
                 />
               </div>
             </div>
 
             {/* Verified Results Bullets */}
-            <div className="space-y-2 rounded-xl border border-[#E7DCCB]/60 bg-[#F8F4ED]/40 p-3">
-              <label className="block text-xs font-bold text-[#29251F]">
+            <div className="space-y-2 rounded-xl border border-white/10 bg-[#16141c] p-3">
+              <label className="block text-xs font-bold text-white">
                 Verified Deliverables / Results Bullets
               </label>
               <div className="flex gap-2">
@@ -428,7 +428,7 @@ export function ProjectsPage() {
                     }
                   }}
                   placeholder="Add metric bullet (e.g. 1.2M video views, 4.8x ROAS)..."
-                  className="flex-1 rounded-lg border border-[#E7DCCB] bg-white px-3 py-1.5 text-xs text-[#29251F]"
+                  className="flex-1 rounded-lg border border-white/10 bg-[#16141c] px-3 py-1.5 text-xs text-white"
                 />
                 <button
                   type="button"
@@ -438,7 +438,7 @@ export function ProjectsPage() {
                       setNewResultBullet('');
                     }
                   }}
-                  className="rounded-lg bg-[#344238] px-3 py-1.5 text-xs font-medium text-white"
+                  className="rounded-lg bg-[#f04796] text-[#0d0d0f] font-bold shadow-[0_0_20px_rgba(240,71,150,0.35)] px-3 py-1.5 text-xs font-medium text-white"
                 >
                   Add
                 </button>
@@ -448,7 +448,7 @@ export function ProjectsPage() {
                 {form.verified_results.map((bullet, idx) => (
                   <span
                     key={idx}
-                    className="inline-flex items-center gap-1 rounded-md bg-white border border-[#E7DCCB] px-2.5 py-1 text-xs text-[#29251F]"
+                    className="inline-flex items-center gap-1 rounded-md bg-[#131117] border border-white/10 px-2.5 py-1 text-xs text-white"
                   >
                     <span>{bullet}</span>
                     <button
@@ -459,7 +459,7 @@ export function ProjectsPage() {
                           verified_results: form.verified_results.filter((_, i) => i !== idx),
                         })
                       }
-                      className="text-[#8B806D] hover:text-rose-600"
+                      className="text-white/60 hover:text-rose-600"
                     >
                       <X size={12} />
                     </button>
@@ -479,42 +479,42 @@ export function ProjectsPage() {
               />
 
               <div className="space-y-2">
-                <label className="block text-xs font-medium text-[#29251F]">Case Study Link</label>
+                <label className="block text-xs font-medium text-white">Case Study Link</label>
                 <input
                   type="text"
                   value={form.case_study_url}
                   onChange={(e) => setForm({ ...form, case_study_url: e.target.value })}
                   placeholder="#contact"
-                  className="w-full rounded-xl border border-[#E7DCCB] bg-[#F8F4ED]/50 px-3 py-2 text-xs text-[#29251F] focus:border-[#344238] focus:bg-white focus:outline-hidden"
+                  className="w-full rounded-xl border border-white/10 bg-[#16141c] px-3 py-2 text-xs text-white focus:border-[#f04796] focus:ring-1 focus:ring-[#f04796] focus:bg-[#16141c] focus:outline-hidden"
                 />
 
                 <div className="pt-4 space-y-2">
-                  <label className="flex items-center gap-2 cursor-pointer text-xs font-medium text-[#29251F]">
+                  <label className="flex items-center gap-2 cursor-pointer text-xs font-medium text-white">
                     <input
                       type="checkbox"
                       checked={form.is_featured}
                       onChange={(e) => setForm({ ...form, is_featured: e.target.checked })}
-                      className="h-4 w-4 rounded-sm border-[#E7DCCB] text-[#344238]"
+                      className="h-4 w-4 rounded-sm border-white/10 text-[#f6b7d2]"
                     />
                     <span>Feature on homepage</span>
                   </label>
 
-                  <label className="flex items-center gap-2 cursor-pointer text-xs font-medium text-[#29251F]">
+                  <label className="flex items-center gap-2 cursor-pointer text-xs font-medium text-white">
                     <input
                       type="checkbox"
                       checked={form.is_visible}
                       onChange={(e) => setForm({ ...form, is_visible: e.target.checked })}
-                      className="h-4 w-4 rounded-sm border-[#E7DCCB] text-[#344238]"
+                      className="h-4 w-4 rounded-sm border-white/10 text-[#f6b7d2]"
                     />
                     <span>Visible</span>
                   </label>
 
-                  <label className="flex items-center gap-2 cursor-pointer text-xs font-medium text-[#29251F]">
+                  <label className="flex items-center gap-2 cursor-pointer text-xs font-medium text-white">
                     <input
                       type="checkbox"
                       checked={form.is_published}
                       onChange={(e) => setForm({ ...form, is_published: e.target.checked })}
-                      className="h-4 w-4 rounded-sm border-[#E7DCCB] text-[#344238]"
+                      className="h-4 w-4 rounded-sm border-white/10 text-[#f6b7d2]"
                     />
                     <span>Published (Live)</span>
                   </label>
@@ -522,18 +522,18 @@ export function ProjectsPage() {
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-2 border-t border-[#E7DCCB] pt-4">
+            <div className="flex items-center justify-end gap-2 border-t border-white/10 pt-4">
               <button
                 type="button"
                 onClick={resetForm}
-                className="rounded-xl border border-[#E7DCCB] bg-[#F8F4ED] px-4 py-2 text-xs font-semibold text-[#29251F] transition hover:bg-[#E7DCCB]/60"
+                className="rounded-xl border border-white/10 bg-[#0a0a0a] px-4 py-2 text-xs font-semibold text-white transition hover:bg-white/10"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={saving}
-                className="inline-flex items-center gap-1.5 rounded-xl bg-[#344238] px-5 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-[#29251F] disabled:opacity-50"
+                className="inline-flex items-center gap-1.5 rounded-xl bg-[#f04796] text-[#0d0d0f] font-bold shadow-[0_0_20px_rgba(240,71,150,0.35)] px-5 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-[#ff6ab3] disabled:opacity-50"
               >
                 {saving ? 'Saving...' : editingId ? 'Update Case Study' : 'Create Case Study'}
               </button>
@@ -543,32 +543,32 @@ export function ProjectsPage() {
       )}
 
       {/* Projects List */}
-      <div className="overflow-hidden rounded-2xl border border-[#E7DCCB] bg-white shadow-xs">
-        <div className="p-4 border-b border-[#E7DCCB] flex items-center justify-between">
-          <h2 className="text-xs font-bold uppercase tracking-wider text-[#8B806D]">
+      <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#131117] shadow-xs">
+        <div className="p-4 border-b border-white/10 flex items-center justify-between">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-white/60">
             Case Studies ({filteredItems.length})
           </h2>
-          <span className="text-[11px] text-[#8B806D]">Order controls position on public landing page</span>
+          <span className="text-[11px] text-white/60">Order controls position on public landing page</span>
         </div>
 
         {filteredItems.length === 0 ? (
-          <div className="p-12 text-center text-xs text-[#8B806D]">
+          <div className="p-12 text-center text-xs text-white/60">
             No case studies found in this category. Click &quot;Add Case Study&quot; to create one.
           </div>
         ) : (
-          <div className="divide-y divide-[#E7DCCB]/60">
+          <div className="divide-y divide-white/10">
             {filteredItems.map((project, index) => (
               <div
                 key={project.id}
-                className="flex flex-col gap-4 p-4 transition hover:bg-[#F8F4ED]/40 sm:flex-row sm:items-center sm:justify-between"
+                className="flex flex-col gap-4 p-4 transition hover:bg-[#16141c] sm:flex-row sm:items-center sm:justify-between"
               >
                 <div className="flex items-center gap-3">
-                  <div className="flex flex-col gap-1 text-[#8B806D]">
+                  <div className="flex flex-col gap-1 text-white/60">
                     <button
                       type="button"
                       disabled={index === 0}
                       onClick={() => void moveOrder(index, 'up')}
-                      className="hover:text-[#29251F] disabled:opacity-20"
+                      className="hover:text-white disabled:opacity-20"
                     >
                       <ArrowUp size={14} />
                     </button>
@@ -576,13 +576,13 @@ export function ProjectsPage() {
                       type="button"
                       disabled={index === filteredItems.length - 1}
                       onClick={() => void moveOrder(index, 'down')}
-                      className="hover:text-[#29251F] disabled:opacity-20"
+                      className="hover:text-white disabled:opacity-20"
                     >
                       <ArrowDown size={14} />
                     </button>
                   </div>
 
-                  <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl border border-[#E7DCCB] bg-[#F8F4ED]">
+                  <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl border border-white/10 bg-[#0a0a0a]">
                     {project.cover_image_url ? (
                       <img
                         src={project.cover_image_url}
@@ -590,7 +590,7 @@ export function ProjectsPage() {
                         className="h-full w-full object-cover"
                       />
                     ) : (
-                      <div className="flex h-full w-full items-center justify-center text-[#8B806D]">
+                      <div className="flex h-full w-full items-center justify-center text-white/60">
                         <ImageIcon size={20} />
                       </div>
                     )}
@@ -598,19 +598,19 @@ export function ProjectsPage() {
 
                   <div>
                     <div className="flex items-center gap-2">
-                      <h3 className="text-xs font-bold text-[#29251F]">{project.title}</h3>
+                      <h3 className="text-xs font-bold text-white">{project.title}</h3>
                       {project.is_featured && (
                         <span className="flex items-center gap-1 rounded-md bg-amber-50 border border-amber-200 px-1.5 py-0.5 text-[10px] font-semibold text-amber-800">
                           <Star size={10} className="fill-amber-500 text-amber-500" /> Featured
                         </span>
                       )}
                       {project.category && (
-                        <span className="rounded-md bg-[#F8F4ED] px-2 py-0.5 text-[10px] font-medium text-[#344238] border border-[#E7DCCB]">
+                        <span className="rounded-md bg-[#0a0a0a] px-2 py-0.5 text-[10px] font-medium text-[#f6b7d2] border border-white/10">
                           {project.category}
                         </span>
                       )}
                     </div>
-                    <div className="mt-1 flex items-center gap-3 text-[11px] text-[#8B806D]">
+                    <div className="mt-1 flex items-center gap-3 text-[11px] text-white/60">
                       {project.client_name && <span>Client: {project.client_name}</span>}
                       {project.result_metric && (
                         <span className="font-semibold text-emerald-700">
@@ -627,7 +627,7 @@ export function ProjectsPage() {
                     onClick={() => void togglePublish(project)}
                     className={`rounded-lg px-2.5 py-1 text-[11px] font-semibold transition ${
                       project.is_published
-                        ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                        ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/30'
                         : 'bg-amber-50 text-amber-800 border border-amber-200'
                     }`}
                   >
@@ -641,7 +641,7 @@ export function ProjectsPage() {
                     className={`h-8 w-8 flex items-center justify-center rounded-lg border transition ${
                       project.is_featured
                         ? 'border-amber-300 bg-amber-50 text-amber-700'
-                        : 'border-[#E7DCCB] bg-[#F8F4ED] text-[#8B806D]'
+                        : 'border-white/10 bg-[#0a0a0a] text-white/60'
                     }`}
                   >
                     <Star size={14} className={project.is_featured ? 'fill-amber-500' : ''} />
@@ -651,7 +651,7 @@ export function ProjectsPage() {
                     type="button"
                     onClick={() => startEdit(project)}
                     title="Edit Case Study"
-                    className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#E7DCCB] bg-white text-[#29251F] transition hover:bg-[#F8F4ED]"
+                    className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-[#131117] text-white transition hover:bg-[#0a0a0a]"
                   >
                     <Pencil size={14} />
                   </button>

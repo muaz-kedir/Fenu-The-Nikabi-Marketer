@@ -83,7 +83,7 @@ export function ContactSettingsPage() {
 
   if (loading) {
     return (
-      <div className="flex h-64 items-center justify-center text-xs text-[#8B806D]">
+      <div className="flex h-64 items-center justify-center text-xs text-white/60">
         Loading contact settings...
       </div>
     );
@@ -94,8 +94,8 @@ export function ContactSettingsPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-[#29251F]">Contact Information & Channels</h1>
-          <p className="mt-1 text-xs text-[#8B806D]">
+          <h1 className="text-xl font-bold tracking-tight text-white">Contact Information & Channels</h1>
+          <p className="mt-1 text-xs text-white/60">
             Manage client inquiry channels, WhatsApp direct link, booking calendar, and social handles.
           </p>
         </div>
@@ -105,7 +105,7 @@ export function ContactSettingsPage() {
             type="button"
             disabled={saving || publishing}
             onClick={() => void handleSaveDraft()}
-            className="inline-flex items-center gap-1.5 rounded-xl border border-[#E7DCCB] bg-white px-4 py-2 text-xs font-semibold text-[#29251F] shadow-xs transition hover:bg-[#F8F4ED]"
+            className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 bg-[#16141c] px-4 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-[#0a0a0a]"
           >
             <Save size={14} />
             {saving ? 'Saving...' : 'Save Draft'}
@@ -114,7 +114,7 @@ export function ContactSettingsPage() {
             type="button"
             disabled={saving || publishing}
             onClick={() => void handlePublish()}
-            className="inline-flex items-center gap-1.5 rounded-xl bg-[#344238] px-4 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-[#29251F]"
+            className="inline-flex items-center gap-1.5 rounded-xl bg-[#f04796] text-[#0d0d0f] font-bold shadow-[0_0_20px_rgba(240,71,150,0.35)] px-4 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-[#ff6ab3]"
           >
             <Send size={14} />
             {publishing ? 'Publishing...' : 'Publish Live'}
@@ -137,148 +137,148 @@ export function ContactSettingsPage() {
       {/* Form sections */}
       <div className="space-y-6">
         {/* Contact Page Headings */}
-        <div className="rounded-2xl border border-[#E7DCCB] bg-white p-6 shadow-xs space-y-4">
-          <h2 className="text-xs font-bold uppercase tracking-wider text-[#8B806D] border-b border-[#E7DCCB]/60 pb-3">
+        <div className="rounded-2xl border border-white/10 bg-[#131117] p-6 shadow-xs space-y-4">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-white/60 border-b border-white/10 pb-3">
             Contact Section Presentation
           </h2>
 
           <div>
-            <label className="block text-xs font-medium text-[#29251F]">Section Heading</label>
+            <label className="block text-xs font-medium text-white">Section Heading</label>
             <input
               type="text"
               value={form.contact_heading || ''}
               onChange={(e) => handleChange('contact_heading', e.target.value)}
               placeholder="Ready to scale your brand?"
-              className="mt-1 w-full rounded-xl border border-[#E7DCCB] bg-[#F8F4ED]/50 px-3 py-2 text-xs text-[#29251F] focus:border-[#344238] focus:bg-white focus:outline-hidden"
+              className="mt-1 w-full rounded-xl border border-white/10 bg-[#16141c] px-3 py-2 text-xs text-white focus:border-[#f04796] focus:ring-1 focus:ring-[#f04796] focus:bg-[#16141c] focus:outline-hidden"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-[#29251F]">Section Description / Instructions</label>
+            <label className="block text-xs font-medium text-white">Section Description / Instructions</label>
             <textarea
               rows={3}
               value={form.contact_description || ''}
               onChange={(e) => handleChange('contact_description', e.target.value)}
               placeholder="Book a strategy session or leave an inquiry..."
-              className="mt-1 w-full rounded-xl border border-[#E7DCCB] bg-[#F8F4ED]/50 p-3 text-xs text-[#29251F] focus:border-[#344238] focus:bg-white focus:outline-hidden"
+              className="mt-1 w-full rounded-xl border border-white/10 bg-[#16141c] p-3 text-xs text-white focus:border-[#f04796] focus:ring-1 focus:ring-[#f04796] focus:bg-[#16141c] focus:outline-hidden"
             />
           </div>
         </div>
 
         {/* Channels */}
-        <div className="rounded-2xl border border-[#E7DCCB] bg-white p-6 shadow-xs space-y-4">
-          <h2 className="text-xs font-bold uppercase tracking-wider text-[#8B806D] border-b border-[#E7DCCB]/60 pb-3">
+        <div className="rounded-2xl border border-white/10 bg-[#131117] p-6 shadow-xs space-y-4">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-white/60 border-b border-white/10 pb-3">
             Direct Reach & Booking
           </h2>
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label className="block text-xs font-medium text-[#29251F]">Primary Email</label>
+              <label className="block text-xs font-medium text-white">Primary Email</label>
               <input
                 type="email"
                 value={form.email || ''}
                 onChange={(e) => handleChange('email', e.target.value)}
                 placeholder="hello@azminazahra.com"
-                className="mt-1 w-full rounded-xl border border-[#E7DCCB] bg-[#F8F4ED]/50 px-3 py-2 text-xs text-[#29251F] focus:border-[#344238] focus:bg-white focus:outline-hidden"
+                className="mt-1 w-full rounded-xl border border-white/10 bg-[#16141c] px-3 py-2 text-xs text-white focus:border-[#f04796] focus:ring-1 focus:ring-[#f04796] focus:bg-[#16141c] focus:outline-hidden"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-[#29251F]">Phone Number / WhatsApp Contact</label>
+              <label className="block text-xs font-medium text-white">Phone Number / WhatsApp Contact</label>
               <input
                 type="text"
                 value={form.phone || ''}
                 onChange={(e) => handleChange('phone', e.target.value)}
                 placeholder="+971 52 123 4567"
-                className="mt-1 w-full rounded-xl border border-[#E7DCCB] bg-[#F8F4ED]/50 px-3 py-2 text-xs text-[#29251F] focus:border-[#344238] focus:bg-white focus:outline-hidden"
+                className="mt-1 w-full rounded-xl border border-white/10 bg-[#16141c] px-3 py-2 text-xs text-white focus:border-[#f04796] focus:ring-1 focus:ring-[#f04796] focus:bg-[#16141c] focus:outline-hidden"
               />
             </div>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label className="block text-xs font-medium text-[#29251F]">Direct WhatsApp Chat Link</label>
+              <label className="block text-xs font-medium text-white">Direct WhatsApp Chat Link</label>
               <input
                 type="text"
                 value={form.whatsapp_url || ''}
                 onChange={(e) => handleChange('whatsapp_url', e.target.value)}
                 placeholder="https://wa.me/971521234567"
-                className="mt-1 w-full rounded-xl border border-[#E7DCCB] bg-[#F8F4ED]/50 px-3 py-2 text-xs text-[#29251F] focus:border-[#344238] focus:bg-white focus:outline-hidden"
+                className="mt-1 w-full rounded-xl border border-white/10 bg-[#16141c] px-3 py-2 text-xs text-white focus:border-[#f04796] focus:ring-1 focus:ring-[#f04796] focus:bg-[#16141c] focus:outline-hidden"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-[#29251F]">Direct Calendar Booking URL (Calendly, etc.)</label>
+              <label className="block text-xs font-medium text-white">Direct Calendar Booking URL (Calendly, etc.)</label>
               <input
                 type="text"
                 value={form.booking_url || ''}
                 onChange={(e) => handleChange('booking_url', e.target.value)}
                 placeholder="https://calendly.com/your-username/30min"
-                className="mt-1 w-full rounded-xl border border-[#E7DCCB] bg-[#F8F4ED]/50 px-3 py-2 text-xs text-[#29251F] focus:border-[#344238] focus:bg-white focus:outline-hidden"
+                className="mt-1 w-full rounded-xl border border-white/10 bg-[#16141c] px-3 py-2 text-xs text-white focus:border-[#f04796] focus:ring-1 focus:ring-[#f04796] focus:bg-[#16141c] focus:outline-hidden"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-[#29251F]">Location / Office Base</label>
+            <label className="block text-xs font-medium text-white">Location / Office Base</label>
             <input
               type="text"
               value={form.location || ''}
               onChange={(e) => handleChange('location', e.target.value)}
               placeholder="Dubai, UAE (Available Worldwide)"
-              className="mt-1 w-full rounded-xl border border-[#E7DCCB] bg-[#F8F4ED]/50 px-3 py-2 text-xs text-[#29251F] focus:border-[#344238] focus:bg-white focus:outline-hidden"
+              className="mt-1 w-full rounded-xl border border-white/10 bg-[#16141c] px-3 py-2 text-xs text-white focus:border-[#f04796] focus:ring-1 focus:ring-[#f04796] focus:bg-[#16141c] focus:outline-hidden"
             />
           </div>
         </div>
 
         {/* Social Links */}
-        <div className="rounded-2xl border border-[#E7DCCB] bg-white p-6 shadow-xs space-y-4">
-          <h2 className="text-xs font-bold uppercase tracking-wider text-[#8B806D] border-b border-[#E7DCCB]/60 pb-3">
+        <div className="rounded-2xl border border-white/10 bg-[#131117] p-6 shadow-xs space-y-4">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-white/60 border-b border-white/10 pb-3">
             Social Media Profiles
           </h2>
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label className="block text-xs font-medium text-[#29251F]">Instagram Profile URL</label>
+              <label className="block text-xs font-medium text-white">Instagram Profile URL</label>
               <input
                 type="text"
                 value={form.instagram_url || ''}
                 onChange={(e) => handleChange('instagram_url', e.target.value)}
                 placeholder="https://instagram.com/..."
-                className="mt-1 w-full rounded-xl border border-[#E7DCCB] bg-[#F8F4ED]/50 px-3 py-2 text-xs text-[#29251F] focus:border-[#344238] focus:bg-white focus:outline-hidden"
+                className="mt-1 w-full rounded-xl border border-white/10 bg-[#16141c] px-3 py-2 text-xs text-white focus:border-[#f04796] focus:ring-1 focus:ring-[#f04796] focus:bg-[#16141c] focus:outline-hidden"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-[#29251F]">TikTok Profile URL</label>
+              <label className="block text-xs font-medium text-white">TikTok Profile URL</label>
               <input
                 type="text"
                 value={form.tiktok_url || ''}
                 onChange={(e) => handleChange('tiktok_url', e.target.value)}
                 placeholder="https://tiktok.com/@..."
-                className="mt-1 w-full rounded-xl border border-[#E7DCCB] bg-[#F8F4ED]/50 px-3 py-2 text-xs text-[#29251F] focus:border-[#344238] focus:bg-white focus:outline-hidden"
+                className="mt-1 w-full rounded-xl border border-white/10 bg-[#16141c] px-3 py-2 text-xs text-white focus:border-[#f04796] focus:ring-1 focus:ring-[#f04796] focus:bg-[#16141c] focus:outline-hidden"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-[#29251F]">LinkedIn Profile URL</label>
+              <label className="block text-xs font-medium text-white">LinkedIn Profile URL</label>
               <input
                 type="text"
                 value={form.linkedin_url || ''}
                 onChange={(e) => handleChange('linkedin_url', e.target.value)}
                 placeholder="https://linkedin.com/in/..."
-                className="mt-1 w-full rounded-xl border border-[#E7DCCB] bg-[#F8F4ED]/50 px-3 py-2 text-xs text-[#29251F] focus:border-[#344238] focus:bg-white focus:outline-hidden"
+                className="mt-1 w-full rounded-xl border border-white/10 bg-[#16141c] px-3 py-2 text-xs text-white focus:border-[#f04796] focus:ring-1 focus:ring-[#f04796] focus:bg-[#16141c] focus:outline-hidden"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-[#29251F]">Facebook Profile / Page URL</label>
+              <label className="block text-xs font-medium text-white">Facebook Profile / Page URL</label>
               <input
                 type="text"
                 value={form.facebook_url || ''}
                 onChange={(e) => handleChange('facebook_url', e.target.value)}
                 placeholder="https://facebook.com/..."
-                className="mt-1 w-full rounded-xl border border-[#E7DCCB] bg-[#F8F4ED]/50 px-3 py-2 text-xs text-[#29251F] focus:border-[#344238] focus:bg-white focus:outline-hidden"
+                className="mt-1 w-full rounded-xl border border-white/10 bg-[#16141c] px-3 py-2 text-xs text-white focus:border-[#f04796] focus:ring-1 focus:ring-[#f04796] focus:bg-[#16141c] focus:outline-hidden"
               />
             </div>
           </div>

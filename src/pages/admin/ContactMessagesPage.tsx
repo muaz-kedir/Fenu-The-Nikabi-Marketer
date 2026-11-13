@@ -75,14 +75,14 @@ export function ContactMessagesPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-[#29251F]">Client Inquiries & Messages</h1>
-          <p className="mt-1 text-xs text-[#8B806D]">
+          <h1 className="text-xl font-bold tracking-tight text-white">Client Inquiries & Messages</h1>
+          <p className="mt-1 text-xs text-white/60">
             Incoming leads and partnership requests submitted from the public landing page contact form.
           </p>
         </div>
 
         {/* Filter Pills */}
-        <div className="flex items-center gap-1.5 rounded-xl border border-[#E7DCCB] bg-white p-1">
+        <div className="flex items-center gap-1.5 rounded-xl border border-white/10 bg-[#131117] p-1">
           {(['all', 'new', 'read', 'replied'] as const).map((tab) => (
             <button
               key={tab}
@@ -90,8 +90,8 @@ export function ContactMessagesPage() {
               onClick={() => setFilter(tab)}
               className={`rounded-lg px-3 py-1.5 text-xs font-semibold capitalize transition ${
                 filter === tab
-                  ? 'bg-[#344238] text-white shadow-xs'
-                  : 'text-[#8B806D] hover:text-[#29251F]'
+                  ? 'bg-[#f04796] text-[#0d0d0f] font-bold shadow-[0_0_20px_rgba(240,71,150,0.35)] text-white shadow-xs'
+                  : 'text-white/60 hover:text-white'
               }`}
             >
               {tab}
@@ -103,19 +103,19 @@ export function ContactMessagesPage() {
       {/* Grid: Messages List & Message Reader */}
       <div className="grid gap-6 lg:grid-cols-5">
         {/* Messages List (3 cols) */}
-        <div className="lg:col-span-3 overflow-hidden rounded-2xl border border-[#E7DCCB] bg-white shadow-xs">
-          <div className="p-4 border-b border-[#E7DCCB] flex items-center justify-between">
-            <h2 className="text-xs font-bold uppercase tracking-wider text-[#8B806D]">
+        <div className="lg:col-span-3 overflow-hidden rounded-2xl border border-white/10 bg-[#131117] shadow-xs">
+          <div className="p-4 border-b border-white/10 flex items-center justify-between">
+            <h2 className="text-xs font-bold uppercase tracking-wider text-white/60">
               Inbox ({filtered.length})
             </h2>
           </div>
 
           {loading ? (
-            <div className="p-12 text-center text-xs text-[#8B806D]">Loading inbox...</div>
+            <div className="p-12 text-center text-xs text-white/60">Loading inbox...</div>
           ) : filtered.length === 0 ? (
-            <div className="p-12 text-center text-xs text-[#8B806D]">No inquiries found in this view.</div>
+            <div className="p-12 text-center text-xs text-white/60">No inquiries found in this view.</div>
           ) : (
-            <div className="divide-y divide-[#E7DCCB]/60">
+            <div className="divide-y divide-white/10">
               {filtered.map((item) => (
                 <div
                   key={item.id}
@@ -125,8 +125,8 @@ export function ContactMessagesPage() {
                   }}
                   className={`p-4 cursor-pointer transition flex items-start gap-3 ${
                     activeMessage?.id === item.id
-                      ? 'bg-[#F8F4ED]'
-                      : 'hover:bg-[#F8F4ED]/40 bg-white'
+                      ? 'bg-[#0a0a0a]'
+                      : 'hover:bg-[#16141c] bg-white'
                   }`}
                 >
                   <div
@@ -136,15 +136,15 @@ export function ContactMessagesPage() {
                   />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-[#29251F] truncate">{item.sender_name}</span>
-                      <span className="text-[10px] text-[#8B806D] font-mono">
+                      <span className="text-xs font-bold text-white truncate">{item.sender_name}</span>
+                      <span className="text-[10px] text-white/60 font-mono">
                         {new Date(item.created_at).toLocaleDateString()}
                       </span>
                     </div>
-                    <div className="text-[11px] font-medium text-[#344238] truncate mt-0.5">
+                    <div className="text-[11px] font-medium text-[#f6b7d2] truncate mt-0.5">
                       {item.subject || 'New Website Inquiry'}
                     </div>
-                    <p className="text-[11px] text-[#8B806D] line-clamp-1 mt-0.5">{item.message}</p>
+                    <p className="text-[11px] text-white/60 line-clamp-1 mt-0.5">{item.message}</p>
                   </div>
                 </div>
               ))}
@@ -153,19 +153,19 @@ export function ContactMessagesPage() {
         </div>
 
         {/* Message Reader (2 cols) */}
-        <div className="lg:col-span-2 rounded-2xl border border-[#E7DCCB] bg-white p-6 shadow-xs">
+        <div className="lg:col-span-2 rounded-2xl border border-white/10 bg-[#131117] p-6 shadow-xs">
           {activeMessage ? (
             <div className="space-y-4">
-              <div className="flex items-start justify-between border-b border-[#E7DCCB] pb-4">
+              <div className="flex items-start justify-between border-b border-white/10 pb-4">
                 <div>
-                  <h3 className="text-sm font-bold text-[#29251F]">{activeMessage.sender_name}</h3>
+                  <h3 className="text-sm font-bold text-white">{activeMessage.sender_name}</h3>
                   <a
                     href={`mailto:${activeMessage.sender_email}`}
-                    className="text-xs text-[#344238] hover:underline block mt-0.5"
+                    className="text-xs text-[#f6b7d2] hover:underline block mt-0.5"
                   >
                     {activeMessage.sender_email}
                   </a>
-                  <span className="text-[10px] text-[#8B806D] block mt-1">
+                  <span className="text-[10px] text-white/60 block mt-1">
                     Received: {new Date(activeMessage.created_at).toLocaleString()}
                   </span>
                 </div>
@@ -183,27 +183,27 @@ export function ContactMessagesPage() {
               </div>
 
               <div>
-                <span className="text-[11px] uppercase tracking-wider text-[#8B806D] block">Subject</span>
-                <span className="text-xs font-semibold text-[#29251F] mt-0.5 block">
+                <span className="text-[11px] uppercase tracking-wider text-white/60 block">Subject</span>
+                <span className="text-xs font-semibold text-white mt-0.5 block">
                   {activeMessage.subject || 'General Inquiry'}
                 </span>
               </div>
 
-              <div className="rounded-xl border border-[#E7DCCB]/60 bg-[#F8F4ED]/50 p-4 text-xs text-[#29251F] leading-relaxed whitespace-pre-wrap">
+              <div className="rounded-xl border border-white/10 bg-[#16141c] p-4 text-xs text-white leading-relaxed whitespace-pre-wrap">
                 {activeMessage.message}
               </div>
 
               {/* Status Actions */}
-              <div className="border-t border-[#E7DCCB] pt-4 space-y-2">
-                <span className="text-[11px] text-[#8B806D] block">Update Status:</span>
+              <div className="border-t border-white/10 pt-4 space-y-2">
+                <span className="text-[11px] text-white/60 block">Update Status:</span>
                 <div className="flex flex-wrap gap-2">
                   <button
                     type="button"
                     onClick={() => void markStatus(activeMessage.id, 'read')}
                     className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition ${
                       activeMessage.status === 'read'
-                        ? 'border-[#344238] bg-[#344238] text-white'
-                        : 'border-[#E7DCCB] bg-white text-[#29251F]'
+                        ? 'border-[#344238] bg-[#f04796] text-[#0d0d0f] font-bold shadow-[0_0_20px_rgba(240,71,150,0.35)] text-white'
+                        : 'border-white/10 bg-[#131117] text-white'
                     }`}
                   >
                     Mark Read
@@ -214,7 +214,7 @@ export function ContactMessagesPage() {
                     className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition ${
                       activeMessage.status === 'replied'
                         ? 'border-emerald-600 bg-emerald-600 text-white'
-                        : 'border-[#E7DCCB] bg-white text-[#29251F]'
+                        : 'border-white/10 bg-[#131117] text-white'
                     }`}
                   >
                     Mark Replied
@@ -223,7 +223,7 @@ export function ContactMessagesPage() {
                     href={`mailto:${activeMessage.sender_email}?subject=Re: ${encodeURIComponent(
                       activeMessage.subject || 'Inquiry'
                     )}`}
-                    className="inline-flex items-center gap-1.5 rounded-lg bg-[#344238] px-3 py-1.5 text-xs font-medium text-white shadow-xs"
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-[#f04796] text-[#0d0d0f] font-bold shadow-[0_0_20px_rgba(240,71,150,0.35)] px-3 py-1.5 text-xs font-medium text-white shadow-xs"
                   >
                     <Reply size={13} /> Reply via Email
                   </a>
@@ -231,8 +231,8 @@ export function ContactMessagesPage() {
               </div>
             </div>
           ) : (
-            <div className="flex h-64 flex-col items-center justify-center text-center text-xs text-[#8B806D]">
-              <Mail size={32} className="mb-2 text-[#8B806D]/40" />
+            <div className="flex h-64 flex-col items-center justify-center text-center text-xs text-white/60">
+              <Mail size={32} className="mb-2 text-white/60/40" />
               <span>Select an inquiry from the list to view its contents.</span>
             </div>
           )}

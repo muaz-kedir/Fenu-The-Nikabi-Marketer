@@ -83,8 +83,8 @@ export function ProcessPage() {
   return (
     <div className="mx-auto max-w-4xl space-y-6">
       <div>
-        <h1 className="text-xl font-bold tracking-tight text-[#29251F]">Workflow Process Steps</h1>
-        <p className="mt-1 text-xs text-[#8B806D]">
+        <h1 className="text-xl font-bold tracking-tight text-white">Workflow Process Steps</h1>
+        <p className="mt-1 text-xs text-white/60">
           Explain your 3-to-4 stage marketing engagement methodology (Audit, Strategy, Execution, Scaling).
         </p>
       </div>
@@ -102,63 +102,63 @@ export function ProcessPage() {
       )}
 
       {/* Form */}
-      <form onSubmit={save} className="rounded-2xl border border-[#E7DCCB] bg-white p-6 shadow-xs space-y-4">
-        <h2 className="text-xs font-bold uppercase tracking-wider text-[#8B806D] border-b border-[#E7DCCB]/60 pb-3">
+      <form onSubmit={save} className="rounded-2xl border border-white/10 bg-[#131117] p-6 shadow-xs space-y-4">
+        <h2 className="text-xs font-bold uppercase tracking-wider text-white/60 border-b border-white/10 pb-3">
           {editingId ? 'Edit Process Step' : 'Add New Process Step'}
         </h2>
 
         <div className="grid gap-4 sm:grid-cols-3">
           <div>
-            <label className="block text-xs font-medium text-[#29251F]">Step Number (e.g. 01)</label>
+            <label className="block text-xs font-medium text-white">Step Number (e.g. 01)</label>
             <input
               required
               value={form.step_number}
               onChange={(e) => setForm({ ...form, step_number: e.target.value })}
-              className="mt-1 w-full rounded-xl border border-[#E7DCCB] bg-[#F8F4ED]/50 px-3 py-2 text-xs text-[#29251F] focus:border-[#344238] focus:bg-white focus:outline-hidden"
+              className="mt-1 w-full rounded-xl border border-white/10 bg-[#16141c] px-3 py-2 text-xs text-white focus:border-[#f04796] focus:ring-1 focus:ring-[#f04796] focus:bg-[#16141c] focus:outline-hidden"
             />
           </div>
 
           <div className="sm:col-span-2">
-            <label className="block text-xs font-medium text-[#29251F]">Step Title</label>
+            <label className="block text-xs font-medium text-white">Step Title</label>
             <input
               required
               value={form.title}
               onChange={(e) => setForm({ ...form, title: e.target.value })}
               placeholder="e.g. Strategic Brand Discovery & Audit"
-              className="mt-1 w-full rounded-xl border border-[#E7DCCB] bg-[#F8F4ED]/50 px-3 py-2 text-xs text-[#29251F] focus:border-[#344238] focus:bg-white focus:outline-hidden"
+              className="mt-1 w-full rounded-xl border border-white/10 bg-[#16141c] px-3 py-2 text-xs text-white focus:border-[#f04796] focus:ring-1 focus:ring-[#f04796] focus:bg-[#16141c] focus:outline-hidden"
             />
           </div>
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-[#29251F]">Step Description</label>
+          <label className="block text-xs font-medium text-white">Step Description</label>
           <textarea
             rows={3}
             required
             value={form.description}
             onChange={(e) => setForm({ ...form, description: e.target.value })}
             placeholder="Explain what happens in this stage..."
-            className="mt-1 w-full rounded-xl border border-[#E7DCCB] bg-[#F8F4ED]/50 p-3 text-xs text-[#29251F] focus:border-[#344238] focus:bg-white focus:outline-hidden"
+            className="mt-1 w-full rounded-xl border border-white/10 bg-[#16141c] p-3 text-xs text-white focus:border-[#f04796] focus:ring-1 focus:ring-[#f04796] focus:bg-[#16141c] focus:outline-hidden"
           />
         </div>
 
         <div className="flex items-center justify-between pt-2">
           <div className="flex gap-4">
-            <label className="flex items-center gap-2 cursor-pointer text-xs font-medium text-[#29251F]">
+            <label className="flex items-center gap-2 cursor-pointer text-xs font-medium text-white">
               <input
                 type="checkbox"
                 checked={form.is_visible}
                 onChange={(e) => setForm({ ...form, is_visible: e.target.checked })}
-                className="h-4 w-4 rounded-sm border-[#E7DCCB] text-[#344238]"
+                className="h-4 w-4 rounded-sm border-white/10 text-[#f6b7d2]"
               />
               <span>Visible</span>
             </label>
-            <label className="flex items-center gap-2 cursor-pointer text-xs font-medium text-[#29251F]">
+            <label className="flex items-center gap-2 cursor-pointer text-xs font-medium text-white">
               <input
                 type="checkbox"
                 checked={form.is_published}
                 onChange={(e) => setForm({ ...form, is_published: e.target.checked })}
-                className="h-4 w-4 rounded-sm border-[#E7DCCB] text-[#344238]"
+                className="h-4 w-4 rounded-sm border-white/10 text-[#f6b7d2]"
               />
               <span>Published</span>
             </label>
@@ -169,7 +169,7 @@ export function ProcessPage() {
               <button
                 type="button"
                 onClick={resetForm}
-                className="rounded-xl border border-[#E7DCCB] bg-[#F8F4ED] px-4 py-2 text-xs font-semibold text-[#29251F]"
+                className="rounded-xl border border-white/10 bg-[#0a0a0a] px-4 py-2 text-xs font-semibold text-white"
               >
                 Cancel
               </button>
@@ -177,7 +177,7 @@ export function ProcessPage() {
             <button
               type="submit"
               disabled={saving}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-[#344238] px-5 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-[#29251F] disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-[#f04796] text-[#0d0d0f] font-bold shadow-[0_0_20px_rgba(240,71,150,0.35)] px-5 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-[#ff6ab3] disabled:opacity-50"
             >
               <Plus size={14} />
               {saving ? 'Saving...' : editingId ? 'Update Step' : 'Add Step'}
@@ -187,16 +187,16 @@ export function ProcessPage() {
       </form>
 
       {/* List */}
-      <div className="overflow-hidden rounded-2xl border border-[#E7DCCB] bg-white shadow-xs divide-y divide-[#E7DCCB]/60">
+      <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#131117] shadow-xs divide-y divide-white/10">
         {items.map((step) => (
-          <div key={step.id} className="p-4 flex items-center justify-between transition hover:bg-[#F8F4ED]/40">
+          <div key={step.id} className="p-4 flex items-center justify-between transition hover:bg-[#16141c]">
             <div className="flex items-center gap-3">
-              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#F8F4ED] font-mono text-xs font-bold text-[#344238] border border-[#E7DCCB]">
+              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#0a0a0a] font-mono text-xs font-bold text-[#f6b7d2] border border-white/10">
                 {step.step_number}
               </span>
               <div>
-                <h3 className="text-xs font-bold text-[#29251F]">{step.title}</h3>
-                <p className="mt-0.5 line-clamp-1 text-[11px] text-[#8B806D] max-w-md">{step.description}</p>
+                <h3 className="text-xs font-bold text-white">{step.title}</h3>
+                <p className="mt-0.5 line-clamp-1 text-[11px] text-white/60 max-w-md">{step.description}</p>
               </div>
             </div>
 
@@ -214,7 +214,7 @@ export function ProcessPage() {
                     is_published: step.is_published !== false,
                   });
                 }}
-                className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#E7DCCB] bg-white text-[#29251F] hover:bg-[#F8F4ED]"
+                className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-[#131117] text-white hover:bg-[#0a0a0a]"
               >
                 <Pencil size={13} />
               </button>

@@ -111,7 +111,7 @@ export function WebsiteSettingsPage() {
 
   if (loading) {
     return (
-      <div className="flex h-64 items-center justify-center text-xs text-[#8B806D]">
+      <div className="flex h-64 items-center justify-center text-xs text-white/60">
         Loading website settings...
       </div>
     );
@@ -123,18 +123,18 @@ export function WebsiteSettingsPage() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold tracking-tight text-[#29251F]">Website Global Settings</h1>
+            <h1 className="text-xl font-bold tracking-tight text-white">Website Global Settings</h1>
             {hasDraftChanges ? (
-              <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-[11px] font-semibold text-amber-800">
+              <span className="rounded-full border border-amber-500/40 bg-amber-500/10 px-2.5 py-0.5 text-[11px] font-semibold text-amber-300">
                 Unpublished Draft
               </span>
             ) : (
-              <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-800">
+              <span className="rounded-full border border-emerald-500/40 bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-300">
                 Published Live
               </span>
             )}
           </div>
-          <p className="mt-1 text-xs text-[#8B806D]">
+          <p className="mt-1 text-xs text-white/60">
             Manage top announcement bar, brand logo, brand colors, and copyright footer.
           </p>
         </div>
@@ -144,7 +144,7 @@ export function WebsiteSettingsPage() {
             type="button"
             disabled={saving || publishing}
             onClick={() => void handleSaveDraft()}
-            className="inline-flex items-center gap-1.5 rounded-xl border border-[#E7DCCB] bg-white px-4 py-2 text-xs font-semibold text-[#29251F] shadow-xs transition hover:bg-[#F8F4ED]"
+            className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 bg-[#16141c] px-4 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-[#0a0a0a]"
           >
             <Save size={14} />
             {saving ? 'Saving...' : 'Save Draft'}
@@ -153,7 +153,7 @@ export function WebsiteSettingsPage() {
             type="button"
             disabled={saving || publishing}
             onClick={() => void handlePublish()}
-            className="inline-flex items-center gap-1.5 rounded-xl bg-[#344238] px-4 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-[#29251F]"
+            className="inline-flex items-center gap-1.5 rounded-xl bg-[#f04796] text-[#0d0d0f] font-bold shadow-[0_0_20px_rgba(240,71,150,0.35)] px-4 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-[#ff6ab3]"
           >
             <Send size={14} />
             {publishing ? 'Publishing...' : 'Publish Live'}
@@ -175,33 +175,33 @@ export function WebsiteSettingsPage() {
 
       <div className="space-y-6">
         {/* Announcement Bar */}
-        <div className="rounded-2xl border border-[#E7DCCB] bg-white p-6 shadow-xs space-y-4">
-          <div className="flex items-center justify-between border-b border-[#E7DCCB]/60 pb-3">
+        <div className="rounded-2xl border border-white/10 bg-[#131117] p-6 shadow-xs space-y-4">
+          <div className="flex items-center justify-between border-b border-white/10 pb-3">
             <div className="flex items-center gap-2">
-              <Bell size={16} className="text-[#344238]" />
-              <h2 className="text-xs font-bold uppercase tracking-wider text-[#8B806D]">
+              <Bell size={16} className="text-[#f6b7d2]" />
+              <h2 className="text-xs font-bold uppercase tracking-wider text-white/60">
                 Top Announcement Bar
               </h2>
             </div>
-            <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-[#29251F]">
+            <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-white">
               <input
                 type="checkbox"
                 checked={form.announcement_active}
                 onChange={(e) => handleChange('announcement_active', e.target.checked)}
-                className="h-4 w-4 rounded-sm border-[#E7DCCB] text-[#344238]"
+                className="h-4 w-4 rounded-sm border-white/10 text-[#f6b7d2]"
               />
               <span>Enable Announcement Bar</span>
             </label>
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-[#29251F]">Announcement Message Text</label>
+            <label className="block text-xs font-medium text-white">Announcement Message Text</label>
             <input
               type="text"
               value={form.announcement_text || ''}
               onChange={(e) => handleChange('announcement_text', e.target.value)}
               placeholder="e.g. ✨ Now booking Q2 marketing campaigns – Inquire today!"
-              className="mt-1 w-full rounded-xl border border-[#E7DCCB] bg-[#F8F4ED]/50 px-3 py-2 text-xs text-[#29251F] focus:border-[#344238] focus:bg-white focus:outline-hidden"
+              className="mt-1 w-full rounded-xl border border-white/10 bg-[#16141c] px-3 py-2 text-xs text-white focus:border-[#f04796] focus:ring-1 focus:ring-[#f04796] focus:bg-[#16141c] focus:outline-hidden"
             />
           </div>
 
@@ -214,40 +214,40 @@ export function WebsiteSettingsPage() {
         </div>
 
         {/* Brand Identity */}
-        <div className="rounded-2xl border border-[#E7DCCB] bg-white p-6 shadow-xs space-y-4">
-          <h2 className="text-xs font-bold uppercase tracking-wider text-[#8B806D] border-b border-[#E7DCCB]/60 pb-3">
+        <div className="rounded-2xl border border-white/10 bg-[#131117] p-6 shadow-xs space-y-4">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-white/60 border-b border-white/10 pb-3">
             Brand Identity
           </h2>
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label className="block text-xs font-medium text-[#29251F]">Site / Brand Name</label>
+              <label className="block text-xs font-medium text-white">Site / Brand Name</label>
               <input
                 type="text"
                 value={form.site_name}
                 onChange={(e) => handleChange('site_name', e.target.value)}
-                className="mt-1 w-full rounded-xl border border-[#E7DCCB] bg-[#F8F4ED]/50 px-3 py-2 text-xs text-[#29251F] focus:border-[#344238] focus:bg-white focus:outline-hidden"
+                className="mt-1 w-full rounded-xl border border-white/10 bg-[#16141c] px-3 py-2 text-xs text-white focus:border-[#f04796] focus:ring-1 focus:ring-[#f04796] focus:bg-[#16141c] focus:outline-hidden"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-[#29251F]">Owner Name</label>
+              <label className="block text-xs font-medium text-white">Owner Name</label>
               <input
                 type="text"
                 value={form.owner_name}
                 onChange={(e) => handleChange('owner_name', e.target.value)}
-                className="mt-1 w-full rounded-xl border border-[#E7DCCB] bg-[#F8F4ED]/50 px-3 py-2 text-xs text-[#29251F] focus:border-[#344238] focus:bg-white focus:outline-hidden"
+                className="mt-1 w-full rounded-xl border border-white/10 bg-[#16141c] px-3 py-2 text-xs text-white focus:border-[#f04796] focus:ring-1 focus:ring-[#f04796] focus:bg-[#16141c] focus:outline-hidden"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-[#29251F]">Professional Title / Role</label>
+            <label className="block text-xs font-medium text-white">Professional Title / Role</label>
             <input
               type="text"
               value={form.professional_title}
               onChange={(e) => handleChange('professional_title', e.target.value)}
-              className="mt-1 w-full rounded-xl border border-[#E7DCCB] bg-[#F8F4ED]/50 px-3 py-2 text-xs text-[#29251F] focus:border-[#344238] focus:bg-white focus:outline-hidden"
+              className="mt-1 w-full rounded-xl border border-white/10 bg-[#16141c] px-3 py-2 text-xs text-white focus:border-[#f04796] focus:ring-1 focus:ring-[#f04796] focus:bg-[#16141c] focus:outline-hidden"
             />
           </div>
 
@@ -271,47 +271,47 @@ export function WebsiteSettingsPage() {
         </div>
 
         {/* Brand Theme Colors */}
-        <div className="rounded-2xl border border-[#E7DCCB] bg-white p-6 shadow-xs space-y-4">
-          <div className="flex items-center gap-2 border-b border-[#E7DCCB]/60 pb-3">
-            <Palette size={16} className="text-[#344238]" />
-            <h2 className="text-xs font-bold uppercase tracking-wider text-[#8B806D]">
+        <div className="rounded-2xl border border-white/10 bg-[#131117] p-6 shadow-xs space-y-4">
+          <div className="flex items-center gap-2 border-b border-white/10 pb-3">
+            <Palette size={16} className="text-[#f6b7d2]" />
+            <h2 className="text-xs font-bold uppercase tracking-wider text-white/60">
               Brand Color Palette
             </h2>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label className="block text-xs font-medium text-[#29251F]">Primary Olive Accent Color</label>
+              <label className="block text-xs font-medium text-white">Primary Olive Accent Color</label>
               <div className="mt-1 flex items-center gap-2">
                 <input
                   type="color"
                   value={form.brand_primary_color || '#344238'}
                   onChange={(e) => handleChange('brand_primary_color', e.target.value)}
-                  className="h-9 w-9 rounded-lg border border-[#E7DCCB] p-0.5 cursor-pointer"
+                  className="h-9 w-9 rounded-lg border border-white/10 p-0.5 cursor-pointer"
                 />
                 <input
                   type="text"
                   value={form.brand_primary_color || '#344238'}
                   onChange={(e) => handleChange('brand_primary_color', e.target.value)}
-                  className="flex-1 rounded-xl border border-[#E7DCCB] bg-[#F8F4ED]/50 px-3 py-2 text-xs text-[#29251F] font-mono"
+                  className="flex-1 rounded-xl border border-white/10 bg-[#16141c] px-3 py-2 text-xs text-white font-mono"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-[#29251F]">Secondary Beige / Accent Color</label>
+              <label className="block text-xs font-medium text-white">Secondary Beige / Accent Color</label>
               <div className="mt-1 flex items-center gap-2">
                 <input
                   type="color"
                   value={form.brand_accent_color || '#E7DCCB'}
                   onChange={(e) => handleChange('brand_accent_color', e.target.value)}
-                  className="h-9 w-9 rounded-lg border border-[#E7DCCB] p-0.5 cursor-pointer"
+                  className="h-9 w-9 rounded-lg border border-white/10 p-0.5 cursor-pointer"
                 />
                 <input
                   type="text"
                   value={form.brand_accent_color || '#E7DCCB'}
                   onChange={(e) => handleChange('brand_accent_color', e.target.value)}
-                  className="flex-1 rounded-xl border border-[#E7DCCB] bg-[#F8F4ED]/50 px-3 py-2 text-xs text-[#29251F] font-mono"
+                  className="flex-1 rounded-xl border border-white/10 bg-[#16141c] px-3 py-2 text-xs text-white font-mono"
                 />
               </div>
             </div>
@@ -319,19 +319,19 @@ export function WebsiteSettingsPage() {
         </div>
 
         {/* Footer & Copyright */}
-        <div className="rounded-2xl border border-[#E7DCCB] bg-white p-6 shadow-xs space-y-4">
-          <h2 className="text-xs font-bold uppercase tracking-wider text-[#8B806D] border-b border-[#E7DCCB]/60 pb-3">
+        <div className="rounded-2xl border border-white/10 bg-[#131117] p-6 shadow-xs space-y-4">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-white/60 border-b border-white/10 pb-3">
             Footer Copyright Text
           </h2>
 
           <div>
-            <label className="block text-xs font-medium text-[#29251F]">Copyright Notice</label>
+            <label className="block text-xs font-medium text-white">Copyright Notice</label>
             <input
               type="text"
               value={form.copyright_text}
               onChange={(e) => handleChange('copyright_text', e.target.value)}
               placeholder="© 2026 Azmina Zahra. All rights reserved."
-              className="mt-1 w-full rounded-xl border border-[#E7DCCB] bg-[#F8F4ED]/50 px-3 py-2 text-xs text-[#29251F] focus:border-[#344238] focus:bg-white focus:outline-hidden"
+              className="mt-1 w-full rounded-xl border border-white/10 bg-[#16141c] px-3 py-2 text-xs text-white focus:border-[#f04796] focus:ring-1 focus:ring-[#f04796] focus:bg-[#16141c] focus:outline-hidden"
             />
           </div>
         </div>
