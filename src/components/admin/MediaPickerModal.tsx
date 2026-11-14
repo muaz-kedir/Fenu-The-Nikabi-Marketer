@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Check, Image as ImageIcon, Search, Upload, X } from 'lucide-react';
 import { getMedia, uploadMedia } from '../../services/contentService';
+import { CmsImage } from '../ui/CmsImage';
 import type { MediaItem } from '../../types/database';
 
 type MediaPickerModalProps = {
@@ -193,7 +194,7 @@ export function MediaPickerModal({
                   className="group relative cursor-pointer overflow-hidden rounded-2xl border border-white/10 bg-[#0f0f12] transition hover:border-[#f04796] hover:shadow-[0_0_20px_rgba(240,71,150,0.25)]"
                 >
                   <div className="aspect-square w-full overflow-hidden bg-black/40">
-                    <img
+                    <CmsImage
                       src={item.file_url}
                       alt={item.alt_text || item.file_name}
                       className="h-full w-full object-cover transition duration-300 group-hover:scale-105"

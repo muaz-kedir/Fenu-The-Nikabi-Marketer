@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { ArrowRight, Sparkles, Star } from 'lucide-react';
+import { CmsImage } from './ui/CmsImage';
 import type { HeroContent, SiteSettings } from '../types/database';
 
 type HeroProps = {
@@ -106,8 +107,9 @@ export function Hero({ hero, site }: HeroProps) {
 
           <div className="relative flex h-[430px] w-[430px] items-center justify-center rounded-full border border-[#f04796]/60 bg-[linear-gradient(135deg,rgba(240,71,150,0.15),rgba(255,255,255,0.02),rgba(240,71,150,0.05))] p-6 shadow-[0_0_60px_rgba(240,71,150,0.15)]">
             <div className="absolute inset-3 rounded-full border border-[#f6b7d2]/35" />
-            <img
+            <CmsImage
               src={image}
+              fallbackSrc="/fenu-brand.png"
               alt={altText}
               className="h-full w-full rounded-full object-cover object-center"
             />

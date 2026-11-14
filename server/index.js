@@ -297,15 +297,18 @@ async function ensureDatabaseSchema() {
       }
     }
 
-    // 4. Ensure migration 005_media_persistence is applied
+    // 4. Ensure media persistence and alt text columns exist unconditionally
     try {
-      const mig005Path = path.join(process.cwd(), 'database', 'migrations', '005_media_persistence.sql');
-      if (fs.existsSync(mig005Path)) {
-        const mig005Sql = fs.readFileSync(mig005Path, 'utf8');
-        await activePool.query(mig005Sql);
-      }
+      await activePool.query(`
+        ALTER TABLE media_items ADD COLUMN IF NOT EXISTS data_url TEXT;
+        ALTER TABLE site_settings ADD COLUMN IF NOT EXISTS profile_image_alt TEXT;
+        ALTER TABLE hero_content ADD COLUMN IF NOT EXISTS profile_image_alt TEXT;
+        ALTER TABLE about_content ADD COLUMN IF NOT EXISTS profile_image_alt TEXT;
+        ALTER TABLE services ADD COLUMN IF NOT EXISTS image_alt TEXT;
+      `);
+      console.log('[db] Media persistence and alt text schema verified.');
     } catch (migErr) {
-      console.warn('[db] Note on migration 005:', migErr.message);
+      console.warn('[db] Note on schema alterations:', migErr.message);
     }
 
     schemaInitialized = true;
@@ -755,21 +758,33 @@ function singletonRoutes(table, columns) {
         isPublished,
       ]);
       const values = fields.map((field) => sanitized[field] ?? null);
+      let targetId;
       if (existing.rows[0]) {
+        targetId = existing.rows[0].id;
         const setClause = fields.map((field, index) => `${field} = $${index + 2}`).join(', ');
         await query(`UPDATE ${table} SET ${setClause}, updated_at = NOW() WHERE id = $1`, [
-          existing.rows[0].id,
+          targetId,
           ...values,
         ]);
-        ok(res, { id: existing.rows[0].id, updated: true, is_published: isPublished });
       } else {
         const placeholders = fields.map((_, index) => `$${index + 2}`).join(', ');
         const result = await query(
           `INSERT INTO ${table} (is_published, ${fields.join(', ')}) VALUES ($1, ${placeholders}) RETURNING id`,
           [isPublished, ...values],
         );
-        ok(res, { id: result.rows[0].id, created: true, is_published: isPublished });
+        targetId = result.rows[0].id;
       }
+
+      // If saving directly as published, also sync the draft row so draft doesn't hold stale or reverted data!
+      if (isPublished) {
+        const draft = await query(`SELECT id FROM ${table} WHERE is_published = FALSE ORDER BY updated_at DESC LIMIT 1`);
+        if (draft.rows[0]) {
+          const setClause = fields.map((field, index) => `${field} = $${index + 2}`).join(', ');
+          await query(`UPDATE ${table} SET ${setClause}, updated_at = NOW() WHERE id = $1`, [draft.rows[0].id, ...values]);
+        }
+      }
+
+      ok(res, { id: targetId, updated: true, is_published: isPublished });
     } catch (error) {
       console.error(`Error saving admin ${table}:`, error);
       fail(res, 500, error.message || 'Failed to save content.');
@@ -782,7 +797,6 @@ function singletonRoutes(table, columns) {
 
   app.post(`/api/admin/${table}/publish`, requireAdmin, async (req, res) => {
     try {
-      // If client sent updated fields directly in publish body, save as published
       const fields = columns;
       const hasPayload = fields.some((f) => req.body && req.body[f] !== undefined);
 
@@ -797,7 +811,7 @@ function singletonRoutes(table, columns) {
           const placeholders = fields.map((_, index) => `$${index + 2}`).join(', ');
           await query(`INSERT INTO ${table} (is_published, ${fields.join(', ')}) VALUES ($1, ${placeholders})`, [true, ...values]);
         }
-        // Also update draft if exists to match
+        // Also update draft so draft and published stay strictly synchronized
         const draft = await query(`SELECT id FROM ${table} WHERE is_published = FALSE ORDER BY updated_at DESC LIMIT 1`);
         if (draft.rows[0]) {
           const setClause = fields.map((field, index) => `${field} = $${index + 2}`).join(', ');
@@ -807,21 +821,34 @@ function singletonRoutes(table, columns) {
         return;
       }
 
-      // Otherwise copy existing draft to published
+      // If no payload passed, safely resolve between published and draft
       const draft = await query(`SELECT * FROM ${table} WHERE is_published = FALSE ORDER BY updated_at DESC LIMIT 1`);
-      if (!draft.rows[0]) {
-        // If no draft exists, check if published already exists
-        const published = await query(`SELECT * FROM ${table} WHERE is_published = TRUE ORDER BY updated_at DESC LIMIT 1`);
-        if (!published.rows[0]) {
-          fail(res, 404, 'No content to publish.');
-          return;
-        }
-        ok(res, { published: true, message: 'Already published.' });
+      const published = await query(`SELECT * FROM ${table} WHERE is_published = TRUE ORDER BY updated_at DESC LIMIT 1`);
+
+      if (!draft.rows[0] && !published.rows[0]) {
+        fail(res, 404, 'No content to publish.');
         return;
       }
-      const row = sanitizeSingletonPayload(table, draft.rows[0]);
-      const published = await query(`SELECT id FROM ${table} WHERE is_published = TRUE ORDER BY updated_at DESC LIMIT 1`);
+
+      // If published exists and is newer than or equal to draft, keep published as-is and sync draft
+      if (published.rows[0] && draft.rows[0]) {
+        const publishedTime = new Date(published.rows[0].updated_at).getTime();
+        const draftTime = new Date(draft.rows[0].updated_at).getTime();
+        if (publishedTime >= draftTime) {
+          const row = sanitizeSingletonPayload(table, published.rows[0]);
+          const values = fields.map((field) => row[field] ?? null);
+          const setClause = fields.map((field, index) => `${field} = $${index + 2}`).join(', ');
+          await query(`UPDATE ${table} SET ${setClause}, updated_at = NOW() WHERE id = $1`, [draft.rows[0].id, ...values]);
+          ok(res, { published: true, message: 'Published content is up to date.' });
+          return;
+        }
+      }
+
+      // Draft is newer: copy draft to published
+      const sourceRow = draft.rows[0] || published.rows[0];
+      const row = sanitizeSingletonPayload(table, sourceRow);
       const values = fields.map((field) => row[field] ?? null);
+
       if (published.rows[0]) {
         const setClause = fields.map((field, index) => `${field} = $${index + 2}`).join(', ');
         await query(`UPDATE ${table} SET ${setClause}, updated_at = NOW() WHERE id = $1`, [
@@ -1313,18 +1340,28 @@ app.post('/api/media/upload', requireAdmin, async (req, res) => {
     fs.writeFileSync(filePath, buffer);
     const storagePath = `${safeFolder}/${safeName}`;
     const fileUrl = `/uploads/${storagePath}`;
+
+    // Ensure data_url column exists in media_items before insert
+    try {
+      await query('ALTER TABLE media_items ADD COLUMN IF NOT EXISTS data_url TEXT');
+    } catch (altErr) {
+      console.warn('[media-upload] Column alter check note:', altErr.message);
+    }
+
     let result;
     try {
       result = await query(
         'INSERT INTO media_items (file_name, file_url, storage_path, file_type, file_size, alt_text, data_url) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, file_name, file_url, storage_path, file_type, file_size, alt_text, uploaded_at',
         [fileName, fileUrl, storagePath, contentType, buffer.length, altText || null, dataUrl],
       );
-    } catch {
+    } catch (insertErr) {
+      console.error('[media-upload] Primary insert with data_url failed:', insertErr.message);
       result = await query(
         'INSERT INTO media_items (file_name, file_url, storage_path, file_type, file_size, alt_text) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, file_name, file_url, storage_path, file_type, file_size, alt_text, uploaded_at',
         [fileName, fileUrl, storagePath, contentType, buffer.length, altText || null],
       );
     }
+    console.log(`[media-upload] Successfully stored: ${storagePath} (${buffer.length} bytes)`);
     ok(res, result.rows[0]);
   } catch (error) {
     console.error('Error uploading media:', error);

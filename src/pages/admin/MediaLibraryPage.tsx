@@ -17,6 +17,7 @@ import {
   updateMediaAlt,
   uploadMedia,
 } from '../../services/contentService';
+import { CmsImage } from '../../components/ui/CmsImage';
 import type { MediaItem } from '../../types/database';
 
 export function MediaLibraryPage() {
@@ -219,7 +220,7 @@ export function MediaLibraryPage() {
                 className="group relative flex flex-col overflow-hidden rounded-xl border border-white/10 bg-[#0a0a0a] transition hover:border-[#f04796]/40 hover:shadow-xs"
               >
                 <div className="relative aspect-square w-full overflow-hidden bg-slate-100">
-                  <img
+                  <CmsImage
                     src={item.file_url}
                     alt={item.alt_text || item.file_name}
                     className="h-full w-full object-cover transition duration-300 group-hover:scale-105"

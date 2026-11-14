@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ArrowRight, Menu, X } from 'lucide-react';
+import { CmsImage } from './ui/CmsImage';
 import type { NavigationItem, SiteSettings } from '../types/database';
 
 const defaultNavLinks = [
@@ -35,8 +36,9 @@ export function Navbar({ navigation, site }: NavbarProps) {
     <header className="sticky top-0 z-50 border-b border-white/10 bg-[#0a0a0a]/80 backdrop-blur-xl">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
         <a href="#home" className="flex min-w-0 items-center gap-2.5 sm:gap-3" aria-label={`${siteName} home`}>
-          <img
+          <CmsImage
             src={logoUrl}
+            fallbackSrc="/fenu-brand.png"
             alt={siteName}
             className="h-10 w-10 shrink-0 rounded-full object-cover border border-[#f04796]/40 shadow-[0_0_15px_rgba(240,71,150,0.3)]"
           />

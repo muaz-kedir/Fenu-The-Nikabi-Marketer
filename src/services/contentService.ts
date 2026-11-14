@@ -177,8 +177,11 @@ export async function saveAdminSingleton(resource: string, payload: Record<strin
   });
 }
 
-export async function publishAdminSingleton(resource: string) {
-  return localApiRequest(`/api/admin/${resource}/publish`, { method: 'POST' });
+export async function publishAdminSingleton(resource: string, payload?: Record<string, unknown>) {
+  return localApiRequest(`/api/admin/${resource}/publish`, {
+    method: 'POST',
+    body: payload ? JSON.stringify(payload) : undefined,
+  });
 }
 
 export async function getMedia() {

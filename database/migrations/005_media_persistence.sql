@@ -1,5 +1,8 @@
 -- Add data_url column to media_items to survive container restarts and ephemeral scratch storage
 ALTER TABLE media_items ADD COLUMN IF NOT EXISTS data_url TEXT;
 
--- Add profile_image_alt to site_settings
+-- Add profile_image_alt to site_settings, hero_content, and about_content
 ALTER TABLE site_settings ADD COLUMN IF NOT EXISTS profile_image_alt TEXT;
+ALTER TABLE hero_content ADD COLUMN IF NOT EXISTS profile_image_alt TEXT;
+ALTER TABLE about_content ADD COLUMN IF NOT EXISTS profile_image_alt TEXT;
+ALTER TABLE services ADD COLUMN IF NOT EXISTS image_alt TEXT;

@@ -89,7 +89,7 @@ export function HeroEditorPage() {
     try {
       // First save current form as published
       await saveAdminSingleton('hero_content', form, true);
-      await publishAdminSingleton('hero_content');
+      await publishAdminSingleton('hero_content', form);
       setFeedback({ type: 'success', text: 'Hero section published live to visitors!' });
       setHasDraftChanges(false);
       if (refreshOverview) refreshOverview();

@@ -95,7 +95,7 @@ export function WebsiteSettingsPage() {
     setMessage(null);
     try {
       await saveAdminSingleton('site_settings', form, true);
-      await publishAdminSingleton('site_settings');
+      await publishAdminSingleton('site_settings', form);
       setMessage({ type: 'success', text: 'Website settings published live!' });
       setHasDraftChanges(false);
       if (refreshOverview) refreshOverview();

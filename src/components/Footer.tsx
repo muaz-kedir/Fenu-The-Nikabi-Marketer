@@ -1,4 +1,5 @@
 import { BriefcaseBusiness, Camera, MessageCircleMore, Music2, Phone } from 'lucide-react';
+import { CmsImage } from './ui/CmsImage';
 import type { FooterContent, SiteSettings } from '../types/database';
 
 const socialDisplay = [
@@ -35,8 +36,9 @@ export function Footer({ site, footer }: FooterProps) {
         <div className="flex flex-col items-center justify-between gap-6 border-b border-white/10 pb-8 md:flex-row">
           <div>
             <div className="flex items-center gap-3">
-              <img
+              <CmsImage
                 src={logoUrl}
+                fallbackSrc="/fenu-brand.png"
                 alt={brandName}
                 className="h-10 w-10 shrink-0 rounded-full object-cover border border-[#f04796]/40 shadow-[0_0_15px_rgba(240,71,150,0.3)]"
               />

@@ -1,5 +1,6 @@
 import { ArrowRight, Award, Sparkles } from 'lucide-react';
 import { BentoCard } from './ui/BentoCard';
+import { CmsImage } from './ui/CmsImage';
 import type { AboutContent } from '../types/database';
 
 type AboutProps = {
@@ -20,7 +21,12 @@ export function About({ about }: AboutProps) {
         <div className="relative mx-auto w-full max-w-[420px]">
           <div className="absolute inset-6 rounded-[32px] border border-[#f04796]/40 bg-[#f04796]/10 blur-xl" />
           <div className="relative overflow-hidden rounded-[32px] border border-white/10 bg-[#111214] p-4 shadow-[0_0_40px_rgba(240,71,150,0.1)]">
-            <img src={image} alt={altText} className="h-[520px] w-full rounded-[24px] object-cover" />
+            <CmsImage
+              src={image}
+              fallbackSrc="https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=1000&q=80"
+              alt={altText}
+              className="h-[520px] w-full rounded-[24px] object-cover"
+            />
           </div>
         </div>
 

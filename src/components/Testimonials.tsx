@@ -1,5 +1,6 @@
 import { Quote } from 'lucide-react';
 import { BentoCard } from './ui/BentoCard';
+import { CmsImage } from './ui/CmsImage';
 import type { TestimonialItem } from '../types/database';
 
 type TestimonialsProps = {
@@ -35,8 +36,9 @@ export function Testimonials({ testimonials }: TestimonialsProps) {
 
           <div className="mt-8 flex items-center gap-4 border-t border-white/10 pt-6">
             {items[0].client_image_url ? (
-              <img
+              <CmsImage
                 src={items[0].client_image_url}
+                fallbackSrc="/fenu-brand.png"
                 alt={items[0].client_name}
                 className="h-14 w-14 rounded-full object-cover border border-[#f04796]/40"
               />
@@ -69,8 +71,9 @@ export function Testimonials({ testimonials }: TestimonialsProps) {
 
               <div className="mt-6 flex items-center gap-3 border-t border-white/10 pt-4">
                 {item.client_image_url ? (
-                  <img
+                  <CmsImage
                     src={item.client_image_url}
+                    fallbackSrc="/fenu-brand.png"
                     alt={item.client_name}
                     className="h-11 w-11 rounded-full object-cover border border-[#f04796]/30"
                   />

@@ -71,7 +71,7 @@ export function ContactSettingsPage() {
     setFeedback(null);
     try {
       await saveAdminSingleton('site_settings', form, true);
-      await publishAdminSingleton('site_settings');
+      await publishAdminSingleton('site_settings', form);
       setFeedback({ type: 'success', text: 'Contact settings published live!' });
       if (refreshOverview) refreshOverview();
     } catch (err) {

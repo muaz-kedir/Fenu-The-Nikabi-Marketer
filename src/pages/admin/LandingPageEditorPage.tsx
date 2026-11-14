@@ -287,8 +287,8 @@ export function LandingPageEditorPage() {
     setSaving(true);
     setMessage(null);
     try {
-      await saveAdminSingleton(table, payload, false);
-      await publishAdminSingleton(table);
+      await saveAdminSingleton(table, payload, true);
+      await publishAdminSingleton(table, payload);
       await loadTabData();
       setMessage({ type: 'success', text: 'Published successfully! Changes are now live on the public website.' });
     } catch (err) {

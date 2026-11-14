@@ -103,7 +103,7 @@ export function AboutEditorPage() {
     setMessage(null);
     try {
       await saveAdminSingleton('about_content', form, true);
-      await publishAdminSingleton('about_content');
+      await publishAdminSingleton('about_content', form);
       setMessage({ type: 'success', text: 'About Me section published to the live website!' });
       setHasDraftChanges(false);
       if (refreshOverview) refreshOverview();

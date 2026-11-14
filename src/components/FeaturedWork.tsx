@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ArrowUpRight, CheckCircle2 } from 'lucide-react';
 import { BentoCard } from './ui/BentoCard';
+import { CmsImage } from './ui/CmsImage';
 import type { ProjectItem } from '../types/database';
 
 const categories = [
@@ -72,11 +73,9 @@ export function FeaturedWork({ projects }: FeaturedWorkProps) {
             >
               <div>
                 <div className="relative overflow-hidden aspect-video bg-[#0d0d0f]">
-                  <img
-                    src={
-                      project.cover_image_url ||
-                      'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=900&q=80'
-                    }
+                  <CmsImage
+                    src={project.cover_image_url}
+                    fallbackSrc="https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=900&q=80"
                     alt={project.title}
                     className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
                   />

@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import { FileImage, Image as ImageIcon, Trash2, Upload } from 'lucide-react';
 import { uploadMedia } from '../../services/contentService';
 import { MediaPickerModal } from './MediaPickerModal';
+import { CmsImage } from '../ui/CmsImage';
 
 type ImageUploadFieldProps = {
   label: string;
@@ -107,7 +108,7 @@ export function ImageUploadField({
                 aspect === 'circle' ? 'rounded-full' : 'rounded-2xl'
               }`}
             >
-              <img src={value} alt={altText || label} className={getAspectClass()} />
+              <CmsImage src={value} alt={altText || label} className={getAspectClass()} />
             </div>
 
             <div className="flex-1 space-y-2 text-center sm:text-left">

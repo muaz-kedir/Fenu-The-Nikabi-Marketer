@@ -69,7 +69,7 @@ export function SeoSettingsPage() {
     setFeedback(null);
     try {
       await saveAdminSingleton('site_settings', form, true);
-      await publishAdminSingleton('site_settings');
+      await publishAdminSingleton('site_settings', form);
       setFeedback({ type: 'success', text: 'SEO meta tags published live to visitors and search crawlers!' });
       if (refreshOverview) refreshOverview();
     } catch (err) {
